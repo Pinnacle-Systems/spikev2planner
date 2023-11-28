@@ -1,0 +1,56 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Orders {
+  id       Int          @id @default(autoincrement())
+  orderNo  String
+  buyer    String?
+  dDate    DateTime     @db.Date
+  style    String?
+  quantity Int?
+  sam      String?
+  lines    OrderLines[]
+}
+
+model OrderLines {
+  id        Int
+  pcs       Int
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  days      Int
+  Orders    Orders  @relation(fields: [ordersId], references: [id])
+  ordersId  Int
+  Line      Line     @relation(fields: [id], references: [id])
+  @@unique([id, ordersId])
+}
+
+model Unit {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  location String?
+  line     Line[]
+}
+
+model Line {
+  id         Int          @id @default(autoincrement())
+  Unit       Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unitId     Int
+  name       String?
+  inCharge   String?
+  capacity   Int?
+  efficiency Int?
+  OrderLines OrderLines[]
+}
+
+model Holiday {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @db.Date
+  description String?
+}

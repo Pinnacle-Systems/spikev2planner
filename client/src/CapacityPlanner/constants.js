@@ -1,0 +1,1 @@
+export const ORDER_ITEM_ORDER_LIST = {w: "150px", h: "100px"}

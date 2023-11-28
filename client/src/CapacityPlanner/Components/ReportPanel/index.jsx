@@ -1,0 +1,31 @@
+import React from 'react'
+import plannedLogo from "../../../assets/pngwing.com (4).png"
+import unPlannedLogo from "../../../assets/pngwing.com (5).png"
+
+const ReportPanel = () => {
+    return (
+        <div className='text-sm text-center '>
+            <div className='grid grid-cols-2 border'>
+                <a href="#/plannedOrdersReport" className='p-1 border w-full flex justify-center bg-gray-50'>
+                    <img src={plannedLogo} width={40} />
+                    <span className='text-xs'>
+                        Planned Orders
+                    </span>
+                </a>
+                <a href="#/unPlannedOrdersReport" className='p-1 border w-full flex justify-center bg-gray-50 text-xs'>
+                    <img src={unPlannedLogo} width={30} />
+                    <p className='grid'>
+                        <span className='whitespace-nowrap'>
+                            Un-Planned
+                        </span>
+                        <span>
+                            Orders
+                        </span>
+                    </p>
+                </a>
+            </div>
+        </div>
+    )
+}
+
+export default ReportPanel

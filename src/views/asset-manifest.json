@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/static/css/main.5e5070c3.css",
+    "main.js": "/static/js/main.6c5df597.js",
+    "static/media/pngwing.com (5).png": "/static/media/pngwing.com (5).eae7b0e5c65b37267301.png",
+    "static/media/pngwing.com (7).png": "/static/media/pngwing.com (7).ea5e92c0b9ee53bc027e.png",
+    "static/media/pngwing.com (9).png": "/static/media/pngwing.com (9).d984e50cf2655ede4245.png",
+    "static/media/pngwing.com (4).png": "/static/media/pngwing.com (4).3d4269813fc263392249.png",
+    "static/media/pngwing.com (8).png": "/static/media/pngwing.com (8).62da182f832b34cb0aa7.png",
+    "index.html": "/index.html",
+    "main.5e5070c3.css.map": "/static/css/main.5e5070c3.css.map",
+    "main.6c5df597.js.map": "/static/js/main.6c5df597.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5e5070c3.css",
+    "static/js/main.6c5df597.js"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "capacityplannerbackend",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "prisma": {
+    "schema": "./src/models/schema.prisma"
+  },
+  "scripts": {
+    "migrate": "npx prisma migrate dev --schema ./src/models/schema.prisma",
+    "vercel-build": "prisma generate",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }, 
+  "repository": {
+    "type": "git",
+    "url": "y"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "prisma": "^4.11.0",
+    "@prisma/client": "^4.11.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
