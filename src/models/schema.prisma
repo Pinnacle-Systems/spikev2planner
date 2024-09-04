@@ -9,14 +9,24 @@ datasource db {
 }
 
 model Orders {
-  id       Int          @id @default(autoincrement())
-  orderNo  String
-  buyer    String?
-  dDate    DateTime     @db.Date
-  style    String?
-  quantity Int?
-  sam      String?
-  lines    OrderLines[]
+  id                        Int                         @id @default(autoincrement())
+  orderNo                   String
+  buyer                     String?
+  dDate                     DateTime                    @db.Date
+  style                     String?
+  quantity                  Int?
+  sam                       String?
+  lines                     OrderLines[]
+  OrderSizeColorWiseDetails OrderSizeColorWiseDetails[]
+}
+
+model OrderSizeColorWiseDetails {
+  id       Int    @id @default(autoincrement())
+  Order    Orders @relation(fields: [ordersId], references: [id], onDelete: Cascade)
+  ordersId Int
+  size     String
+  color    String
+  qty      Int
 }
 
 model OrderLines {
@@ -25,9 +35,10 @@ model OrderLines {
   startDate DateTime @db.Date
   endDate   DateTime @db.Date
   days      Int
-  Orders    Orders  @relation(fields: [ordersId], references: [id])
+  Orders    Orders   @relation(fields: [ordersId], references: [id])
   ordersId  Int
   Line      Line     @relation(fields: [id], references: [id])
+
   @@unique([id, ordersId])
 }
 

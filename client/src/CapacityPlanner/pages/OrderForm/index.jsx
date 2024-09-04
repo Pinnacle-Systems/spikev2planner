@@ -24,11 +24,11 @@ const OrderForm = () => {
 
   return (
     <div className='h-screen w-screen'>
-      <div className='h-full border w-1/2 float-left'>
-        <Form id={id} setId={setId}/>
+      <div className='h-full border w-3/4 float-left'>
+        <Form id={id} setId={setId} />
       </div>
-      <div className='h-full w-1/2 float-right'>
-        <Report orders={orders} setOrders={setOrders} setId={setId}/>
+      <div className='h-full w-1/4 float-right'>
+        <Report orders={orders} setOrders={setOrders} setId={setId} />
       </div>
     </div>
   )

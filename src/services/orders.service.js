@@ -1,5 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { convertToImportFormat } from '../utils/excelDataTransform.js';
+import { read, utils } from "xlsx";
+import _ from 'lodash';
+import { convertDateDisplayFormatToDBFormat, excelDateToJSDate } from '../utils/helper.js';
 
 const prisma = new PrismaClient()
 
@@ -44,6 +48,9 @@ async function getOne(id) {
     const data = await prisma.orders.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            OrderSizeColorWiseDetails: true
         }
     })
     if (!data) return NoRecordFound("orders");
@@ -107,6 +114,43 @@ async function create(body) {
         },
     });
     return { statusCode: 0, data };
+}
+
+export async function excelImport(req) {
+    let file = new Uint8Array(req.file.buffer)
+    let workbook = read(file, { type: "array" });
+    var sheet_name_list = workbook.SheetNames;
+    const importedData = utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+    const headerNames = importedData;
+    const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
+    const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
+    const orderDetailsArr = [];
+    for (let [key, val] of Object.entries(orderDetails)) {
+        orderDetailsArr.push({
+            orderNo: key,
+            style: val[0]?.styleno,
+            buyer: val[0]?.buyer,
+            sam: val[0]?.sam,
+            dDate: new Date(excelDateToJSDate(val[0]?.deliverydate)),
+            quantity: val.reduce((a, c) => a + parseInt(c.qty), 0),
+            OrderSizeColorWiseDetails: {
+                create: val.map(i => ({
+                    size: i.size,
+                    color: i.color,
+                    qty: parseInt(i.qty)
+                }))
+            }
+        })
+    }
+    await prisma.$transaction(async (tx) => {
+        for (let index = 0; index < orderDetailsArr.length; index++) {
+            const order = orderDetailsArr[index];
+            await tx.orders.create({
+                data: order
+            })
+        }
+    })
+    return { statusCode: 0 }
 }
 
 async function update(id, body) {

@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update,updateMany as _updateMany, remove as _remove } from '../services/orders.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, updateMany as _updateMany, remove as _remove, excelImport as _excelImport } from '../services/orders.service.js';
 
 async function get(req, res, next) {
     try {
@@ -55,6 +55,22 @@ async function create(req, res, next) {
     }
 }
 
+export async function excelImport(req, res, next) {
+    try {
+        res.json(await _excelImport(req));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        }
+    }
+}
+
 async function update(req, res, next) {
     try {
         res.json(await _update(req.params.id, req.body));
@@ -83,7 +99,7 @@ async function remove(req, res, next) {
         }
         else if (error.code === "P2003") {
             res.statusCode = 200;
-            res.json({statusCode: 1, message: "Child record Exists"})
+            res.json({ statusCode: 1, message: "Child record Exists" })
         }
         console.log(`Error`, error.message);
     }

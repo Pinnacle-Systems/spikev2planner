@@ -1,9 +1,12 @@
 import { Router } from 'express';
 const router = Router();
-import { get, getOne, getSearch, create, update, remove, updateMany } from '../controllers/orders.controller.js';
+import { get, getOne, getSearch, create, update, remove, updateMany, excelImport } from '../controllers/orders.controller.js';
+import { receiveOnlyMulter } from '../utils/multerUpload.js';
 
 
 router.post('/', create);
+
+router.post('/excelImport', receiveOnlyMulter.single('file'), excelImport);
 
 router.get('/', get);
 

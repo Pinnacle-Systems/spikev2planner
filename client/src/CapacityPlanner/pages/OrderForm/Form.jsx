@@ -7,6 +7,9 @@ import axios from "axios";
 import { toasterTrigger } from "../../../utils/helper";
 import { ORDERS_API } from "../../../Constants/Api"
 import moment from "moment";
+import Modal from "../../../Components/Modal";
+import ExcelImport from "./ExcelImport";
+import OrderSizeColorWiseDetails from "./OrderSizeColorWiseDetails";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -18,6 +21,8 @@ function Form({ id, setId }) {
     const [style, setStyle] = useState("");
     const [quantity, setQuantity] = useState("");
     const [sam, setSam] = useState("");
+    const [excelImportForm, setExcelImportForm] = useState(false);
+    const [orderSizeColorWiseDetails, setOrderSizeColorWiseDetails] = useState([]);
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -60,6 +65,7 @@ function Form({ id, setId }) {
                         setQuantity(result.data.data.quantity);
                         setSam(result.data.data.sam);
                         setStyle(result.data.data.style);
+                        setOrderSizeColorWiseDetails(result?.data?.data?.OrderSizeColorWiseDetails || []);
                     }
                 } else {
                     console.log(result);
@@ -101,62 +107,85 @@ function Form({ id, setId }) {
         setSam("");
         setStyle("");
         setId("");
+        setOrderSizeColorWiseDetails([])
     }
 
     return (
-        <div className="flex items-center h-full w-full">
-            <form className="mx-auto w-[600px] mt-2 border h-[400px]" onSubmit={handleSubmit}>
-                <header className="text-xl w-full text-gray-700 text-center font-bold flex justify-between  items-center p-1">
-                    <div></div>
-                    <span>
-                        Order Details Form
-                    </span>
-                    <button
-                        className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
-                        type="button"
-                        onClick={resetForm}
-                    >
-                        New
-                    </button>
-                </header>
-                <div className="grid md:grid-cols-2 gap-1 w-full">
-                    <FloatingLabelInput label={"Order no"} autoFocus={true} value={orderNo} setValue={setOrderNo} />
-                    <FloatingLabelInput label={"Buyer"} value={buyer} setValue={setBuyer} />
-                    <FloatingLabelInput label={"Delivery Date"} type={"date"} value={dDate} setValue={setDDate} />
-                    <FloatingLabelInput label={"Style Ref."} value={style} setValue={setStyle} />
-                    <FloatingLabelInput label={"Quantity"} type={"number"} value={quantity} setValue={setQuantity} />
-                    <FloatingLabelInput label={"Sam"} value={sam} type={"number"} setValue={setSam} />
-                </div>
-                <div className="flex md:justify-evenly">
-                    <button
-                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded "
-                        type="button"
-                        onClick={() => navigate(-1)}
-                    >
-                        Back
-                    </button>
-
-                    {id ?
-
+        <>
+            <Modal isOpen={excelImportForm} onClose={() => { setExcelImportForm(false) }}>
+                <ExcelImport />
+            </Modal>
+            <Modal isOpen={excelImportForm} onClose={() => { setExcelImportForm(false) }}>
+                <ExcelImport />
+            </Modal>
+            <div className="flex mt-5 h-full w-full">
+                <form className="mx-auto w-[90%] mt-2 border h-[400px]" onSubmit={handleSubmit}>
+                    <header className="text-xl w-full text-gray-700 text-center font-bold flex justify-between  items-center p-1">
+                        <div></div>
+                        <span>
+                            Order Details Form
+                        </span>
                         <button
-                            className="bg-red-600 hover:bg-red-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
                             type="button"
-                            onClick={handleDelete}
+                            onClick={resetForm}
                         >
-                            Delete
+                            New
                         </button>
-                        :
-                        ""}
-                    <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-1 rounded"
-                        type="submit"
-                    >
-                        Submit
-                    </button>
-                </div>
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            type="button"
+                            onClick={() => { setExcelImportForm(true) }}
+                        >
+                            Order Import
+                        </button>
+                        <button
+                            className="bg-red-400 hover:bg-red-400 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            type="button"
+                            onClick={() => { setExcelImportForm(true) }}
+                        >
+                            Production Data
+                        </button>
+                    </header>
+                    <div className="grid md:grid-cols-2 gap-1 w-full">
+                        <FloatingLabelInput label={"Order no"} autoFocus={true} value={orderNo} setValue={setOrderNo} />
+                        <FloatingLabelInput label={"Buyer"} value={buyer} setValue={setBuyer} />
+                        <FloatingLabelInput label={"Delivery Date"} type={"date"} value={dDate} setValue={setDDate} />
+                        <FloatingLabelInput label={"Style Ref."} value={style} setValue={setStyle} />
+                        <FloatingLabelInput label={"Quantity"} type={"number"} value={quantity} setValue={setQuantity} />
+                        <FloatingLabelInput label={"Sam"} value={sam} type={"number"} setValue={setSam} />
+                    </div>
+                    <OrderSizeColorWiseDetails orderSizeColorWiseDetails={orderSizeColorWiseDetails} />
+                    <div className="flex md:justify-evenly mt-3">
+                        <button
+                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded "
+                            type="button"
+                            onClick={() => navigate(-1)}
+                        >
+                            Back
+                        </button>
 
-            </form>
-        </div>
+                        {id ?
+
+                            <button
+                                className="bg-red-600 hover:bg-red-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                                type="button"
+                                onClick={handleDelete}
+                            >
+                                Delete
+                            </button>
+                            :
+                            ""}
+                        <button
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-1 rounded"
+                            type="submit"
+                        >
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </>
 
     );
 }

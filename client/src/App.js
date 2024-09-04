@@ -4,7 +4,7 @@ import './App.scss';
 
 import CapacityPlanner from './CapacityPlanner/CapacityPlanner';
 
-import { OrderForm, UnitForm, HolidayCalendar, PlannedOrdersReport, UnPlannedOrdersReport} from './CapacityPlanner/pages';
+import { OrderForm, UnitForm, HolidayCalendar, PlannedOrdersReport, UnPlannedOrdersReport } from './CapacityPlanner/pages';
 
 
 function App() {
@@ -12,11 +12,11 @@ function App() {
     <HashRouter>
       <Routes>
         <Route path={"/"} element={<CapacityPlanner />} />
-        <Route path={"/orders"} element={<OrderForm/>} />
-        <Route path={"/unitForm"} element={<UnitForm/>} />
-        <Route path={"/holidayForm"} element={<HolidayCalendar/>} />
-        <Route path={"/plannedOrdersReport"} element={<PlannedOrdersReport/>} />
-        <Route path={"/unPlannedOrdersReport"} element={<UnPlannedOrdersReport/>} />
+        <Route path={"/orders"} element={<OrderForm />} />
+        <Route path={"/unitForm"} element={<UnitForm />} />
+        <Route path={"/holidayForm"} element={<HolidayCalendar />} />
+        <Route path={"/plannedOrdersReport"} element={<PlannedOrdersReport />} />
+        <Route path={"/unPlannedOrdersReport"} element={<UnPlannedOrdersReport />} />
       </Routes>
     </HashRouter >
   );
