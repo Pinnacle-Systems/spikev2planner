@@ -34,6 +34,10 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
                     <b> Incharge</b>
                     <div> {line.inCharge} </div>
                 </div>
+                <div className='grid grid-cols-2 items-center'>
+                    <b> Style Type</b>
+                    <div className='capitalize'> {line.styleType} </div>
+                </div>
             </div>
         </td>
     )

@@ -6,6 +6,7 @@ import moment from 'moment';
 const OrderLineDetails = () => {
     const { currentOrder: order, currentLine, holidays } = useContext(CapacityPlannerContext)
     const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(currentLine?.id))
+    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).reduce((a, c) => a + parseFloat(c.productionQty), 0)
     return (
         <div className='h-[320px] w-[350px] p-7 mt-4 text-center z-50'>
             <div className=' font-bold mb-1 bg-green-300'> Order Details </div>
@@ -45,6 +46,10 @@ const OrderLineDetails = () => {
                 <div className='grid grid-cols-2'>
                     <b className='border border-black'> Delivery Date</b>
                     <div className='border border-black'> {moment.utc(order.dDate).format("DD-MM-YYYY")} </div>
+                </div>
+                <div className='grid grid-cols-2'>
+                    <b className='border border-black'> Production Qty</b>
+                    <div className='border border-black'> {totalLineWiseProductionQty} </div>
                 </div>
             </div>
         </div>

@@ -8,7 +8,7 @@ import { NATIONAL_HOLIDAY_COLOR, SUNDAY_COLOR } from '../../../Constants/colors'
 
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { dateDiffInDays, getCurrentCapacity, isHoliday, isSunday, isNationalHoliday } from './helper';
-import { sortWeekDaysIfLastWeek, getTotalPcsInLineOrder } from '../../helper';
+import { sortWeekDaysIfLastWeek, getTotalPcsInLineOrder, styleTypeMatchingWarningMessage } from '../../helper';
 import { toast } from 'react-toastify';
 
 const MAX_SPEED = 200;
@@ -25,15 +25,12 @@ const Calendar = () => {
         setCurrentDate,
         lines,
         manualSelect, setManualSelect,
-        setPreviousOrders, previousOrders,
+        setPreviousOrders, previousOrders, productionMode
     } = useContext(CapacityPlannerContext)
 
     const [currentMonthDays, setCurrentMonthDays] = useState([]);
 
     const [selectedStarted, setSelectedStarted] = useState(false);
-
-    let lastSelectedMonth = localStorage.getItem("lastSelectedMonth");
-    console.log(lastSelectedMonth, "lastSelectedMonth");
 
     useEffect(() => {
         let startDate = new Date();
@@ -44,22 +41,6 @@ const Calendar = () => {
         endDate.setFullYear(currentYear, currentMonth + 1, 0);
         setCurrentMonthDays(getDateArray(startDate, endDate));
     }, [month])
-
-    // useEffect(() => {
-    //     localStorage.getItem("lastSelectedMonth", "lastSelectedmonth")
-    //     if (localStorage.getItem("lastSelectedMonth")) {
-    //         let startDate = new Date();
-    //         let endDate = new Date();
-    //         let localMonth = localStorage.getItem("lastSelectedMonth")
-    //         localStorage.removeItem("lastSelectedMonth");
-    //         const currentYear = new Date(localMonth).getFullYear();
-    //         const currentMonth = new Date(localMonth).getMonth();
-    //         startDate.setFullYear(currentYear, currentMonth, 1);
-    //         endDate.setFullYear(currentYear, currentMonth + 1, 0);
-    //         setCurrentMonthDays(getDateArray(startDate, endDate));
-    //     }
-    // }, [localStorage.getItem("lastSelectedMonth")])
-
 
     async function drop(ev, date, line) {
         ev.preventDefault();
@@ -134,7 +115,6 @@ const Calendar = () => {
         previousEvent = currentEvent
         previousSpeed = speed;
         speedRef.current = speed;
-
     }, 100);
 
     const getHolidayAbbreviation = (date) => {
@@ -159,7 +139,6 @@ const Calendar = () => {
     }
 
     function getMaxDays(orders, currentOrder, currentLine) {
-        console.log(orders, "getMaxDays");
         const balancePcs = getBalanceQuantityMain(orders, currentOrder);
         const lineCapacity = getCurrentCapacity(currentLine.efficiency, currentLine.capacity);
         return Math.ceil(balancePcs / lineCapacity);
@@ -169,6 +148,7 @@ const Calendar = () => {
         if (!manualSelectAllowed(date, lineObj)) return
         setCurrentLine(lineObj);
         if (!manualSelect) return
+        if (!styleTypeMatchingWarningMessage(lineObj, currentOrder)) return
         if (isNationalHoliday(date, holidays)) return
         setSelectedStarted(true);
         const line = lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
@@ -186,7 +166,6 @@ const Calendar = () => {
         const balancePcs = getBalanceQuantityMain(newOrders, currentOrder)
 
         maxDays.current = getMaxDays(newOrders, currentOrder, lineObj)
-        console.log(speedRef.current, "speed");
 
         if (parseInt(balancePcs) === 0 && (linesFromOrders.length === linesLocal.length)) {
             // toast.error("No Balance Qty ", { position: "top-center" });
@@ -205,6 +184,7 @@ const Calendar = () => {
     const handleOnnMouseOver = (lineObj, date) => {
         if (!manualSelectAllowed(date, lineObj)) return
         if (manualSelect && selectedStarted) {
+            if (!styleTypeMatchingWarningMessage(lineObj, currentOrder)) return
             if (isNationalHoliday(date, holidays)) return
             const currentOrderInOrders = getCurrentOrder(currentOrder.id)
             const line = currentOrderInOrders.lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
@@ -222,7 +202,6 @@ const Calendar = () => {
                 // toast.error("No Balance Qty ", { position: "top-center" });
                 return
             }
-            console.log(speedRef.current, "speed");
 
             if (speedRef.current > MAX_SPEED) {
                 toast.info("Don't do so fast ...! ", { position: "top-left" });
@@ -347,7 +326,7 @@ const Calendar = () => {
                                     // }}
                                     style={{
                                         backgroundColor:
-                                            (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : undefined)
+                                            (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : undefined),
                                     }}
                                 >
                                     <div className='onShow-holiday'>
@@ -365,6 +344,7 @@ const Calendar = () => {
                                                         // {
                                                         //     manualSelect ? "" :
                                                         <OrderItem
+                                                            key={productionMode}
                                                             date={date}
                                                             width={`${orderDaysInCurrentMonth(date, line, getOrderIfOrderPlacedInCurrentDate(date, line)) * 110}%`}
                                                             tooltip={orderDaysInCurrentMonth(date, line, getOrderIfOrderPlacedInCurrentDate(date, line)) >= 10 ? null : (new Date(date).getDate() > 25 ? "left" : "right")}

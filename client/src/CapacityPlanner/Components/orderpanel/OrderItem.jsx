@@ -5,13 +5,17 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { adjust, isCurrentOrderLineActive } from '../../helper';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, date = null }) => {
-    const { manualSelect, setOpenOrderDetail, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine } = useContext(CapacityPlannerContext)
+    const { manualSelect, setOpenOrderDetail, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
         ev.dataTransfer.setData("line", JSON.stringify(line));
         setCurrentDraggedLine(line)
     }
     const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(line?.id))
+    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
+    const productionPercent = Math.floor(totalLineWiseProductionQty / parseFloat(order.quantity) * 100);
+    const balProductionPercent = 100 - productionPercent;
+    console.log(order, productionPercent, balProductionPercent)
     return (
         <>
             {order.lines.length !== 0
@@ -33,7 +37,12 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 " : "") : ""}`}
                             style={{
-                                backgroundColor: isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color,
+                                background: productionMode
+                                    ?
+                                    productionPercent > 0 ?
+                                        `linear-gradient(to right, green, green ${productionPercent}%, #D3D3D3 , #D3D3D3 ${balProductionPercent}%)`
+                                        : '#D3D3D3'
+                                    : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
                                 width: width,
                                 fontSize: "10px",
                             }}
@@ -77,6 +86,10 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     <b> Delivery Date</b>
                                     <div> {moment.utc(order.dDate).format("DD-MM-YYYY")} </div>
                                 </div>
+                                <div className='grid grid-cols-2'>
+                                    <b> Production Qty</b>
+                                    <div> {totalLineWiseProductionQty} </div>
+                                </div>
                             </div>
                             <strong className='text-xs font-bold relative z-20'> {order.orderNo} </strong>
                         </div>
@@ -105,7 +118,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                     <td>
                         {order.quantity}
                     </td>
-                    <td style={{ backgroundColor: order.color}}>
+                    <td style={{ backgroundColor: order.color }}>
                     </td>
                 </tr>
             }

@@ -11,7 +11,8 @@ export async function importOrders(importedData) {
         "size",
         "color",
         "qty",
-        'sam'
+        'sam',
+        "styletype"
     ]
     const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
     const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
@@ -19,6 +20,7 @@ export async function importOrders(importedData) {
     for (let [key, val] of Object.entries(orderDetails)) {
         orderDetailsArr.push({
             orderNo: key,
+            styleType: val[0]?.styletype,
             style: val[0]?.styleno,
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,

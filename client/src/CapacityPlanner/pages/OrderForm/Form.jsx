@@ -12,6 +12,8 @@ import ProductionExcelImport from "./ProductionExcelImport";
 import OrderExcelImport from "./OrderExcelImport";
 
 import OrderSizeColorWiseDetails from "./OrderSizeColorWiseDetails";
+import FloatingLabelSelect from "../../../Components/FloatingLabelSelect";
+import { styleTypeOptions } from "../../../utils/selectOptions";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -26,13 +28,14 @@ function Form({ id, setId }) {
     const [productionExcelImportForm, setProductionExcelImportForm] = useState(false);
     const [orderExcelImportForm, setOrderExcelImportForm] = useState(false);
     const [orderSizeColorWiseDetails, setOrderSizeColorWiseDetails] = useState([]);
+    const [styleType, setStyleType] = useState('basic')
 
     const handleSubmit = (event) => {
         event.preventDefault();
         axios({
             method: `${id ? "put" : "post"}`,
             url: BASE_URL + ORDERS_API + `${id ? "/" + id : ""}`,
-            data: { orderNo, buyer, dDate, style, quantity, sam }
+            data: { orderNo, buyer, dDate, style, quantity, sam, styleType }
         }).then((result) => {
             console.log("result", result.data.response);
             if (result.status === 200 || result.status === 304) {
@@ -60,14 +63,15 @@ function Form({ id, setId }) {
                 method: 'get',
                 url: BASE_URL + ORDERS_API + `/${id}`
             }).then((result) => {
-                if (result.status === 200) {
-                    if (result.data.statusCode === 0) {
-                        setBuyer(result.data.data.buyer);
-                        setDDate(moment.utc(result.data.data.dDate).format("YYYY-MM-DD"));
-                        setOrderNo(result.data.data.orderNo);
-                        setQuantity(result.data.data.quantity);
-                        setSam(result.data.data.sam);
-                        setStyle(result.data.data.style);
+                if (result?.status === 200) {
+                    if (result?.data?.statusCode === 0) {
+                        setBuyer(result?.data?.data.buyer);
+                        setDDate(moment.utc(result?.data?.data?.dDate).format("YYYY-MM-DD"));
+                        setOrderNo(result?.data?.data?.orderNo);
+                        setQuantity(result?.data?.data?.quantity);
+                        setSam(result?.data?.data?.sam);
+                        setStyle(result?.data?.data?.style);
+                        setStyleType(result?.data?.data?.styleType);
                         setOrderSizeColorWiseDetails(result?.data?.data?.OrderSizeColorWiseDetails || []);
                     }
                 } else {
@@ -110,7 +114,8 @@ function Form({ id, setId }) {
         setSam("");
         setStyle("");
         setId("");
-        setOrderSizeColorWiseDetails([])
+        setOrderSizeColorWiseDetails([]);
+        setStyleType('');
     }
 
     return (
@@ -157,6 +162,7 @@ function Form({ id, setId }) {
                         <FloatingLabelInput label={"Style Ref."} value={style} setValue={setStyle} />
                         <FloatingLabelInput label={"Quantity"} type={"number"} value={quantity} setValue={setQuantity} />
                         <FloatingLabelInput label={"Sam"} value={sam} type={"number"} setValue={setSam} />
+                        <FloatingLabelSelect label={"Style Type"} value={styleType} setValue={setStyleType} options={styleTypeOptions} />
                     </div>
                     <OrderSizeColorWiseDetails orderSizeColorWiseDetails={orderSizeColorWiseDetails} />
                     <div className="flex md:justify-evenly mt-3">

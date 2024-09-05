@@ -71,6 +71,15 @@ async function getSearch(req) {
     return { statusCode: 0, data: data };
 }
 
+function convertLineIntoDbFormat(line) {
+    let newLine = {};
+    newLine["name"] = line["name"];
+    newLine["styleType"] = line["styleType"];
+    newLine["inCharge"] = line["inCharge"];
+    newLine["capacity"] = parseInt(line["capacity"]);
+    newLine["efficiency"] = parseInt(line["efficiency"]);
+    return newLine
+}
 
 async function create(body) {
     const { name, location, lines } = await body
@@ -81,9 +90,7 @@ async function create(body) {
             line: {
                 createMany: {
                     data: lines.map(line => {
-                        line["capacity"] = parseInt(line["capacity"]);
-                        line["efficiency"] = parseInt(line["efficiency"]);
-                        return exclude(line, ["unitId"])
+                        return convertLineIntoDbFormat(line)
                     })
                 }
             }
@@ -100,13 +107,6 @@ async function update(id, body) {
         },
     })
     if (!dataFound) return NoRecordFound("unit");
-    const updatingRecords = []
-    lines.forEach(line => {
-        line["capacity"] = parseInt(line["capacity"]);
-        line["efficiency"] = parseInt(line["efficiency"]);
-        let finLine = exclude(line, ["unitId"])
-        updatingRecords.push({ where: { id: finLine.id ? parseInt(finLine.id) : 0 }, create: finLine })
-    });
 
     const data = await prisma.unit.update({
         where: {
@@ -128,13 +128,13 @@ async function update(id, body) {
                 where: {
                     id: parseInt(l.id)
                 },
-                data: exclude(l, ["id"])
+                data: convertLineIntoDbFormat(l)
             })
         } else {
             await prisma.line.create({
                 data: {
                     unitId: parseInt(id),
-                    ...l
+                    ...convertLineIntoDbFormat(l)
                 }
             })
         }

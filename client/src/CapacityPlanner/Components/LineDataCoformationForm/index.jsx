@@ -1,7 +1,7 @@
 import React, { useContext, } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-import { orderAssignment, getEndDate, endDateLoopFinder, findDays, findEndDate } from '../../helper';
+import { orderAssignment, getEndDate, findDays, findEndDate } from '../../helper';
 
 import { GridForm } from './GridForm';
 
@@ -22,10 +22,8 @@ const LineDataConformationForm = () => {
     let pcs = currentOrder.quantity;
     const days = findDays(pcs, currentLine);
     let endDate = getEndDate(currentDate, days);
-    console.log(endDate, "endDate")
     // endDate = endDateLoopFinder(currentDate, endDate, holidays);
     endDate = findEndDate(currentDate, days, holidays);
-    console.log(endDate, "endDate")
     orderAssignment(orders, setOrders, currentOrder, currentLine, pcs, days, currentDate, endDate, holidays)
   }
 
@@ -34,13 +32,13 @@ const LineDataConformationForm = () => {
     const newOrders = [...orders]
     newOrders[currentOrderIndex]["lines"] = newOrders[currentOrderIndex]["lines"].filter(line => parseInt(line.id) !== parseInt(lineObj.id));
     setOrders(newOrders);
-}
+  }
 
   const handleManualSelect = async () => {
     removeOrderFromLine(currentOrder, currentDraggedLine)
     setLineEntryConformation(false);
     setManualSelect(true);
-    }
+  }
 
   return (
     <>

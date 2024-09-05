@@ -1,4 +1,6 @@
 import moment from "moment";
+import { toast } from "react-toastify";
+import { STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE } from "./constants";
 
 export function adjust(color, amount) {
     return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
@@ -37,6 +39,7 @@ export function getBalancePcs(orderQuantity, totalSplitedPcs) {
 }
 
 export const orderAssignment = (orders, setOrders, order, line, pcs, days, startDate, endDate, holidays) => {
+    if (!styleTypeMatchingWarningMessage(line, order)) return
     let orderIndex = findItemIndex(orders, order.id);
     const newOrders = structuredClone(orders);
     let linesLocal = filterItem(newOrders[orderIndex]["lines"], line.id);
@@ -64,8 +67,6 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
             let loopOrderDays = findDays(currentOrderCurrentLine.pcs, line);
             let loopOrderendDate = getEndDate(startDate, loopOrderDays);
             loopOrderendDate = endDateLoopFinder(startDate, loopOrderendDate, holidays);
-            console.log(matchingDays, "matching days", getDateFromDateTimeFormat(startDate), "startDate", loopOrder.orderNo, "orderNo")
-            console.log(orders, "orders")
             orderAssignment(newOrders, setOrders, loopOrder, line, currentOrderCurrentLine.pcs, loopOrderDays, startDate, loopOrderendDate, holidays)
         }
         return matchingDays
@@ -131,11 +132,11 @@ export function findEndDate(startDate, days, holidays) {
     localEndDate.setDate(localEndDate.getDate() + (days - 1));
     let nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
     console.log(nationalDays, localStartDate, localEndDate, days)
-    if(nationalDays === 0){
+    if (nationalDays === 0) {
         return localEndDate
     }
     localEndDate.setDate(localEndDate.getDate() + 1)
-    return findEndDate(localEndDate, nationalDays, holidays); 
+    return findEndDate(localEndDate, nationalDays, holidays);
 }
 
 
@@ -206,4 +207,12 @@ export function sortWeekDaysIfLastWeek(currentMonthDays) {
         weekArray = [...new Set(weekArray)]
     }
     return weekArray
+}
+
+export function styleTypeMatchingWarningMessage(line, order) {
+    if (line?.styleType !== order?.styleType) {
+        toast.warning(STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE)
+        return false
+    }
+    return true
 }

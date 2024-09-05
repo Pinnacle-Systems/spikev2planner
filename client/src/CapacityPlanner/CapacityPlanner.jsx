@@ -49,6 +49,8 @@ const CapacityPlanner = () => {
     const [selectedUnit, setSelectedUnit] = useState("");
     const [holidays, setHolidays] = useState([]);
 
+    const [productionMode, setProductionMode] = useState(false);
+
     const [lines, setLines] = useState([]);
 
     const retrieveLines = useCallback(() => {
@@ -125,7 +127,8 @@ const CapacityPlanner = () => {
                 activeLineOrder, setActiveLineOrder,
                 loading, setLoading,
                 previousOrders, setPreviousOrders,
-                currentDraggedLine, setCurrentDraggedLine
+                currentDraggedLine, setCurrentDraggedLine,
+                productionMode, setProductionMode
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -177,7 +180,7 @@ const CapacityPlanner = () => {
                     }
                 </div>
                 <div className='w-5/6 float-right overflow-auto h-screen'>
-                    <SelectionPanel month={month} setMonth={setMonth} setSelectedUnit={setSelectedUnit} />
+                    <SelectionPanel />
                     <Calendar />
                 </div>
             </div>

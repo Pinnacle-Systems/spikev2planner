@@ -5,13 +5,14 @@ import { DELETE, PLUS } from "../../../utils/icons"
 import axios from 'axios';
 import { LINES_API } from '../../../Constants/Api';
 import { toast } from 'react-toastify';
+import FloatingLabelSelect from '../../../Components/FloatingLabelSelect';
+import { styleTypeOptions } from '../../../utils/selectOptions';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 
 const LineDetails = ({ lines, setLines }) => {
-    const handleInputChange = (event, index, field) => {
-        const value = event.target.value;
+    const handleInputChange = (value, index, field) => {
         const newLines = [...lines];
         newLines[index][field] = value;
         setLines(newLines);
@@ -52,7 +53,7 @@ const LineDetails = ({ lines, setLines }) => {
             toast.error("Server Down", { autoClose: 5000 });
         });
     }
-    
+
     return (
         <div className='h-full'>
             <div className='p-1 flex justify-between text-sm'>
@@ -84,6 +85,7 @@ const LineDetails = ({ lines, setLines }) => {
                             <thead className='sticky top-0 bg-gray-100'>
                                 <tr className='text-sm'>
                                     <th className="table-data">Line Name</th>
+                                    <th className="table-data">Style Type</th>
                                     <th className="table-data">Incharge</th>
                                     <th className="table-data">Max Capacity / per day(piece)</th>
                                     <th className="table-data">Efficiency (%)</th>
@@ -100,9 +102,12 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.name}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "name")
+                                                    handleInputChange(event.target.value, index, "name")
                                                 }
                                             />
+                                        </td>
+                                        <td>
+                                            <FloatingLabelSelect value={row.styleType} setValue={(value) => [handleInputChange(value, index, "styleType")]} options={styleTypeOptions} />
                                         </td>
                                         <td>
                                             <input
@@ -110,7 +115,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.inCharge}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "inCharge")
+                                                    handleInputChange(event.target.value, index, "inCharge")
                                                 }
                                             />
                                         </td>
@@ -121,7 +126,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.capacity}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "capacity")
+                                                    handleInputChange(event.target.value, index, "capacity")
                                                 }
                                             />
                                         </td>
@@ -133,7 +138,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.efficiency}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "efficiency")
+                                                    handleInputChange(event.target.value, index, "efficiency")
                                                 }
                                             />
                                         </td>
@@ -147,8 +152,8 @@ const LineDetails = ({ lines, setLines }) => {
                                             />
                                         </td>
                                         <td>
-                                            <button tabIndex={-1} type='button' 
-                                            onClick={() => { row.id ?  handleDelete(row.id) : handleDeleteRow(index)}}>{DELETE}</button>
+                                            <button tabIndex={-1} type='button'
+                                                onClick={() => { row.id ? handleDelete(row.id) : handleDeleteRow(index) }}>{DELETE}</button>
                                         </td>
                                     </tr>
                                 ))}

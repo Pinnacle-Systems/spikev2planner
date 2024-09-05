@@ -5,6 +5,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import saveLogo from "../../../assets/pngwing.com (10).png"
+import ToggleButton from '../../../Components/ToggleButton';
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -15,6 +16,7 @@ const SelectionPanel = () => {
         month, setMonth,
         selectedUnit, setSelectedUnit,
         manualSelect, setLoading,
+        productionMode, setProductionMode,
     } = useContext(CapacityPlannerContext)
     const [units, setUnits] = useState([]);
 
@@ -50,7 +52,7 @@ const SelectionPanel = () => {
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
         });
-    }, [orders]);
+    }, [orders, month]);
 
     useEffect(() => setSelectedUnit(sessionStorage.getItem("selectedUnit") ? sessionStorage.getItem("selectedUnit") : ""), [setSelectedUnit]);
 
@@ -69,6 +71,9 @@ const SelectionPanel = () => {
             </div>
             <h2 className='bg-gray-50 p-1 text-lg'>
                 Capacity Planner
+            </h2>
+            <h2 className='bg-gray-50 p-1 text-lg'>
+                <ToggleButton label={"Production"} value={productionMode} setValue={setProductionMode} />
             </h2>
             {manualSelect ? "" :
                 <button className='px-1 text-base flex bg-gray-100 rounded-md'
