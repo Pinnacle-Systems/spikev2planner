@@ -5,13 +5,14 @@ import { ORDERS_API } from '../../../Constants/Api';
 import { toast } from 'react-toastify';
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
-const ExcelImport = () => {
+const ProductionExcelImport = () => {
     const [file, setFile] = useState('');
 
     const handleSubmit = (event) => {
         event.preventDefault();
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('importType', 'production');
         axios({
             method: 'post',
             url: BASE_URL + ORDERS_API + '/excelImport',
@@ -22,7 +23,7 @@ const ExcelImport = () => {
                 if (result.data.statusCode === 0) {
                     window.location.reload();
                     localStorage.setItem("res", "success");
-                    localStorage.setItem("success", `Order Saved Successfully!!!`);
+                    localStorage.setItem("success", `Production Imported Successfully!!!`);
                 }
                 else if (result.data.statusCode === 1) {
                     toast.warning(result.data.message, { autoClose: 5000 })
@@ -37,7 +38,7 @@ const ExcelImport = () => {
     };
     return (
         <div className="max-w-md mx-auto p-4 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">Upload Excel File</h2>
+            <h2 className="text-2xl font-semibold mb-4 bg-green-600 rounded-md p-1 text-white">Upload Production Excel File</h2>
             <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                     <label htmlFor="file-upload" className="block text-gray-700 text-sm font-bold mb-2">
@@ -53,7 +54,7 @@ const ExcelImport = () => {
                 </div>
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600"
+                    className="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-600"
                 >
                     Upload
                 </button>
@@ -62,4 +63,4 @@ const ExcelImport = () => {
     )
 }
 
-export default ExcelImport
+export default ProductionExcelImport

@@ -1,13 +1,5 @@
-export function convertToImportFormat(importedData) {
-    const headerNames = ["orderno",
-        "styleno",
-        "buyer",
-        "deliverydate",
-        "size",
-        "color",
-        "qty",
-        'sam'
-    ]
+export function convertToImportFormat(importedData, headerNames) {
+
     const transformedData = importedData.map((row) => {
         let newRow = {};
         const keys = Object.keys(row)

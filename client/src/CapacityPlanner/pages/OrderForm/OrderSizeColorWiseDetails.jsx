@@ -16,6 +16,12 @@ const OrderSizeColorWiseDetails = ({ orderSizeColorWiseDetails }) => {
                         <th>
                             Qty
                         </th>
+                        <th>
+                            Prod.Qty
+                        </th>
+                        <th>
+                            Bal.Qty
+                        </th>
                     </tr>
                 </thead>
                 <tbody>
@@ -29,6 +35,12 @@ const OrderSizeColorWiseDetails = ({ orderSizeColorWiseDetails }) => {
                             </td>
                             <td className="table-data">
                                 {order?.qty}
+                            </td>
+                            <td className="table-data">
+                                {order?.productionQty}
+                            </td>
+                            <td className="table-data">
+                                {order?.balanceQty}
                             </td>
                         </tr>
                     )}

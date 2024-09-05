@@ -1,9 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
-import { convertToImportFormat } from '../utils/excelDataTransform.js';
 import { read, utils } from "xlsx";
-import _ from 'lodash';
-import { convertDateDisplayFormatToDBFormat, excelDateToJSDate } from '../utils/helper.js';
+import { importOrders, importProduction } from '../queries/orders.js';
 
 const prisma = new PrismaClient()
 
@@ -53,6 +51,14 @@ async function getOne(id) {
             OrderSizeColorWiseDetails: true
         }
     })
+    data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
+    select orders.orderno, det.size, det.color, sum(det.qty) as qty, sum(productionDetails.qty) as productionQty, sum(det.qty) - sum(productionDetails.qty) as balanceQty
+from OrderSizeColorWiseDetails det
+join orders on orders.id = det.ordersId
+left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
+where orders.orderno = ${data.orderNo}
+group by orders.orderno, det.size, det.color
+    `
     if (!data) return NoRecordFound("orders");
     return { statusCode: 0, data };
 }
@@ -117,40 +123,19 @@ async function create(body) {
 }
 
 export async function excelImport(req) {
+    const { importType } = req.body;
     let file = new Uint8Array(req.file.buffer)
     let workbook = read(file, { type: "array" });
     var sheet_name_list = workbook.SheetNames;
     const importedData = utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-    const headerNames = importedData;
-    const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
-    const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
-    const orderDetailsArr = [];
-    for (let [key, val] of Object.entries(orderDetails)) {
-        orderDetailsArr.push({
-            orderNo: key,
-            style: val[0]?.styleno,
-            buyer: val[0]?.buyer,
-            sam: val[0]?.sam,
-            dDate: new Date(excelDateToJSDate(val[0]?.deliverydate)),
-            quantity: val.reduce((a, c) => a + parseInt(c.qty), 0),
-            OrderSizeColorWiseDetails: {
-                create: val.map(i => ({
-                    size: i.size,
-                    color: i.color,
-                    qty: parseInt(i.qty)
-                }))
-            }
-        })
+    if (importType === "order") {
+        await importOrders(importedData)
+        return { statusCode: 0 }
     }
-    await prisma.$transaction(async (tx) => {
-        for (let index = 0; index < orderDetailsArr.length; index++) {
-            const order = orderDetailsArr[index];
-            await tx.orders.create({
-                data: order
-            })
-        }
-    })
-    return { statusCode: 0 }
+    if (importType === "production") {
+        await importProduction(importedData)
+        return { statusCode: 0 }
+    }
 }
 
 async function update(id, body) {
@@ -181,15 +166,7 @@ async function updateMany(req) {
             },
             data: {
                 lines: {
-                    // connectOrCreate: {
-                    //     data:
-                    //         order.lines.map(line => {
-                    //             return { id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: parseInt(line.days) }
-
-                    //         })
-                    // }
                     deleteMany: {},
-                    // connectOrCreate:{},
                     createMany: {
                         data:
                             order.lines.map(line => {
@@ -201,22 +178,6 @@ async function updateMany(req) {
             }
         })
     })
-
-    // const dataFound = await prisma.orders.findUnique({
-    //     where: {
-    //         id: parseInt(id)
-    //     },
-    // })
-    // if (!dataFound) return NoRecordFound("orders");
-    // const data = await prisma.orders.update({
-    //     where: {
-    //         id: parseInt(id),
-    //     },
-    //     data: {
-    //         orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam, 
-    //         lines : lines.map(line => {return {id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: new Date(line.days)}})
-    //     },
-    // })
     return { statusCode: 0, data: "Updated Successfull" };
 };
 

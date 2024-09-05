@@ -8,7 +8,9 @@ import { toasterTrigger } from "../../../utils/helper";
 import { ORDERS_API } from "../../../Constants/Api"
 import moment from "moment";
 import Modal from "../../../Components/Modal";
-import ExcelImport from "./ExcelImport";
+import ProductionExcelImport from "./ProductionExcelImport";
+import OrderExcelImport from "./OrderExcelImport";
+
 import OrderSizeColorWiseDetails from "./OrderSizeColorWiseDetails";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -21,7 +23,8 @@ function Form({ id, setId }) {
     const [style, setStyle] = useState("");
     const [quantity, setQuantity] = useState("");
     const [sam, setSam] = useState("");
-    const [excelImportForm, setExcelImportForm] = useState(false);
+    const [productionExcelImportForm, setProductionExcelImportForm] = useState(false);
+    const [orderExcelImportForm, setOrderExcelImportForm] = useState(false);
     const [orderSizeColorWiseDetails, setOrderSizeColorWiseDetails] = useState([]);
 
     const handleSubmit = (event) => {
@@ -112,11 +115,11 @@ function Form({ id, setId }) {
 
     return (
         <>
-            <Modal isOpen={excelImportForm} onClose={() => { setExcelImportForm(false) }}>
-                <ExcelImport />
+            <Modal isOpen={productionExcelImportForm} onClose={() => { setProductionExcelImportForm(false) }}>
+                <ProductionExcelImport />
             </Modal>
-            <Modal isOpen={excelImportForm} onClose={() => { setExcelImportForm(false) }}>
-                <ExcelImport />
+            <Modal isOpen={orderExcelImportForm} onClose={() => { setOrderExcelImportForm(false) }}>
+                <OrderExcelImport />
             </Modal>
             <div className="flex mt-5 h-full w-full">
                 <form className="mx-auto w-[90%] mt-2 border h-[400px]" onSubmit={handleSubmit}>
@@ -133,16 +136,16 @@ function Form({ id, setId }) {
                             New
                         </button>
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold hover:rounded p-1 disabled:bg-blue-300"
                             type="button"
-                            onClick={() => { setExcelImportForm(true) }}
+                            onClick={() => { setOrderExcelImportForm(true) }}
                         >
                             Order Import
                         </button>
                         <button
-                            className="bg-red-400 hover:bg-red-400 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            className="bg-green-500 hover:bg-green-500 text-white font-bold hover:rounded p-1 disabled:bg-green-300"
                             type="button"
-                            onClick={() => { setExcelImportForm(true) }}
+                            onClick={() => { setProductionExcelImportForm(true) }}
                         >
                             Production Data
                         </button>

@@ -16,6 +16,7 @@ model Orders {
   style                     String?
   quantity                  Int?
   sam                       String?
+  styleType                 String                      @default("basic")
   lines                     OrderLines[]
   OrderSizeColorWiseDetails OrderSizeColorWiseDetails[]
 }
@@ -27,6 +28,15 @@ model OrderSizeColorWiseDetails {
   size     String
   color    String
   qty      Int
+}
+
+model ProductionDetails {
+  id      Int    @id @default(autoincrement())
+  orderNo String
+  size    String
+  color   String
+  line    String
+  qty     Int
 }
 
 model OrderLines {
@@ -53,6 +63,7 @@ model Line {
   id         Int          @id @default(autoincrement())
   Unit       Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
   unitId     Int
+  styleType  String       @default("basic")
   name       String?
   inCharge   String?
   capacity   Int?
