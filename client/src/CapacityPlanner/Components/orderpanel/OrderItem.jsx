@@ -4,7 +4,7 @@ import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../util
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { adjust, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
-import { dateDiffBetweenDays, getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
+import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null }) => {
     const { manualSelect, setOpenOrderDetail, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode } = useContext(CapacityPlannerContext)
@@ -23,13 +23,14 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
 
 
     const plannedVsActualPercentage = Math.floor(totalLineWiseProductionQty / parseFloat(totalPcsProductionShouldBeCompletedByYesterday) * 100);
-    // console.log(lineCurrentCapacity, lineDays, holidaysCount, sundayCount, totalPcsProductionShouldBeCompletedByYesterday, totalLineWiseProductionQty, plannedVsActualPercentage)
 
-    let bgColor = GREEN_ALERT_COLOR;
+    let bgColor = EMPTY_ALERT_COLOR;
     if (plannedVsActualPercentage < 50) {
         bgColor = RED_ALERT_COLOR;
     } else if (plannedVsActualPercentage < 80) {
         bgColor = ORANGE_ALERT_COLOR;
+    } else if (plannedVsActualPercentage > 80) {
+        bgColor = GREEN_ALERT_COLOR;
     }
     return (
         <>
@@ -54,9 +55,8 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             style={{
                                 background: productionMode
                                     ?
-                                    productionPercent > 0 ?
-                                        `linear-gradient(to right, ${bgColor}, ${bgColor} ${productionPercent}%, ${EMPTY_ALERT_COLOR} , ${EMPTY_ALERT_COLOR} ${balProductionPercent}%)`
-                                        : EMPTY_ALERT_COLOR : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
+                                    `linear-gradient(to right, ${bgColor}, ${bgColor} ${productionPercent}%, ${EMPTY_ALERT_COLOR} , ${EMPTY_ALERT_COLOR} ${balProductionPercent}%)`
+                                    : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
                                 width: width,
                                 fontSize: "10px",
                             }}
@@ -80,6 +80,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     <b> Total Order Qty</b>
                                     <div> {order.quantity} </div>
                                 </div>
+
                                 <div className='grid grid-cols-2'>
                                     <b> Line Qty</b>
                                     <div> {lineObj?.pcs} </div>
@@ -105,7 +106,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     <div> {totalLineWiseProductionQty} </div>
                                 </div>
                             </div>
-                            <strong className='text-xs font-bold relative z-20'> {order.orderNo} </strong>
+                            <strong className='text-xs font-bold relative z-20'> {order.orderNo}-{order.style} </strong>
                         </div>
                         :
                         <tr className='hidden'></tr>
@@ -117,7 +118,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                     onDragOver={(e) => { e.preventDefault(); }}
                     className={`orderItem noDrop select-none text-center border grabbable`}
                 >
-                    <td>
+                    <td style={{ backgroundColor: order.color }}>
                         {index}
                     </td>
                     <td>
@@ -129,10 +130,11 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                     <td>
                         {order.buyer}
                     </td>
+                    <td className='capitalize'>
+                        {order.styleType}
+                    </td>
                     <td>
                         {order.quantity}
-                    </td>
-                    <td style={{ backgroundColor: order.color }}>
                     </td>
                 </tr>
             }

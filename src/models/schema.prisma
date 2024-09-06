@@ -31,7 +31,8 @@ model OrderSizeColorWiseDetails {
 }
 
 model ProductionDetails {
-  id      Int    @id @default(autoincrement())
+  id      Int      @id @default(autoincrement())
+  date    DateTime @default(now())
   orderNo String
   size    String
   color   String

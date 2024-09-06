@@ -31,6 +31,10 @@ const OrderLineDetails = () => {
                     <div className='border border-black'> {order.quantity} </div>
                 </div>
                 <div className='grid grid-cols-2'>
+                    <b className='border border-black'> Line</b>
+                    <div className='border border-black'> {currentLine?.name} </div>
+                </div>
+                <div className='grid grid-cols-2'>
                     <b className='border border-black'> Line Qty</b>
                     <div className='border border-black font-semibold text-blue-600 font-sans'> {lineObj?.pcs} </div>
                 </div>

@@ -140,6 +140,9 @@ export function getTotalPcsProductionShouldBeCompletedByYesterday(line, lineObj,
   const holidaysCount = findHolidaysBetweenDates(lineObj?.startDate, new Date(), holidays);
   const sundayCount = findSundaysBetweenDates(lineObj?.startDate, new Date());
 
-  const totalPcsProductionShouldBeCompletedByYesterday = lineCurrentCapacity * ((lineDays - holidaysCount - sundayCount));
-  return totalPcsProductionShouldBeCompletedByYesterday
+  let totalPcsProductionShouldBeCompletedByYesterday = lineCurrentCapacity * ((lineDays - holidaysCount - sundayCount));
+  if (totalPcsProductionShouldBeCompletedByYesterday > (lineObj?.pcs)) {
+    totalPcsProductionShouldBeCompletedByYesterday = lineObj?.pcs;
+  }
+  return (totalPcsProductionShouldBeCompletedByYesterday > 0) ? totalPcsProductionShouldBeCompletedByYesterday : 0;
 }

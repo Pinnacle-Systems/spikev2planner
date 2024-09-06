@@ -12,7 +12,6 @@ const OrderList = () => {
 
     function drop(ev) {
         ev.preventDefault();
-        console.log("orderList");
         const order = JSON.parse(ev.dataTransfer.getData("order"));
         const currentOrderIndex = orders.findIndex(ord => parseInt(ord.id) === parseInt(order.id));
         const newOrders = [...orders]
@@ -21,7 +20,7 @@ const OrderList = () => {
     }
 
     return (
-        <div className='w-full h-[400px]' 
+        <div className='w-full h-[400px]'
             onDragOver={(e) => {
                 e.preventDefault();
             }}
@@ -39,12 +38,12 @@ const OrderList = () => {
                             <td className='border border-black'>Order&nbsp;no.</td>
                             <td className='border border-black'>Style</td>
                             <td className='border border-black'>Buyer</td>
+                            <td className='border border-black'>Style Type</td>
                             <td className='border border-black'>Qty</td>
-                            <td className='border border-black w-10'></td>
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.filter(item => item.lines.length === 0 ).map((order, index) => <OrderItem key={order.id} index={index+1} order={order} holidays={holidays} />
+                        {orders.filter(item => item.lines.length === 0).map((order, index) => <OrderItem key={order.id} index={index + 1} order={order} holidays={holidays} />
                         )}
                     </tbody>
                 </table>
