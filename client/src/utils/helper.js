@@ -1,7 +1,7 @@
 import moment from 'moment/moment';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { findNationalHolidaysBetweenDates } from './nationHolidaysHelper';
+import { findHolidaysBetweenDates, findNationalHolidaysBetweenDates, findSundaysBetweenDates } from './nationHolidaysHelper';
 import { adjust } from '../CapacityPlanner/helper';
 
 
@@ -67,9 +67,6 @@ function endDateLoopFinder(startDate, endDate, holidays) {
   let localEndDate = new Date(endDate);
   while (findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays) > nationalDays) {
     nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
-    console.log("startDate", getDateFromDateTimeFormat(localStartDate));
-    console.log("localEndDate", getDateFromDateTimeFormat(localEndDate));
-    console.log("national holidays", nationalDays);
     localEndDate.setDate(new Date(endDate).getDate() + findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays))
   }
   return localEndDate
@@ -126,3 +123,23 @@ export function arrayCounter(arr) {
 }
 
 
+export function dateDiffBetweenDays(a, b) {
+  const _MS_PER_DAY = 1000 * 60 * 60 * 24;
+  // Discard the time and time-zone information.
+  const utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+  const utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+
+  return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
+
+
+export function getTotalPcsProductionShouldBeCompletedByYesterday(line, lineObj, holidays) {
+  const lineCurrentCapacity = Math.floor((line?.capacity || 0) * ((line?.efficiency || 0) / 100))
+
+  const lineDays = dateDiffBetweenDays(new Date(lineObj?.startDate), new Date());
+  const holidaysCount = findHolidaysBetweenDates(lineObj?.startDate, new Date(), holidays);
+  const sundayCount = findSundaysBetweenDates(lineObj?.startDate, new Date());
+
+  const totalPcsProductionShouldBeCompletedByYesterday = lineCurrentCapacity * ((lineDays - holidaysCount - sundayCount));
+  return totalPcsProductionShouldBeCompletedByYesterday
+}

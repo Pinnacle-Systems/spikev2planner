@@ -3,19 +3,34 @@ import React, { useContext } from 'react'
 import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../utils/nationHolidaysHelper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { adjust, isCurrentOrderLineActive } from '../../helper';
+import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
+import { dateDiffBetweenDays, getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 
-const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, date = null }) => {
+const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null }) => {
     const { manualSelect, setOpenOrderDetail, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
         ev.dataTransfer.setData("line", JSON.stringify(line));
         setCurrentDraggedLine(line)
     }
-    const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(line?.id))
-    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
-    const productionPercent = Math.floor(totalLineWiseProductionQty / parseFloat(order.quantity) * 100);
+    const lineObj = (order?.lines || []).find(lineItem => parseInt(lineItem.id) === parseInt(line?.id))
+    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).filter(i => i.line === line?.name).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
+    const productionPercent = Math.floor(totalLineWiseProductionQty / parseFloat(order.quantity || 0) * 100);
     const balProductionPercent = 100 - productionPercent;
-    console.log(order, productionPercent, balProductionPercent)
+
+    // Calculation UpTo Today;
+    const totalPcsProductionShouldBeCompletedByYesterday = getTotalPcsProductionShouldBeCompletedByYesterday(line, lineObj, holidays)
+
+
+    const plannedVsActualPercentage = Math.floor(totalLineWiseProductionQty / parseFloat(totalPcsProductionShouldBeCompletedByYesterday) * 100);
+    // console.log(lineCurrentCapacity, lineDays, holidaysCount, sundayCount, totalPcsProductionShouldBeCompletedByYesterday, totalLineWiseProductionQty, plannedVsActualPercentage)
+
+    let bgColor = GREEN_ALERT_COLOR;
+    if (plannedVsActualPercentage < 50) {
+        bgColor = RED_ALERT_COLOR;
+    } else if (plannedVsActualPercentage < 80) {
+        bgColor = ORANGE_ALERT_COLOR;
+    }
     return (
         <>
             {order.lines.length !== 0
@@ -40,9 +55,8 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                 background: productionMode
                                     ?
                                     productionPercent > 0 ?
-                                        `linear-gradient(to right, green, green ${productionPercent}%, #D3D3D3 , #D3D3D3 ${balProductionPercent}%)`
-                                        : '#D3D3D3'
-                                    : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
+                                        `linear-gradient(to right, ${bgColor}, ${bgColor} ${productionPercent}%, ${EMPTY_ALERT_COLOR} , ${EMPTY_ALERT_COLOR} ${balProductionPercent}%)`
+                                        : EMPTY_ALERT_COLOR : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
                                 width: width,
                                 fontSize: "10px",
                             }}
