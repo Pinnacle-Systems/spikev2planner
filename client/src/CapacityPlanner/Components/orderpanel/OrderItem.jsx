@@ -21,7 +21,6 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
     // Calculation UpTo Today;
     const totalPcsProductionShouldBeCompletedByYesterday = getTotalPcsProductionShouldBeCompletedByYesterday(line, lineObj, holidays)
 
-
     const plannedVsActualPercentage = Math.floor(totalLineWiseProductionQty / parseFloat(totalPcsProductionShouldBeCompletedByYesterday) * 100);
 
     let bgColor = EMPTY_ALERT_COLOR;
@@ -29,7 +28,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
         bgColor = RED_ALERT_COLOR;
     } else if (plannedVsActualPercentage < 80) {
         bgColor = ORANGE_ALERT_COLOR;
-    } else if (plannedVsActualPercentage > 80) {
+    } else if (plannedVsActualPercentage >= 80) {
         bgColor = GREEN_ALERT_COLOR;
     }
     return (
