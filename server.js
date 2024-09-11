@@ -2,7 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cors from 'cors';
-import { orders, units, holidays, lines} from './src/routes/index.js';
+import { orders, units, holidays, lines } from './src/routes/index.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,7 +11,7 @@ const __dirname = dirname(__filename);
 const app = express()
 app.use(express.json())
 
-const path = __dirname + '/src/views/';
+const path = __dirname + '/client/build/';
 
 
 app.use(express.static(path));
@@ -35,7 +35,7 @@ let corsOptions = {
 }
 app.use(cors(corsOptions))
 
-app.get('/', function (req, res) {  
+app.get('/', function (req, res) {
   res.sendFile(path + "index.html");
 });
 
