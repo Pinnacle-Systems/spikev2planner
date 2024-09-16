@@ -19,6 +19,7 @@ import loadingIcon from "../assets/icons8-loading-16.png"
 import addOrders from "../assets/pngwing.com (7).png"
 import holidaysIcon from "../assets/pngwing.com (8).png"
 import splitUpIcon from "../assets/pngwing.com (9).png"
+import { CLIENT_HOLIDAY_URL, CLIENT_ORDERS_URL, CLIENT_UNIT_URL } from '../Constants/clientAppUrls';
 
 export const CapacityPlannerContext = createContext();
 
@@ -151,19 +152,19 @@ const CapacityPlanner = () => {
             <div className=''>
                 <div className='w-1/6 h-full float-left'>
                     <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("orders")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
                             <img src={addOrders} width={20} alt="" />
                             <span>
                                 Orders
                             </span>
                         </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("holidayForm")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_HOLIDAY_URL)}>
                             <img src={holidaysIcon} width={20} alt="" />
                             <span>
                                 Holidays
                             </span>
                         </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("unitForm")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_UNIT_URL)}>
                             <img src={splitUpIcon} width={20} alt="" />
                             <span>
                                 Units

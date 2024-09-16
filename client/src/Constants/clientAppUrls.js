@@ -1,0 +1,6 @@
+export const CLIENT_HOME_URL = "/capacityplanner"
+export const CLIENT_ORDERS_URL = "/orders"
+export const CLIENT_HOLIDAY_URL = "/holiday"
+export const CLIENT_UNIT_URL = "/unit"
+export const CLIENT_PLANNED_ORDERS_URL = "/plannedOrdersReport"
+export const CLIENT_UNPLANNED_ORDERS_URL = "/unPlannedOrdersReport"
