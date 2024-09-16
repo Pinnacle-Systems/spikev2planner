@@ -1,7 +1,6 @@
 import _ from "lodash";
 import prisma from "../models/getPrisma.js";
 import { convertToImportFormat } from "../utils/excelDataTransform.js";
-import { excelDateToJSDate } from "../utils/helper.js";
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -18,13 +17,15 @@ export async function importOrders(importedData) {
     const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
+        console.log(key, 'multipleOrderDetails');
+        const deliveryDate = (val[0]?.deliverydate).split("/").reverse().join("-");
         orderDetailsArr.push({
             orderNo: key,
             styleType: val[0]?.styletype,
             style: val[0]?.styleno,
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,
-            dDate: new Date(excelDateToJSDate(val[0]?.deliverydate)),
+            dDate: new Date(deliveryDate),
             quantity: val.reduce((a, c) => a + parseInt(c.qty), 0),
             OrderSizeColorWiseDetails: {
                 create: val.map(i => ({

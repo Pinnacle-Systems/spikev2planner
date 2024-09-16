@@ -11,7 +11,7 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
             onMouseOver={onMouseOver}
         >
             <div className='h-full grid justify-center items-center'>
-                <span className='text-[15px] font-normal'> {line.name}
+                <span className='text-[12px] font-normal'> {line.name}
                     <span className='text-[10px] capitalize'>
                         ({(line?.styleType || '')?.[0]})
                     </span>

@@ -51,6 +51,8 @@ async function create(req, res, next) {
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
                 console.log(res.statusCode)
             }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
         }
     }
 }
@@ -67,6 +69,8 @@ export async function excelImport(req, res, next) {
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
                 console.log(res.statusCode)
             }
+        } else {
+            res.json({ statusCode: 1, message: "Upload correct format excel...!!!" })
         }
     }
 }
@@ -83,6 +87,8 @@ async function update(req, res, next) {
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
                 console.log(res.statusCode)
             }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
         }
     }
 }
