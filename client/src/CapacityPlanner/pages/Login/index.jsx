@@ -20,13 +20,13 @@ const Login = () => {
         e.preventDefault();
         if (username.toLowerCase() !== "admin") return toast.info("Username Not Found...!!!");
         if (password !== "Admin") return toast.info("Password Not Valid...!!!");
-        navigate(CLIENT_HOME_URL, { replace: true })
+        navigate(CLIENT_HOME_URL)
     };
 
 
     return (
         <section className='relative flex flex-col items-center justify-evenly w-full h-full bg-white'>
-            <h1 className='font-bold text-[2rem] pt-12  '> Management Dashboard</h1>
+            <h1 className='font-bold text-[2rem] pt-12  '> Capacity Planner</h1>
             <div className='flex h-full items-center justify-center '>
                 <div className=' w-[65%]  flex flex-col  '>
                     <img src={company} alt="" className='bg-white shadow-none ' />
