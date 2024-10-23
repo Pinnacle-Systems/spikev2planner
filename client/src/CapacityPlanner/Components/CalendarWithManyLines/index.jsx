@@ -25,7 +25,8 @@ const Calendar = () => {
         setCurrentDate,
         lines,
         manualSelect, setManualSelect,
-        setPreviousOrders, previousOrders, productionMode
+        setPreviousOrders, previousOrders, productionMode,
+        setLearningCurvePopup
     } = useContext(CapacityPlannerContext)
 
     const [currentMonthDays, setCurrentMonthDays] = useState([]);
@@ -154,10 +155,15 @@ const Calendar = () => {
         const line = lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
         const currentOrderIndex = orders.findIndex(order => order.id === parseInt(currentOrder.id));
         const newOrders = structuredClone(orders)
-        const linesFromOrders = [...newOrders[currentOrderIndex]["lines"]]
+        const linesFromOrders = [...newOrders[currentOrderIndex]["lines"]];
+        let currentLineFromOrders = linesFromOrders.find(line => parseInt(line.id) == parseInt(lineObj.id));
         const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
         const endDate = new Date(date)
 
+        // console.log()
+        if ((currentLineFromOrders?.learningCurves || []).length == 0) {
+            setLearningCurvePopup(true);
+        }
 
         let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(date, endDate, holidays);
 
@@ -176,7 +182,7 @@ const Calendar = () => {
             pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * (parseInt(dateDiffInDays(date, endDate, holidays)) - 1) + parseInt(balancePcs);
         }
 
-        linesLocal.push({ id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
+        linesLocal.push({ ...currentLineFromOrders, id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
         newOrders[currentOrderIndex]["lines"] = linesLocal;
         setOrders(newOrders);
     }
@@ -192,6 +198,7 @@ const Calendar = () => {
             const currentOrderIndex = orders.findIndex(order => order.id === parseInt(currentOrder.id));
             const newOrders = structuredClone(orders)
             const linesFromOrders = [...newOrders[currentOrderIndex]["lines"]]
+            let currentLineFromOrders = linesFromOrders.find(line => parseInt(line.id) == parseInt(lineObj.id));
             const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
             const endDate = new Date(date)
             let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(line.startDate, endDate, holidays);
@@ -214,7 +221,7 @@ const Calendar = () => {
             const days = parseInt(dateDiffInDays(line.startDate, endDate, holidays));
             if (maxDays.current < days) return
 
-            linesLocal.push({ id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
+            linesLocal.push({ ...currentLineFromOrders, id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
             newOrders[currentOrderIndex]["lines"] = linesLocal;
             if (validateAllocatedQuantity(orders, currentOrder)) {
                 flushSync(() => {
@@ -320,10 +327,6 @@ const Calendar = () => {
                                     onMouseOver={() => handleOnnMouseOver(line, date)}
                                     onMouseUp={() => { handleOnMouseUp(line, date) }}
                                     onDrop={(e) => { drop(e, date, line) }}
-                                    // style={{
-                                    //     backgroundColor:
-                                    //         (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : getOrderIfOrderPlacedInCurrentDate(date, line)?.color)
-                                    // }}
                                     style={{
                                         backgroundColor:
                                             (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : undefined),
@@ -340,9 +343,6 @@ const Calendar = () => {
                                                     ((getDateFromDateTimeFormat(getOrderIfOrderPlacedInCurrentDate(date, line).lines.find(l => parseInt(l.id) === parseInt(line.id)).startDate) === getDateFromDateTimeFormat(date))
                                                         ||
                                                         (new Date(date).getDate() === 1)) ?
-                                                        // <>
-                                                        // {
-                                                        //     manualSelect ? "" :
                                                         <OrderItem
                                                             key={productionMode}
                                                             date={date}
@@ -352,8 +352,7 @@ const Calendar = () => {
                                                             line={line}
                                                             holidays={holidays}
                                                         />
-                                                        // }
-                                                        // </>
+
                                                         :
                                                         ""
                                                 }

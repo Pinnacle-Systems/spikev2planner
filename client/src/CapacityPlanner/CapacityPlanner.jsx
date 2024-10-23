@@ -20,6 +20,7 @@ import addOrders from "../assets/pngwing.com (7).png"
 import holidaysIcon from "../assets/pngwing.com (8).png"
 import splitUpIcon from "../assets/pngwing.com (9).png"
 import { CLIENT_HOLIDAY_URL, CLIENT_ORDERS_URL, CLIENT_UNIT_URL } from '../Constants/clientAppUrls';
+import LearningCurveInputGrid from './Components/LineDataCoformationForm/LearningCurveInputGrid';
 
 export const CapacityPlannerContext = createContext();
 
@@ -34,6 +35,7 @@ const CapacityPlanner = () => {
     const [openIncludeHolidayModal, setOpenIncludeHolidayModal] = useState(false);
     // const [openHolidaysSelectionForm, setOpenHolidaysSelectionForm] = useState(false);
     const [lineEntryConformation, setLineEntryConformation] = useState(false);
+    const [learningCurvePopup, setLearningCurvePopup] = useState(false);
     const [manualSelect, setManualSelect] = useState(false);
     const [openOrderDetail, setOpenOrderDetail] = useState(false);
 
@@ -129,7 +131,8 @@ const CapacityPlanner = () => {
                 loading, setLoading,
                 previousOrders, setPreviousOrders,
                 currentDraggedLine, setCurrentDraggedLine,
-                productionMode, setProductionMode
+                productionMode, setProductionMode,
+                learningCurvePopup, setLearningCurvePopup
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -139,6 +142,9 @@ const CapacityPlanner = () => {
             </Modal>
             <Modal isOpen={lineEntryConformation} onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
                 <LineDataConformationForm />
+            </Modal>
+            <Modal isOpen={learningCurvePopup} >
+                <LearningCurveInputGrid />
             </Modal>
             <Modal isOpen={openOrderDetail} onClose={() => { setOpenOrderDetail(false); }}>
                 <OrderLineDetails />

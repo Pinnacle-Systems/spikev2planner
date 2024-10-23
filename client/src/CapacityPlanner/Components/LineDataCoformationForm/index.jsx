@@ -1,9 +1,10 @@
-import React, { useContext, } from 'react'
+import React, { useContext, useEffect, useState, } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-import { orderAssignment, getEndDate, findDays, findEndDate } from '../../helper';
+import { orderAssignment, findDays, findEndDate } from '../../helper';
 
 import { GridForm } from './GridForm';
+import LearningCurveInputGrid from './LearningCurveInputGrid';
 
 const LineDataConformationForm = () => {
   const {
@@ -17,25 +18,46 @@ const LineDataConformationForm = () => {
   } = useContext(CapacityPlannerContext)
 
 
+  const [learningCurveItems, setLearningCurveItems] = useState([]);
+
+  useEffect(() => {
+    const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
+    let currentOrderLineIndex = -1;
+    if (currentOrderIndex != -1) {
+      currentOrderLineIndex = orders[currentOrderIndex]['lines'].findIndex(l => parseInt(l.id) == parseInt(currentDraggedLine.id));
+    }
+    setLearningCurveItems(currentOrderLineIndex == -1 ? [] : (
+      // orders[currentOrderIndex]["lines"][currentOrderLineIndex]["learningCurveItems"] || 
+      []
+    ))
+  }, [orders, currentDraggedLine, currentOrder])
+
+
   const handleNoSplit = () => {
     setLineEntryConformation(false);
     let pcs = currentOrder.quantity;
     const days = findDays(pcs, currentLine);
-    let endDate = getEndDate(currentDate, days);
-    // endDate = endDateLoopFinder(currentDate, endDate, holidays);
-    endDate = findEndDate(currentDate, days, holidays);
+    // let endDate = getEndDate(currentDate, days);
+    let endDate = findEndDate(currentDate, days, holidays);
     orderAssignment(orders, setOrders, currentOrder, currentLine, pcs, days, currentDate, endDate, holidays)
   }
 
   function removeOrderFromLine(updatingOrder, lineObj) {
-    const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(updatingOrder.id));
-    const newOrders = [...orders]
-    newOrders[currentOrderIndex]["lines"] = newOrders[currentOrderIndex]["lines"].filter(line => parseInt(line.id) !== parseInt(lineObj.id));
-    setOrders(newOrders);
+    setOrders(orders => {
+      const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(updatingOrder.id));
+      const newOrders = [...orders]
+      newOrders[currentOrderIndex]["lines"] = newOrders[currentOrderIndex]["lines"].filter(line => parseInt(line.id) !== parseInt(lineObj.id))
+      // const lineIndex = newOrders[currentOrderIndex]["lines"].findIndex(line => parseInt(line.id) == parseInt(lineObj.id))
+      // newOrders[currentOrderIndex]["lines"][lineIndex]['startDate'] = '';
+      // newOrders[currentOrderIndex]["lines"][lineIndex]['endDate'] = '';
+      return newOrders
+    });
   }
 
+
+
   const handleManualSelect = async () => {
-    removeOrderFromLine(currentOrder, currentDraggedLine)
+    // removeOrderFromLine(currentOrder, currentDraggedLine)
     setLineEntryConformation(false);
     setManualSelect(true);
   }
@@ -53,12 +75,12 @@ const LineDataConformationForm = () => {
           <GridForm />
         </div>
         :
-        <div className={`w-[400px] ${split ? "h-[400px]" : "h-[100px]"} flex flex-col items-center justify-center`}>
+        <div className={`w-[450px] flex flex-col items-center justify-center p-2`}>
           <div className='font-bold'>
-            Do you want to split it to multiple lines?
+            Do you want to Select Manual or Auto Allocation ?
           </div>
           <div className='flex justify-evenly w-full mt-5'>
-            <button id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'
+            <button autoFocus id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'
               onClick={handleManualSelect}> Manual Select</button>
             <button className='bg-red-200 w-10 text-red-700 p-1 rounded hover:bg-red-300'
               onClick={handleNoSplit}> Auto</button>

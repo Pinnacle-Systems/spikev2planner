@@ -119,7 +119,6 @@ export function endDateLoopFinder(startDate, endDate, holidays) {
     let localStartDate = new Date(startDate);
     let localEndDate = new Date(endDate);
     while (findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays) > nationalDays) {
-        console.log(findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays), localStartDate, localEndDate)
         nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
         localEndDate.setDate(new Date(endDate).getDate() + nationalDays)
     }
@@ -131,7 +130,6 @@ export function findEndDate(startDate, days, holidays) {
     let localEndDate = new Date(startDate);
     localEndDate.setDate(localEndDate.getDate() + (days - 1));
     let nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
-    console.log(nationalDays, localStartDate, localEndDate, days)
     if (nationalDays === 0) {
         return localEndDate
     }
