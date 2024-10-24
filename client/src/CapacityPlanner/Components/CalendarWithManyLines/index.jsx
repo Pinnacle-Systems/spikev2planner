@@ -8,10 +8,10 @@ import { NATIONAL_HOLIDAY_COLOR, SUNDAY_COLOR } from '../../../Constants/colors'
 
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { dateDiffInDays, getCurrentCapacity, isHoliday, isSunday, isNationalHoliday } from './helper';
-import { sortWeekDaysIfLastWeek, getTotalPcsInLineOrder, styleTypeMatchingWarningMessage } from '../../helper';
+import { sortWeekDaysIfLastWeek, getTotalPcsInLineOrder, styleTypeMatchingWarningMessage, findDays } from '../../helper';
 import { toast } from 'react-toastify';
 
-const MAX_SPEED = 200;
+const MAX_SPEED = 300;
 
 const Calendar = () => {
     const maxDays = useRef(0);
@@ -139,10 +139,27 @@ const Calendar = () => {
         return true
     }
 
+    // function getMaxDays(){
+    //     const balancePcs = getBalanceQuantityMain(orders, currentOrder);
+
+    //     const learningCurveItems = currentLineFromOrders?.learningCurveItems || [];
+    //     const currentCapacity = parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity));
+    //     const days = parseInt(dateDiffInDays(line.startDate, endDate, holidays));
+    //     let currentDayPerc = ((days - 1 >= learningCurveItems.length) ? learningCurveItems[learningCurveItems.length - 1] : learningCurveItems[days - 1])?.percentage;
+    //     const currentDayCapacity = getCurrentCapacity(parseInt(currentDayPerc), currentCapacity)
+
+    //     let pcs = currentDayCapacity * (parseInt(dateDiffInDays(line.startDate, endDate, holidays)));
+
+    // }
+
+
+
     function getMaxDays(orders, currentOrder, currentLine) {
         const balancePcs = getBalanceQuantityMain(orders, currentOrder);
-        const lineCapacity = getCurrentCapacity(currentLine.efficiency, currentLine.capacity);
-        return Math.ceil(balancePcs / lineCapacity);
+        const currentOrderIndex = orders.findIndex(order => order.id === parseInt(currentOrder.id));
+        const linesFromOrders = [...orders[currentOrderIndex]["lines"]];
+        let currentLineFromOrders = linesFromOrders.find(line => parseInt(line.id) == parseInt(currentLine.id));
+        return findDays(balancePcs, { ...currentLine, learningCurveItems: currentLineFromOrders?.learningCurveItems || [] });
     }
 
     const handleOnMouseDown = async (lineObj, date) => {
@@ -160,19 +177,19 @@ const Calendar = () => {
         const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
         const endDate = new Date(date)
 
-        // console.log()
-        if ((currentLineFromOrders?.learningCurves || []).length == 0) {
-            setLearningCurvePopup(true);
+        if ((currentLineFromOrders?.learningCurveItems || []).length == 0) {
+            return setLearningCurvePopup(true);
         }
 
-        let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(date, endDate, holidays);
-
+        const learningCurveItems = currentLineFromOrders?.learningCurveItems || [];
+        const currentCapacity = parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity));
+        let currentDayPerc = parseInt((learningCurveItems[0])?.percentage || 0);
+        const currentDayCapacity = getCurrentCapacity(parseInt(currentDayPerc), currentCapacity)
+        let pcs = currentDayCapacity * (parseInt(dateDiffInDays(new Date(date), endDate, holidays)));
         // balance is found omitting the current line allocated quantity
+        maxDays.current = getMaxDays(newOrders, currentOrder, lineObj)
         newOrders[currentOrderIndex]["lines"] = linesLocal;
         const balancePcs = getBalanceQuantityMain(newOrders, currentOrder)
-
-        maxDays.current = getMaxDays(newOrders, currentOrder, lineObj)
-
         if (parseInt(balancePcs) === 0 && (linesFromOrders.length === linesLocal.length)) {
             // toast.error("No Balance Qty ", { position: "top-center" });
             return
@@ -201,9 +218,9 @@ const Calendar = () => {
             let currentLineFromOrders = linesFromOrders.find(line => parseInt(line.id) == parseInt(lineObj.id));
             const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
             const endDate = new Date(date)
-            let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(line.startDate, endDate, holidays);
 
             const balancePcs = getBalanceQuantityMain(orders, currentOrder);
+
 
             if (parseInt(balancePcs) <= 0 && (linesFromOrders.length === linesLocal.length)) {
                 // toast.error("No Balance Qty ", { position: "top-center" });
@@ -211,16 +228,21 @@ const Calendar = () => {
             }
 
             if (speedRef.current > MAX_SPEED) {
-                toast.info("Don't do so fast ...! ", { position: "top-left" });
+                // toast.info("Don't do so fast ...! ", { position: "top-left" });
                 return
             }
-
-            if (parseInt(balancePcs) < parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity))) {
-                pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * (parseInt(dateDiffInDays(line.startDate, endDate, holidays)) - 1) + parseInt(balancePcs);
-            }
+            const learningCurveItems = currentLineFromOrders?.learningCurveItems || [];
+            const currentCapacity = parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity));
             const days = parseInt(dateDiffInDays(line.startDate, endDate, holidays));
-            if (maxDays.current < days) return
-
+            let currentDayPerc = parseInt(((days - 1 >= learningCurveItems.length) ? learningCurveItems[learningCurveItems.length - 1] : learningCurveItems[days - 1])?.percentage || 0);
+            const currentDayCapacity = getCurrentCapacity(parseInt(currentDayPerc), currentCapacity)
+            let pcs = currentLineFromOrders.pcs;
+            if (currentDayCapacity > balancePcs) {
+                pcs += balancePcs;
+            } else {
+                pcs += currentDayCapacity;
+            }
+            // if (maxDays.current < days) return
             linesLocal.push({ ...currentLineFromOrders, id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
             newOrders[currentOrderIndex]["lines"] = linesLocal;
             if (validateAllocatedQuantity(orders, currentOrder)) {
@@ -241,7 +263,6 @@ const Calendar = () => {
         const totalAllocatedPcs = getTotalPcsInLineOrder(orders, currentOrder);
         return parseInt(currentOrder.quantity) - parseInt(totalAllocatedPcs)
     }
-
 
     const validateAllocatedQuantity = (orders, currentOrder) => {
         const balancePcs = getBalanceQuantityMain(orders, currentOrder);

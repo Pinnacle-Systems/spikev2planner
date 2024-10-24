@@ -32,7 +32,7 @@ const OrderList = () => {
             <h2 className='text-center w-full  select-none text-lg'>Orders</h2>
             <div id="ordersList" className='flex flex-col gap-1 border-2  w-full overflow-auto h-full'>
                 <table className='table-fixed border border-black'>
-                    <thead className='text-xs sticky z-10 top-0 '>
+                    <thead className='text-xs sticky bg-gray-300 z-10 top-0 '>
                         <tr>
                             <td className='border border-black'>S.no</td>
                             <td className='border border-black'>Order&nbsp;no.</td>

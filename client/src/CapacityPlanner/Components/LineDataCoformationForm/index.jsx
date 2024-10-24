@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState, } from 'react'
+import React, { useContext, useState } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
 import { orderAssignment, findDays, findEndDate } from '../../helper';
 
 import { GridForm } from './GridForm';
-import LearningCurveInputGrid from './LearningCurveInputGrid';
+import { LearningCurveInputGrid } from './LearningCurveInputGrid';
 
 const LineDataConformationForm = () => {
   const {
@@ -14,32 +14,28 @@ const LineDataConformationForm = () => {
     orders, setOrders,
     setManualSelect,
     holidays,
-    currentDraggedLine
   } = useContext(CapacityPlannerContext)
 
-
-  const [learningCurveItems, setLearningCurveItems] = useState([]);
-
-  useEffect(() => {
-    const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
-    let currentOrderLineIndex = -1;
-    if (currentOrderIndex != -1) {
-      currentOrderLineIndex = orders[currentOrderIndex]['lines'].findIndex(l => parseInt(l.id) == parseInt(currentDraggedLine.id));
-    }
-    setLearningCurveItems(currentOrderLineIndex == -1 ? [] : (
-      // orders[currentOrderIndex]["lines"][currentOrderLineIndex]["learningCurveItems"] || 
-      []
-    ))
-  }, [orders, currentDraggedLine, currentOrder])
-
+  const [learningCurveItems, setLearningCurveItems] = useState([])
 
   const handleNoSplit = () => {
     setLineEntryConformation(false);
     let pcs = currentOrder.quantity;
-    const days = findDays(pcs, currentLine);
+    const days = findDays(pcs, { ...currentLine, learningCurveItems });
     // let endDate = getEndDate(currentDate, days);
     let endDate = findEndDate(currentDate, days, holidays);
-    orderAssignment(orders, setOrders, currentOrder, currentLine, pcs, days, currentDate, endDate, holidays)
+    const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
+    let currentOrderLineIndex = -1;
+    let newOrders = structuredClone(orders);
+    if (currentOrderIndex != -1) {
+      currentOrderLineIndex = orders[currentOrderIndex]['lines'].findIndex(l => parseInt(l.id) == parseInt(currentLine.id));
+      if (currentOrderLineIndex != -1) {
+        newOrders[currentOrderIndex]["lines"][currentOrderLineIndex]["learningCurveItems"] = learningCurveItems.filter(i => i.percentage);
+      } else {
+        newOrders[currentOrderIndex]["lines"].push({ id: currentLine.id, learningCurveItems })
+      }
+    }
+    orderAssignment(newOrders, setOrders, currentOrder, currentLine, pcs, days, currentDate, endDate, holidays)
   }
 
   function removeOrderFromLine(updatingOrder, lineObj) {
@@ -54,10 +50,26 @@ const LineDataConformationForm = () => {
     });
   }
 
-
+  function assignLearningCurve() {
+    setOrders(orders => {
+      const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
+      let currentOrderLineIndex = -1;
+      let newOrders = structuredClone(orders);
+      if (currentOrderIndex != -1) {
+        currentOrderLineIndex = orders[currentOrderIndex]['lines'].findIndex(l => parseInt(l.id) == parseInt(currentLine.id));
+        if (currentOrderLineIndex != -1) {
+          newOrders[currentOrderIndex]["lines"][currentOrderLineIndex]["learningCurveItems"] = learningCurveItems.filter(i => i.percentage);
+        } else {
+          newOrders[currentOrderIndex]["lines"].push({ id: currentLine.id, learningCurveItems })
+        }
+      }
+      return newOrders;
+    })
+  }
 
   const handleManualSelect = async () => {
     // removeOrderFromLine(currentOrder, currentDraggedLine)
+    assignLearningCurve()
     setLineEntryConformation(false);
     setManualSelect(true);
   }
@@ -79,6 +91,7 @@ const LineDataConformationForm = () => {
           <div className='font-bold'>
             Do you want to Select Manual or Auto Allocation ?
           </div>
+          <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} />
           <div className='flex justify-evenly w-full mt-5'>
             <button autoFocus id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'
               onClick={handleManualSelect}> Manual Select</button>

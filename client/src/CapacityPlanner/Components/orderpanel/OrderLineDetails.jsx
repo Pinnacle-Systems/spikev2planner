@@ -3,6 +3,7 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../utils/nationHolidaysHelper';
 import moment from 'moment';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
+import { LearningCurveInputGrid } from '../LineDataCoformationForm/LearningCurveInputGrid';
 
 const OrderLineDetails = () => {
     const { currentOrder: order, currentLine, holidays, } = useContext(CapacityPlannerContext)
@@ -62,6 +63,8 @@ const OrderLineDetails = () => {
                     <b className='border border-black'> Production Qty</b>
                     <div className='border border-black'> {totalLineWiseProductionQty} </div>
                 </div>
+                {console.log(lineObj, 'learningCurveItems')}
+                <LearningCurveInputGrid learningCurveItems={lineObj?.learningCurveItems || []} readOnly />
             </div>
         </div>
     )

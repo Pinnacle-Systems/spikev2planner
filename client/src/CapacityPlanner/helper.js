@@ -52,7 +52,8 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
             pcs: pcs,
             startDate,
             endDate,
-            days: days
+            days: days,
+            learningCurveItems: newOrders?.[orderIndex]?.["lines"]?.[0]?.['learningCurveItems'] || []
         })
     newOrders[orderIndex]["line"] = [];
     newOrders[orderIndex]["lines"] = linesLocal;
@@ -107,8 +108,33 @@ export const getEndDate = (startDate, days) => {
 }
 
 export const findDays = (pcs, line) => {
-    return Math.ceil(pcs / getCurrentCapacity(line.efficiency, line.capacity));
+    const learningCurveItems = line?.learningCurveItems || [];
+    if (learningCurveItems.length === 0) return 0;
+    let days = 0;
+    let allocatablePcs = 0;
+    for (let i = 0; i < learningCurveItems.length; i++) {
+        allocatablePcs += getCurrentCapacity(parseInt(learningCurveItems[i]?.percentage || 0), line.capacity);
+        days++;
+    }
+    days += Math.ceil((pcs - allocatablePcs) / getCurrentCapacity(parseInt(learningCurveItems[learningCurveItems.length - 1]?.percentage), line.capacity));
+    return days
 }
+export const findPcs = (targetDays, line) => {
+    const learningCurveItems = line?.learningCurveItems || [];
+    if (learningCurveItems.length === 0) return 0;
+    let days = 0;
+    let allocatablePcs = 0;
+    for (let i = 0; i < learningCurveItems.length; i++) {
+        allocatablePcs += getCurrentCapacity(parseInt(learningCurveItems[i]?.percentage || 0), line.capacity);
+        days++;
+    }
+    return allocatablePcs
+}
+
+
+// export const findDays = (pcs, line) => {
+//     return Math.ceil(pcs / getCurrentCapacity(line.efficiency, line.capacity));
+// }
 
 export function getCurrentCapacity(efficiency, capacity) {
     return (parseInt(efficiency) * parseInt(capacity)) / 100;
