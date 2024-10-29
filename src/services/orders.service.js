@@ -7,7 +7,6 @@ const prisma = new PrismaClient()
 
 async function get(req) {
     const { lines } = req.query;
-    // console.log("lines", typeof (JSON.parse(lines)));
     let data = await prisma.orders.findMany({
         where: {
             lines: lines ?
@@ -18,12 +17,11 @@ async function get(req) {
                     { none: {} })
                 :
                 undefined
-        }
-        ,
+        },
         include: {
-            // lines: true
             lines: {
                 include: {
+                    learningCurveItems: true,
                     Line: {
                         select: {
                             name: true,
@@ -33,13 +31,14 @@ async function get(req) {
                                 }
                             }
                         }
-                    }
+                    },
                 }
             }
         }
     });
     const sizeColorWiseDetails = await prisma.$queryRaw`
- select orders.orderno as orderNo, det.size, det.color,productionDetails.line, sum(det.qty) as qty, coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - sum(productionDetails.qty) as balanceQty
+ select orders.orderno as orderNo, det.size, det.color,productionDetails.line, sum(det.qty) as qty, 
+ coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - coalesce(sum(productionDetails.qty),0) as balanceQty
 from OrderSizeColorWiseDetails det
 join orders on orders.id = det.ordersId
 left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
@@ -64,7 +63,7 @@ async function getOne(id) {
         }
     })
     data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
-    select orders.orderno as orderNo, det.size, det.color, sum(det.qty) as qty, coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - sum(productionDetails.qty) as balanceQty
+    select orders.orderno as orderNo, det.size, det.color, sum(det.qty) as qty, coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - coalesce(sum(productionDetails.qty),0) as balanceQty
 from OrderSizeColorWiseDetails det
 join orders on orders.id = det.ordersId
 left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
@@ -173,20 +172,22 @@ async function update(id, body) {
 async function updateMany(req) {
     const { orders } = await req.body
     orders.forEach(async (order) => {
-        const data = await prisma.orders.update({
+        await prisma.orders.update({
             where: {
                 id: parseInt(order.id),
             },
             data: {
                 lines: {
                     deleteMany: {},
-                    createMany: {
-                        data:
-                            order.lines.map(line => {
-                                return { id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: parseInt(line.days) }
-
-                            })
-                    }
+                    create: order.lines.map(line => {
+                        return {
+                            lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
+                            endDate: new Date(line.endDate), days: parseInt(line.days),
+                            learningCurveItems: {
+                                create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
+                            }
+                        }
+                    }),
                 },
             }
         })

@@ -41,16 +41,23 @@ model ProductionDetails {
 }
 
 model OrderLines {
-  id        Int
-  pcs       Int
-  startDate DateTime @db.Date
-  endDate   DateTime @db.Date
-  days      Int
-  Orders    Orders   @relation(fields: [ordersId], references: [id])
-  ordersId  Int
-  Line      Line     @relation(fields: [id], references: [id])
+  id                 Int                  @id @default(autoincrement())
+  Line               Line                 @relation(fields: [lineId], references: [id])
+  lineId             Int
+  Orders             Orders               @relation(fields: [ordersId], references: [id], onDelete: Cascade)
+  ordersId           Int
+  pcs                Int
+  startDate          DateTime             @db.Date
+  endDate            DateTime             @db.Date
+  days               Int
+  learningCurveItems LearningCurveItems[]
+}
 
-  @@unique([id, ordersId])
+model LearningCurveItems {
+  id           Int        @id @default(autoincrement())
+  OrderLines   OrderLines @relation(fields: [orderLinesId], references: [id], onDelete: Cascade)
+  orderLinesId Int
+  percentage   Float      @default(0)
 }
 
 model Unit {

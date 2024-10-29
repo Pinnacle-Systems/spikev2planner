@@ -17,7 +17,6 @@ export async function importOrders(importedData) {
     const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
-        console.log(key, 'multipleOrderDetails');
         const deliveryDate = (val[0]?.deliverydate).split("/").reverse().join("-");
         orderDetailsArr.push({
             orderNo: key,
