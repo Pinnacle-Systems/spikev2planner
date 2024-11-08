@@ -134,13 +134,23 @@ export function dateDiffBetweenDays(a, b) {
 
 
 export function getTotalPcsProductionShouldBeCompletedByYesterday(line, lineObj, holidays) {
-  const lineCurrentCapacity = Math.floor((line?.capacity || 0) * ((line?.efficiency || 0) / 100))
 
   const lineDays = dateDiffBetweenDays(new Date(lineObj?.startDate), new Date());
   const holidaysCount = findHolidaysBetweenDates(lineObj?.startDate, new Date(), holidays);
   const sundayCount = findSundaysBetweenDates(lineObj?.startDate, new Date());
 
-  let totalPcsProductionShouldBeCompletedByYesterday = lineCurrentCapacity * ((lineDays - holidaysCount - sundayCount));
+  let totalPcsProductionShouldBeCompletedByYesterday = 0;
+
+  const learningCurveItems = lineObj?.learningCurveItems || [];
+
+  let totalLineDays = (lineDays - holidaysCount - sundayCount);
+  let lineCurrentCapacity = 0;
+  for (let i = 0; i < learningCurveItems.length; i++) {
+    lineCurrentCapacity = Math.floor((line?.capacity || 0) * ((learningCurveItems[i]?.percentage || 0) / 100));
+    totalPcsProductionShouldBeCompletedByYesterday += lineCurrentCapacity;
+  }
+  totalPcsProductionShouldBeCompletedByYesterday += (totalLineDays - learningCurveItems.length) * lineCurrentCapacity;
+
   if (totalPcsProductionShouldBeCompletedByYesterday > (lineObj?.pcs)) {
     totalPcsProductionShouldBeCompletedByYesterday = lineObj?.pcs;
   }
