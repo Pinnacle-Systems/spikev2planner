@@ -195,8 +195,8 @@ const Calendar = () => {
             return
         }
 
-        if (parseInt(balancePcs) < parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity))) {
-            pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * (parseInt(dateDiffInDays(date, endDate, holidays)) - 1) + parseInt(balancePcs);
+        if (parseInt(balancePcs) < parseInt(getCurrentCapacity(parseInt(currentDayPerc), lineObj.capacity))) {
+            pcs = getCurrentCapacity(parseInt(currentDayPerc), lineObj.capacity) * (parseInt(dateDiffInDays(date, endDate, holidays)) - 1) + parseInt(balancePcs);
         }
 
         linesLocal.push({ ...currentLineFromOrders, id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
@@ -344,9 +344,16 @@ const Calendar = () => {
                                     }
                                     onDragOver={isNationalHoliday(date, holidays) ? undefined : (e) => onDragOver(e)}
                                     onDragLeave={(e) => { onDragLeave(e, date, line) }}
+
                                     onMouseDown={() => handleOnMouseDown(line, date)}
+                                    onTouchStart={() => handleOnMouseDown(line, date)}
+
                                     onMouseOver={() => handleOnnMouseOver(line, date)}
+                                    onTouchMove={() => handleOnnMouseOver(line, date)}
+
                                     onMouseUp={() => { handleOnMouseUp(line, date) }}
+                                    onTouchEnd={() => { handleOnMouseUp(line, date) }}
+
                                     onDrop={(e) => { drop(e, date, line) }}
                                     style={{
                                         backgroundColor:

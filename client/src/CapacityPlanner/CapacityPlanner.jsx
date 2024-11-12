@@ -21,6 +21,8 @@ import holidaysIcon from "../assets/pngwing.com (8).png"
 import splitUpIcon from "../assets/pngwing.com (9).png"
 import { CLIENT_HOLIDAY_URL, CLIENT_ORDERS_URL, CLIENT_UNIT_URL } from '../Constants/clientAppUrls';
 import { LearningCurveInputGridStandalone } from './Components/LineDataCoformationForm/LearningCurveInputGrid';
+import OrderProductionDetails from './Components/orderpanel/OrderProductionDetails';
+import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptions';
 
 export const CapacityPlannerContext = createContext();
 
@@ -39,6 +41,10 @@ const CapacityPlanner = () => {
 
     const [manualSelect, setManualSelect] = useState(false);
     const [openOrderDetail, setOpenOrderDetail] = useState(false);
+
+    const [isOrderProductionDetails, setIsOrderProductionDetails] = useState(false);
+
+    const [isOrderLineDetailOptions, setIsOrderLineDetailOptions] = useState(false);
 
     const [activeLineOrder, setActiveLineOrder] = useState({});
 
@@ -134,7 +140,9 @@ const CapacityPlanner = () => {
                 previousOrders, setPreviousOrders,
                 currentDraggedLine, setCurrentDraggedLine,
                 productionMode, setProductionMode,
-                learningCurvePopup, setLearningCurvePopup
+                learningCurvePopup, setLearningCurvePopup,
+                isOrderProductionDetails, setIsOrderProductionDetails,
+                isOrderLineDetailOptions, setIsOrderLineDetailOptions
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -151,6 +159,12 @@ const CapacityPlanner = () => {
             <Modal isOpen={openOrderDetail} onClose={() => { setOpenOrderDetail(false); }}>
                 <OrderLineDetails />
             </Modal>
+            <Modal isOpen={isOrderProductionDetails} onClose={() => { setIsOrderProductionDetails(false); }}>
+                <OrderProductionDetails />
+            </Modal>
+            <Modal isOpen={isOrderLineDetailOptions} onClose={() => { setIsOrderLineDetailOptions(false); }}>
+                <OrderLineDetailOptions />
+            </Modal>
             <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
@@ -158,7 +172,7 @@ const CapacityPlanner = () => {
                 </button>
             </Modal>
             <div className=''>
-                <div className='w-1/6 h-full float-left'>
+                <div className='w-[20%] h-full float-left'>
                     <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
                         <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
                             <img src={addOrders} width={20} alt="" />
@@ -188,7 +202,7 @@ const CapacityPlanner = () => {
                         </>
                     }
                 </div>
-                <div className='w-5/6 float-right overflow-auto h-screen'>
+                <div className='w-[80%] float-right overflow-auto h-screen'>
                     <SelectionPanel />
                     <Calendar />
                 </div>

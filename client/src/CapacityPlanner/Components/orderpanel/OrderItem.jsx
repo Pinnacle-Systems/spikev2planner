@@ -6,8 +6,10 @@ import { adjust, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 
-const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null }) => {
-    const { manualSelect, setOpenOrderDetail, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode } = useContext(CapacityPlannerContext)
+const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
+    const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
+        setIsOrderLineDetailOptions
+    } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
         ev.dataTransfer.setData("line", JSON.stringify(line));
@@ -31,10 +33,39 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
     } else if (plannedVsActualPercentage >= 80) {
         bgColor = GREEN_ALERT_COLOR;
     }
+
     return (
         <>
-            {order.lines.length !== 0
+            {fromOrderList
                 ?
+                <tr
+                    style={{ fontSize: "10px" }} id={order.id} draggable={["Pending", "Partial"].includes(order.status)} onDragStart={(e) => { drag(e) }}
+                    onDragOver={(e) => { e.preventDefault(); }}
+                    className={`orderItem noDrop select-none text-center border grabbable`}
+                >
+                    <td style={{ backgroundColor: order.color }}>
+                        {index}
+                    </td>
+                    <td>
+                        {order.orderNo}
+                    </td>
+                    <td>
+                        {order.style}
+                    </td>
+                    <td>
+                        {order.buyer}
+                    </td>
+                    <td className='capitalize'>
+                        {order.styleType}
+                    </td>
+                    <td>
+                        {order.quantity}
+                    </td>
+                    <td>
+                        {order.status}
+                    </td>
+                </tr>
+                :
                 <>
                     {index === 0 ?
                         <div onMouseOver={(e) => { e.stopPropagation(); }} id={`${order?.id}/${line ? line.id : ""}`}
@@ -44,8 +75,16 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                 if (manualSelect) return
                                 setCurrentOrder(order);
                                 setCurrentLine(line);
-                                setOpenOrderDetail(true)
+                                setCurrentDate(lineObj?.startDate);
+                                setIsOrderLineDetailOptions(true)
                             }}
+                            // onContextMenu={(e) => {
+                            //     e.preventDefault()
+                            //     if (manualSelect) return
+                            //     setCurrentOrder(order);
+                            //     setCurrentLine(line);
+                            //     setIsOrderProductionDetails(true)
+                            // }}
                             className={` animate-bounce-once mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
                             ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
                             ${manualSelect ?
@@ -111,31 +150,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                         <tr className='hidden'></tr>
                     }
                 </>
-                :
-                <tr
-                    style={{ fontSize: "10px" }} id={order.id} draggable onDragStart={(e) => { drag(e) }}
-                    onDragOver={(e) => { e.preventDefault(); }}
-                    className={`orderItem noDrop select-none text-center border grabbable`}
-                >
-                    <td style={{ backgroundColor: order.color }}>
-                        {index}
-                    </td>
-                    <td>
-                        {order.orderNo}
-                    </td>
-                    <td>
-                        {order.style}
-                    </td>
-                    <td>
-                        {order.buyer}
-                    </td>
-                    <td className='capitalize'>
-                        {order.styleType}
-                    </td>
-                    <td>
-                        {order.quantity}
-                    </td>
-                </tr>
+
             }
         </>
     )

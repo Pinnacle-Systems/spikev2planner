@@ -42,10 +42,11 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
     if (!styleTypeMatchingWarningMessage(line, order)) return
     let orderIndex = findItemIndex(orders, order.id);
     const newOrders = structuredClone(orders);
+    let learningCurveItems = (newOrders[orderIndex]?.["lines"] || []).find(i => i.id == line.id)?.learningCurveItems || [];
     let linesLocal = filterItem(newOrders[orderIndex]["lines"], line.id);
-    if (parseInt(pcs) === parseInt(order.quantity)) {
-        linesLocal = [];
-    }
+    // if (parseInt(pcs) === parseInt(order.quantity)) {
+    //     linesLocal = [];
+    // }
     linesLocal.push(
         {
             id: line.id,
@@ -53,7 +54,7 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
             startDate,
             endDate,
             days: days,
-            learningCurveItems: newOrders?.[orderIndex]?.["lines"]?.[0]?.['learningCurveItems'] || []
+            learningCurveItems
         })
     newOrders[orderIndex]["line"] = [];
     newOrders[orderIndex]["lines"] = linesLocal;
@@ -90,6 +91,7 @@ function filterItem(itemArray, itemId) {
 }
 
 export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getDateFromDateTimeFormatToDisplay = (date) => moment.utc(date).format("DD-MM-YYYY");
 
 
 function matchingDatesbetweenOrders(currentOrder, looporder, line) {
@@ -198,6 +200,11 @@ export const getDateArray = function (start, end) {
 export function findHolidaysBetweenDates(start, end, holidays) {
     const allDates = getDateArray(start, end);
     return allDates.filter(date => isHoliday(date, holidays)).length
+}
+
+export function findWorkingDaysBetweenDates(start, end, holidays) {
+    const allDates = getDateArray(start, end);
+    return allDates.filter(date => !isNationalHoliday(date, holidays))
 }
 
 export function isSunday(date) {

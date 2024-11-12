@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import OrderItem from "./OrderItem"
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
@@ -9,6 +9,7 @@ const OrderList = () => {
         holidays,
     } = useContext(CapacityPlannerContext)
 
+    const [searchOrderNo, setSearchOrderNo] = useState('')
 
     function drop(ev) {
         ev.preventDefault();
@@ -18,6 +19,17 @@ const OrderList = () => {
         newOrders[currentOrderIndex]["lines"] = []
         setOrders(newOrders);
     }
+
+    let ordersForLines = orders.map(ord => {
+        let status = "Pending";
+        let isFullyCompleted = (ord.lines).reduce((a, c) => a + parseFloat(c.pcs || 0), 0) == ord.quantity;
+        if (isFullyCompleted) {
+            status = "Allocated";
+        } else if (ord.lines.length > 0) {
+            status = "Partial";
+        }
+        return { ...ord, status }
+    })
 
     return (
         <div className='w-full h-[400px]'
@@ -32,6 +44,17 @@ const OrderList = () => {
             <h2 className='text-center w-full  select-none text-lg'>Orders</h2>
             <div id="ordersList" className='flex flex-col gap-1 border-2  w-full overflow-auto h-full'>
                 <table className='table-fixed border border-black'>
+                    <thead className='text-xs sticky z-10 top-0 '>
+                        <tr>
+                            <td className='border border-black' colSpan={7} >
+                                <div className='flex justify-center items-center'>
+                                    <input type="text" placeholder='Search Order' className='w-full p-1 my-1 outline-none' autoFocus
+                                        value={searchOrderNo} onChange={(e) => { setSearchOrderNo(e.target.value) }}
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+                    </thead>
                     <thead className='text-xs sticky bg-gray-300 z-10 top-0 '>
                         <tr>
                             <td className='border border-black'>S.no</td>
@@ -40,10 +63,12 @@ const OrderList = () => {
                             <td className='border border-black'>Buyer</td>
                             <td className='border border-black'>Style Type</td>
                             <td className='border border-black'>Qty</td>
+                            <td className='border border-black'>Status</td>
                         </tr>
                     </thead>
                     <tbody>
-                        {orders.filter(item => item.lines.length === 0).map((order, index) => <OrderItem key={order.id} index={index + 1} order={order} holidays={holidays} />
+                        {ordersForLines.filter(i => searchOrderNo ? (i?.orderNo || '').includes(searchOrderNo) : true).map((order, index) =>
+                            <OrderItem key={order.id} index={index + 1} order={order} holidays={holidays} fromOrderList />
                         )}
                     </tbody>
                 </table>

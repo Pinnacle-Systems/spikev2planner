@@ -1,0 +1,68 @@
+import React, { useContext } from 'react'
+import { CapacityPlannerContext } from '../../CapacityPlanner';
+import { findWorkingDaysBetweenDates, getCurrentCapacity, getDateFromDateTimeFormatToDisplay } from '../../helper';
+
+const OrderProductionDetails = () => {
+    const { currentOrder: order, currentLine, holidays, } = useContext(CapacityPlannerContext)
+    const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(currentLine?.id))
+    // const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).filter(i => i.line === currentLine?.name).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
+    // const totalPcsProductionShouldBeCompletedByYesterday = getTotalPcsProductionShouldBeCompletedByYesterday(currentLine, lineObj, holidays)
+    const learningCurveItems = lineObj.learningCurveItems || [];
+    const productionSchedule = [];
+    const workingDays = findWorkingDaysBetweenDates(lineObj.startDate, lineObj.endDate, holidays);
+    const currentCapacity = parseInt(getCurrentCapacity(currentLine.efficiency, currentLine.capacity));
+    let totalPcs = lineObj.pcs || 0;
+    let totalProductionSchedulePcs = 0;
+    for (let i = 0; i < workingDays.length; i++) {
+        let currentEfficiency = (i < (learningCurveItems.length)) ? (learningCurveItems[i]?.percentage || 0) : (learningCurveItems[learningCurveItems.length - 1]?.percentage || 0);
+        let currentDatePcs = getCurrentCapacity(parseInt(currentEfficiency), currentCapacity);
+        let balanceQty = totalPcs - totalProductionSchedulePcs;
+        let allocationQty = 0;
+        if (currentDatePcs > balanceQty) {
+            allocationQty += balanceQty
+        } else {
+            allocationQty += currentDatePcs
+        }
+        totalProductionSchedulePcs += allocationQty;
+        productionSchedule.push({ date: workingDays[i], pcs: allocationQty })
+    }
+    return (
+        <div className=' p-5 mt-5 text-center max-h-[500px] overflow-y-auto'>
+            <table className='table-fixed mt-4'>
+                <thead className='top-0 sticky bg-gray-100'>
+                    <tr className=' font-bold mb-1 bg-blue-300 '>
+                        <th colSpan={4}>
+                            Production Schedule Details
+                        </th>
+                    </tr>
+                    <tr >
+                        <th className='border border-black'> Order no.</th>
+                        <th className='border border-black'> {order.orderNo}</th>
+                        <th className='border border-black'> Line</th>
+                        <th className='border border-black'> {currentLine?.name}</th>
+                    </tr>
+                    <tr>
+                        <th className='border border-black w-5'> S.no</th>
+                        <th className='border border-black'> Date</th>
+                        <th className='border border-black' colSpan={2}> Pcs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {productionSchedule.map((prod, index) =>
+                        <tr key={prod.date}>
+                            <td className='border border-black'> {index + 1}</td>
+                            <td className='border border-black'> {getDateFromDateTimeFormatToDisplay(prod.date)}</td>
+                            <td className='border border-black' colSpan={2}> {prod?.pcs}</td>
+                        </tr>
+                    )}
+                    <tr>
+                        <td className='border border-black' colSpan={2}>Total</td>
+                        <td className='border border-black' colSpan={2}> {totalProductionSchedulePcs}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    )
+}
+
+export default OrderProductionDetails
