@@ -5,7 +5,7 @@ import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';
 import SelectionPanel from './Components/SelectionPanel/SelectionPanel';
 import axios from 'axios';
-import { ORDERS_API, HOLIDAYS_API, UNITS_API } from '../Constants/Api';
+import { ORDERS_API, HOLIDAYS_API, UNITS_API, LINES_API } from '../Constants/Api';
 import { toast } from 'react-toastify';
 import Modal from '../Components/Modal';
 import DeliveryDateWarning from './Components/DeliveryDate/DeliveryDateWarning';
@@ -23,6 +23,7 @@ import { CLIENT_HOLIDAY_URL, CLIENT_ORDERS_URL, CLIENT_UNIT_URL } from '../Const
 import { LearningCurveInputGridStandalone } from './Components/LineDataCoformationForm/LearningCurveInputGrid';
 import OrderProductionDetails from './Components/orderpanel/OrderProductionDetails';
 import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptions';
+import ProductionPlanningReport from './Components/Report/Report';
 
 export const CapacityPlannerContext = createContext();
 
@@ -50,6 +51,8 @@ const CapacityPlanner = () => {
 
     const [findOrder, setFindOrder] = useState({});
 
+    const [openProductionPlanningReport, setOpenProductionPlanningReport] = useState(false);
+
 
     const [split, setSplit] = useState(false);
     const [currentOrder, setCurrentOrder] = useState({});
@@ -66,6 +69,7 @@ const CapacityPlanner = () => {
 
     const [lines, setLines] = useState([]);
 
+
     const retrieveLines = useCallback(() => {
         if (!selectedUnit) return
         axios({
@@ -78,6 +82,8 @@ const CapacityPlanner = () => {
         });
     }, [selectedUnit]);
     useEffect(retrieveLines, [retrieveLines]);
+
+
 
     const getHolidays = useCallback(() => {
         axios({
@@ -146,7 +152,9 @@ const CapacityPlanner = () => {
                 learningCurvePopup, setLearningCurvePopup,
                 isOrderProductionDetails, setIsOrderProductionDetails,
                 isOrderLineDetailOptions, setIsOrderLineDetailOptions,
-                setFindOrder, findOrder
+                setFindOrder, findOrder,
+                openProductionPlanningReport, setOpenProductionPlanningReport
+
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -168,6 +176,9 @@ const CapacityPlanner = () => {
             </Modal>
             <Modal isOpen={isOrderLineDetailOptions} onClose={() => { setIsOrderLineDetailOptions(false); }}>
                 <OrderLineDetailOptions />
+            </Modal>
+            <Modal widthClass={'h-[80%] w-[90%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
+                <ProductionPlanningReport />
             </Modal>
             <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>

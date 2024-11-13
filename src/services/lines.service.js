@@ -4,7 +4,11 @@ import { NoRecordFound } from '../configs/Responses.js';
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { month } = req.query
+    const { month, isReport } = req.query;
+    if (isReport) {
+        const data = await prisma.line.findMany({});
+        return { statusCode: 0, data };
+    }
     let date, firstDay, lastDay;
     if (month) {
         date = new Date(month);
@@ -26,19 +30,6 @@ async function get(req) {
                 }
             ]
         },
-        include: {
-            Line: {
-                select: {
-                    name: true,
-                    unitId: true,
-                    Unit: {
-                        select: {
-                            name: true
-                        }
-                    }
-                }
-            },
-        }
     });
     return { statusCode: 0, data };
 }
