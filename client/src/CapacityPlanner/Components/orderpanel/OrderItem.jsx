@@ -105,20 +105,20 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             //     setCurrentLine(line);
                             //     setIsOrderProductionDetails(true)
                             // }}
-                            className={` animate-bounce-once mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
-                            ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
-                            ${isCurrentOrderActive(order.id, findOrder) ? "z-0 transition delay-150 duration-300 ease-in-out scale-150" : ""}
-                            ${manualSelect ?
-                                    (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
-                                        "z-0 transition delay-150 duration-300 ease-in-out scale-150 " : "") : ""}`}
                             style={{
-                                background: productionMode
+                                background: isCurrentOrderActive(order.id, findOrder) ? undefined : (productionMode
                                     ?
                                     `linear-gradient(to right, ${bgColor}, ${bgColor} ${productionPercent}%, ${EMPTY_ALERT_COLOR} , ${EMPTY_ALERT_COLOR} ${balProductionPercent}%)`
-                                    : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color),
+                                    : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color)),
                                 width: width,
                                 fontSize: "10px",
                             }}
+                            className={` animate-bounce-once mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
+                            ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
+                            ${isCurrentOrderActive(order.id, findOrder) ? "z-0 transition delay-150 duration-300 ease-in-out scale-150 bg-gray-700 text-white" : ""}
+                            ${manualSelect ?
+                                    (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
+                                        "z-0 transition delay-150 duration-300 ease-in-out scale-150 " : "") : ""}`}
                         >
                             <div className={`flex flex-col gap-1 text-center p-1 onShow
                             ${tooltip ? (tooltip === "left" ? "-ml-14" : "mt-14 -ml-[200px]") : ""}`}
