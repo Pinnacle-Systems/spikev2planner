@@ -25,7 +25,7 @@ const LineDataConformationForm = () => {
     const orderLines = structuredClone(orders[currentOrderIndex]?.['lines'] || []);
     const currentOrderLineIndex = orderLines.findIndex(i => i.id == currentLine.id);
     if (currentOrderLineIndex == -1) {
-      orderLines.push({ id: currentLine.id, pcs: 0 })
+      orderLines.push({ id: currentLine.id, Line: currentLine, pcs: 0 })
     }
     setLineItems(orderLines)
   }, [orders, currentOrder, currentLine])
