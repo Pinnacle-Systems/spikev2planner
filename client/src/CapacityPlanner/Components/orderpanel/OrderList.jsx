@@ -9,7 +9,8 @@ const OrderList = () => {
         holidays,
     } = useContext(CapacityPlannerContext)
 
-    const [searchOrderNo, setSearchOrderNo] = useState('')
+    const [searchOrderNo, setSearchOrderNo] = useState('');
+    const [statusFilter, setStatusFilter] = useState("")
 
     function drop(ev) {
         ev.preventDefault();
@@ -55,6 +56,22 @@ const OrderList = () => {
                             </td>
                         </tr>
                     </thead>
+                    <thead className='text-xs sticky z-10 top-0 '>
+                        <tr>
+                            <td className='border border-black' colSpan={7} >
+                                <div className='flex items-center gap-16'>
+                                    <label htmlFor="" className='w-1/4 pl-2'>Status</label>
+                                    <select name="" id="" className='text-center w-3/4' value={statusFilter}
+                                        onChange={(e) => { setStatusFilter(e.target.value) }}>
+                                        <option value="">All</option>
+                                        <option value="Allocated">Allocated</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Partial">Partial</option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                    </thead>
                     <thead className='text-xs sticky bg-gray-300 z-10 top-0 '>
                         <tr>
                             <td className='border border-black'>S.no</td>
@@ -67,7 +84,11 @@ const OrderList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {ordersForLines.filter(i => searchOrderNo ? (i?.orderNo || '').includes(searchOrderNo) : true).map((order, index) =>
+                        {ordersForLines.filter(i =>
+                            (statusFilter ? (i.status == statusFilter) : true)
+                            &&
+                            (searchOrderNo ? (i?.orderNo || '').includes(searchOrderNo) : true)
+                        ).map((order, index) =>
                             <OrderItem key={order.id} index={index + 1} order={order} holidays={holidays} fromOrderList />
                         )}
                     </tbody>

@@ -47,15 +47,17 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
     // if (parseInt(pcs) === parseInt(order.quantity)) {
     //     linesLocal = [];
     // }
-    linesLocal.push(
-        {
-            id: line.id,
-            pcs: pcs,
-            startDate,
-            endDate,
-            days: days,
-            learningCurveItems
-        })
+    if (pcs > 0) {
+        linesLocal.push(
+            {
+                id: line.id,
+                pcs: pcs,
+                startDate,
+                endDate,
+                days: days,
+                learningCurveItems
+            })
+    }
     newOrders[orderIndex]["line"] = [];
     newOrders[orderIndex]["lines"] = linesLocal;
     let ordersInCurrentLine = getOrdersInCurrentLine(order.id, line.id, newOrders);
