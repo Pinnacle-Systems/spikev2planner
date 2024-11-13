@@ -107,7 +107,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             // }}
                             className={` animate-bounce-once mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
                             ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
-                            ${isCurrentOrderActive(order.id, findOrder) ? "z-0 transition delay-150 duration-300 ease-in-out scale-125" : ""}
+                            ${isCurrentOrderActive(order.id, findOrder) ? "z-0 transition delay-150 duration-300 ease-in-out scale-150" : ""}
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 " : "") : ""}`}
