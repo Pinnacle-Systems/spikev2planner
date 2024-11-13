@@ -1,10 +1,14 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrashCan, faEye, faEyeSlash, faImages, faCartPlus, faGlobeAsia, faHouseMedicalFlag, 
-    faUserDoctor, faExternalLink, faHandHoldingMedical, faPlusCircle, faAmbulance, faPrescriptionBottleMedical } from "@fortawesome/free-solid-svg-icons";
+import {
+    faTrashCan, faEye, faEyeSlash, faImages, faCartPlus, faGlobeAsia, faHouseMedicalFlag,
+    faUserDoctor, faExternalLink, faHandHoldingMedical, faPlusCircle, faAmbulance, faPrescriptionBottleMedical,
+    faBan
+} from "@fortawesome/free-solid-svg-icons";
 
 
 export const DELETE = <span className='text-red-600'> <FontAwesomeIcon icon={faTrashCan} /> </span>
 export const VIEW = <span className='text-blue-600'> <FontAwesomeIcon icon={faEye} /> </span>
+export const BAN_ICON = <span className='text-blue-600'> <FontAwesomeIcon icon={faBan} /> </span>
 export const UNVIEW = <span className='text-blue-600'> <FontAwesomeIcon icon={faEyeSlash} /> </span>
 export const IMAGE_ICON = <span> <FontAwesomeIcon icon={faImages} /> </span>
 export const EMPTY_ICON = <span> <FontAwesomeIcon icon={faCartPlus} /> </span>

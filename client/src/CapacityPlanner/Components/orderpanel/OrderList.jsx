@@ -9,7 +9,7 @@ const OrderList = () => {
         holidays,
     } = useContext(CapacityPlannerContext)
 
-    const [searchOrderNo, setSearchOrderNo] = useState('');
+    const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState("")
 
     function drop(ev) {
@@ -47,10 +47,10 @@ const OrderList = () => {
                 <table className='table-fixed border border-black'>
                     <thead className='text-xs sticky z-10 top-0 '>
                         <tr>
-                            <td className='border border-black' colSpan={7} >
+                            <td className='border border-black' colSpan={8} >
                                 <div className='flex justify-center items-center'>
-                                    <input type="text" placeholder='Search Order' className='w-full p-1 my-1 outline-none' autoFocus
-                                        value={searchOrderNo} onChange={(e) => { setSearchOrderNo(e.target.value) }}
+                                    <input type="text" placeholder='Search Order,Style' className='w-full p-1 my-1 outline-none' autoFocus
+                                        value={searchText} onChange={(e) => { setSearchText(e.target.value) }}
                                     />
                                 </div>
                             </td>
@@ -58,7 +58,7 @@ const OrderList = () => {
                     </thead>
                     <thead className='text-xs sticky z-10 top-0 '>
                         <tr>
-                            <td className='border border-black' colSpan={7} >
+                            <td className='border border-black' colSpan={8} >
                                 <div className='flex items-center gap-16'>
                                     <label htmlFor="" className='w-1/4 pl-2'>Status</label>
                                     <select name="" id="" className='text-center w-3/4' value={statusFilter}
@@ -81,13 +81,14 @@ const OrderList = () => {
                             <td className='border border-black'>Style Type</td>
                             <td className='border border-black'>Qty</td>
                             <td className='border border-black'>Status</td>
+                            <td className='border border-black'>Find</td>
                         </tr>
                     </thead>
                     <tbody>
                         {ordersForLines.filter(i =>
                             (statusFilter ? (i.status == statusFilter) : true)
                             &&
-                            (searchOrderNo ? (i?.orderNo || '').includes(searchOrderNo) : true)
+                            (searchText ? ((i?.orderNo || '').toLowerCase().includes(searchText.toLowerCase()) || (i?.style || '').toLowerCase().includes(searchText.toLowerCase())) : true)
                         ).map((order, index) =>
                             <OrderItem key={order.id} index={index + 1} order={order} holidays={holidays} fromOrderList />
                         )}

@@ -48,6 +48,9 @@ const CapacityPlanner = () => {
 
     const [activeLineOrder, setActiveLineOrder] = useState({});
 
+    const [findOrder, setFindOrder] = useState({});
+
+
     const [split, setSplit] = useState(false);
     const [currentOrder, setCurrentOrder] = useState({});
     const [currentLine, setCurrentLine] = useState("");
@@ -142,7 +145,8 @@ const CapacityPlanner = () => {
                 productionMode, setProductionMode,
                 learningCurvePopup, setLearningCurvePopup,
                 isOrderProductionDetails, setIsOrderProductionDetails,
-                isOrderLineDetailOptions, setIsOrderLineDetailOptions
+                isOrderLineDetailOptions, setIsOrderLineDetailOptions,
+                setFindOrder, findOrder
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -172,7 +176,7 @@ const CapacityPlanner = () => {
                 </button>
             </Modal>
             <div className=''>
-                <div className='w-[20%] h-full float-left'>
+                <div className='w-[25%] h-full float-left'>
                     <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
                         <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
                             <img src={addOrders} width={20} alt="" />
@@ -202,7 +206,7 @@ const CapacityPlanner = () => {
                         </>
                     }
                 </div>
-                <div className='w-[80%] float-right overflow-auto h-screen'>
+                <div className='w-[75%] float-right overflow-auto h-screen'>
                     <SelectionPanel />
                     <Calendar />
                 </div>

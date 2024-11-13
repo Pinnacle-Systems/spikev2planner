@@ -2,13 +2,14 @@ import moment from 'moment';
 import React, { useContext } from 'react'
 import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../utils/nationHolidaysHelper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
-import { adjust, isCurrentOrderLineActive } from '../../helper';
+import { adjust, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
+import { BAN_ICON, VIEW } from '../../../utils/icons';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
-        setIsOrderLineDetailOptions
+        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth
     } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
@@ -32,6 +33,16 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
         bgColor = ORANGE_ALERT_COLOR;
     } else if (plannedVsActualPercentage >= 80) {
         bgColor = GREEN_ALERT_COLOR;
+    }
+
+    function handleFindOrder() {
+        let lines = (order.lines || [])
+        if (lines.length === 0) return
+        setMonth(moment.utc(new Date(lines[0]?.startDate)))
+        setFindOrder({ orderId: order.id })
+    }
+    function handleFindOrderDisable() {
+        setFindOrder({})
     }
 
     return (
@@ -64,6 +75,15 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                     <td>
                         {order.status}
                     </td>
+                    {order.status == "Pending" ?
+                        <td >
+                            {BAN_ICON}
+                        </td>
+                        :
+                        <td onClick={handleFindOrder} onBlur={handleFindOrderDisable}>
+                            <button >{VIEW}</button>
+                        </td>
+                    }
                 </tr>
                 :
                 <>
@@ -87,6 +107,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             // }}
                             className={` animate-bounce-once mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
                             ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
+                            ${isCurrentOrderActive(order.id, findOrder) ? "z-0 transition delay-150 duration-300 ease-in-out scale-125" : ""}
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 " : "") : ""}`}

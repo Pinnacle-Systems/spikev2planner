@@ -10,6 +10,9 @@ export const isCurrentOrderLineActive = (orderId, lineId, activeLineOrder) => {
     if (Object.keys(activeLineOrder).length === 0) return false
     return ((parseInt(orderId) === parseInt(activeLineOrder?.orderId)) && (parseInt(lineId) === parseInt(activeLineOrder?.lineId)))
 }
+export const isCurrentOrderActive = (orderId, activeLineOrder) => {
+    return (parseInt(orderId) === parseInt(activeLineOrder?.orderId))
+}
 
 export const getTotalPcsInLineOrder = (orders, currentOrder) => {
     let totalPcs = 0;
