@@ -9,7 +9,7 @@ import { BAN_ICON, VIEW } from '../../../utils/icons';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
-        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth
+        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit
     } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
@@ -38,7 +38,11 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
     function handleFindOrder() {
         let lines = (order.lines || [])
         if (lines.length === 0) return
-        setMonth(moment.utc(new Date(lines[0]?.startDate)))
+        setMonth(moment.utc(new Date(lines[0]?.startDate)));
+        if (lines[0]?.Line?.unitId) {
+            setSelectedUnit(lines[0]?.Line?.unitId);
+        }
+
         setFindOrder({ orderId: order.id })
     }
     function handleFindOrderDisable() {

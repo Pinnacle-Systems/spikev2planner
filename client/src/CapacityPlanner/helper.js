@@ -53,6 +53,7 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
     if (pcs > 0) {
         linesLocal.push(
             {
+                Line: line,
                 id: line.id,
                 pcs: pcs,
                 startDate,

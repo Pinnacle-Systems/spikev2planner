@@ -25,6 +25,7 @@ async function get(req) {
                     Line: {
                         select: {
                             name: true,
+                            unitId: true,
                             Unit: {
                                 select: {
                                     name: true

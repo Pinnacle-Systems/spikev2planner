@@ -286,7 +286,7 @@ const Calendar = () => {
     return (
         <div className='relative w-full overflow-y-auto overflow-x-hidden select-none p-2' style={{ height: "90%", fontSize: "12px" }}>
             <table className={`relative table-fixed w-full p-2`}>
-                <thead className='sticky z-50 top-0 bg-gray-200'>
+                <thead className='sticky z-40 top-0 bg-gray-200'>
                     <tr>
                         {manualSelect ? <th></th> : ""}
                         <th className='w-16'>

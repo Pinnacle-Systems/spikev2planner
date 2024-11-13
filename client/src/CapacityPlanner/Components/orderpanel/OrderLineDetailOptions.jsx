@@ -4,6 +4,7 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 const OrderLineDetailOptions = () => {
     const { setIsOrderProductionDetails, setLineEntryConformation, setOpenOrderDetail, setIsOrderLineDetailOptions, setOrders, currentOrder, currentLine } = useContext(CapacityPlannerContext)
     function removeOrderFromLine() {
+        if (!window.confirm("Do you want to delete this strip?")) return
         setOrders(prev => {
             let orders = structuredClone(prev);
             const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder.id));
@@ -11,8 +12,10 @@ const OrderLineDetailOptions = () => {
             newOrders[currentOrderIndex]["lines"] = newOrders[currentOrderIndex]["lines"].filter(line => parseInt(line.id) !== parseInt(currentLine.id));
             return newOrders
         });
+        setIsOrderLineDetailOptions(false);
     }
     function removeOrder() {
+        if (!window.confirm("Do you want to delete all strips?")) return
         setOrders(prev => {
             let orders = structuredClone(prev);
             const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder.id));
@@ -20,13 +23,14 @@ const OrderLineDetailOptions = () => {
             newOrders[currentOrderIndex]["lines"] = [];
             return newOrders
         });
+        setIsOrderLineDetailOptions(false);
     }
     const options = [
         { name: "Production Schedule", onClick: () => { setIsOrderProductionDetails(true); setIsOrderLineDetailOptions(false); }, className: "bg-green-600" },
         { name: "Order Details", onClick: () => { setOpenOrderDetail(true); setIsOrderLineDetailOptions(false); }, className: "bg-blue-600" },
         { name: "Edit Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
-        { name: "Delete Strip", onClick: () => { removeOrderFromLine(); setIsOrderLineDetailOptions(false); }, className: "bg-red-600" },
-        { name: "Delete All Strips ", onClick: () => { removeOrder(); setIsOrderLineDetailOptions(false); }, className: "bg-red-600" },
+        { name: "Delete Strip", onClick: () => { removeOrderFromLine(); }, className: "bg-red-600" },
+        { name: "Delete All Strips ", onClick: () => { removeOrder(); }, className: "bg-red-600" },
     ];
     return (
         <div className='mt-10'>

@@ -15,7 +15,6 @@ const LineDataConformationForm = () => {
     orders, setOrders,
     setManualSelect,
     holidays,
-    lines
   } = useContext(CapacityPlannerContext);
 
 
@@ -89,10 +88,6 @@ const LineDataConformationForm = () => {
     setManualSelect(true);
   }
 
-  function getLineName(id) {
-    return lines.find(i => i.id == id)?.name
-  }
-
   const totalAllocatedQty = lineItems.reduce((a, c) => a + parseFloat(c.pcs || 0), 0)
 
   const balanceQty = (currentOrder.quantity || 0) - totalAllocatedQty;
@@ -159,7 +154,7 @@ const LineDataConformationForm = () => {
               {lineItems.map((line, index) =>
                 <tr key={line.id} className={`${(currentLine.id == line.id) ? 'bg-green-200' : ''}`}>
                   <td className='border border-black text-center'> {index + 1}</td>
-                  <td className='border border-black'> {getLineName(line?.id)}</td>
+                  <td className='border border-black'> {line?.Line?.name}</td>
                   <td className='border border-black text-right' >
                     <input type="number" min={0} className='text-right' value={line?.pcs}
                       disabled={currentLine.id != line.id} onChange={(e) => { handleChange(index, 'pcs', e.target.value) }} /> </td>

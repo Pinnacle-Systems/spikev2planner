@@ -25,6 +25,19 @@ async function get(req) {
                     } : undefined
                 }
             ]
+        },
+        include: {
+            Line: {
+                select: {
+                    name: true,
+                    unitId: true,
+                    Unit: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
         }
     });
     return { statusCode: 0, data };
