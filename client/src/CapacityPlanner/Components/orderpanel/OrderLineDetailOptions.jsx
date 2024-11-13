@@ -24,7 +24,7 @@ const OrderLineDetailOptions = () => {
     const options = [
         { name: "Production Schedule", onClick: () => { setIsOrderProductionDetails(true); setIsOrderLineDetailOptions(false); }, className: "bg-green-600" },
         { name: "Order Details", onClick: () => { setOpenOrderDetail(true); setIsOrderLineDetailOptions(false); }, className: "bg-blue-600" },
-        { name: "Change Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
+        { name: "Edit Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
         { name: "Delete Strip", onClick: () => { removeOrderFromLine(); setIsOrderLineDetailOptions(false); }, className: "bg-red-600" },
         { name: "Delete All Strips ", onClick: () => { removeOrder(); setIsOrderLineDetailOptions(false); }, className: "bg-red-600" },
     ];
