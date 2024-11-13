@@ -192,6 +192,13 @@ export function findSundaysBetweenDates(start, end) {
 export function isSameDay(d1, d2) {
     return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
 }
+export function isDateBetweenDates(d1, d2, findDate) {
+    let startDate = new Date(d1);
+    let endDate = new Date(d2);
+    let findingDate = new Date(findDate);
+    if (isSameDay(findingDate, startDate) || isSameDay(findingDate, endDate)) return true
+    return (startDate < findingDate) && (findingDate < endDate)
+}
 
 export const getDateArray = function (start, end) {
     let arr = [];

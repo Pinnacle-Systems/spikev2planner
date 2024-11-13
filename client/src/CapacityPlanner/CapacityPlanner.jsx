@@ -5,7 +5,7 @@ import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';
 import SelectionPanel from './Components/SelectionPanel/SelectionPanel';
 import axios from 'axios';
-import { ORDERS_API, HOLIDAYS_API, UNITS_API, LINES_API } from '../Constants/Api';
+import { ORDERS_API, HOLIDAYS_API, UNITS_API } from '../Constants/Api';
 import { toast } from 'react-toastify';
 import Modal from '../Components/Modal';
 import DeliveryDateWarning from './Components/DeliveryDate/DeliveryDateWarning';
@@ -68,6 +68,21 @@ const CapacityPlanner = () => {
     const [productionMode, setProductionMode] = useState(false);
 
     const [lines, setLines] = useState([]);
+
+    const [units, setUnits] = useState([]);
+
+
+    const retrieveUnits = useCallback(() => {
+        axios({
+            method: 'get',
+            url: BASE_URL + UNITS_API,
+        }).then((result) => {
+            setUnits(result.data.data)
+        }, (error) => {
+            toast.error("Server Down", { autoClose: 5000 });
+        });
+    }, []);
+    useEffect(retrieveUnits, [retrieveUnits]);
 
 
     const retrieveLines = useCallback(() => {
@@ -153,7 +168,8 @@ const CapacityPlanner = () => {
                 isOrderProductionDetails, setIsOrderProductionDetails,
                 isOrderLineDetailOptions, setIsOrderLineDetailOptions,
                 setFindOrder, findOrder,
-                openProductionPlanningReport, setOpenProductionPlanningReport
+                openProductionPlanningReport, setOpenProductionPlanningReport,
+                units, setUnits
 
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
@@ -177,7 +193,7 @@ const CapacityPlanner = () => {
             <Modal isOpen={isOrderLineDetailOptions} onClose={() => { setIsOrderLineDetailOptions(false); }}>
                 <OrderLineDetailOptions />
             </Modal>
-            <Modal widthClass={'h-[80%] w-[90%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
+            <Modal widthClass={'w-[90%] h-[80%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
                 <ProductionPlanningReport />
             </Modal>
             <Modal isOpen={loading}>

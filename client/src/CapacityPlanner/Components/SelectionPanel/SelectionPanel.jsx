@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState, useContext } from 'react';
+import React, { useCallback, useEffect, useContext } from 'react';
 import moment from 'moment/moment';
-import { UNITS_API, ORDERS_API } from '../../../Constants/Api';
+import { ORDERS_API } from '../../../Constants/Api';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
@@ -17,21 +17,9 @@ const SelectionPanel = () => {
         selectedUnit, setSelectedUnit,
         manualSelect, setLoading,
         productionMode, setProductionMode,
+        units
     } = useContext(CapacityPlannerContext)
-    const [units, setUnits] = useState([]);
 
-
-    const retrieveData = useCallback(() => {
-        axios({
-            method: 'get',
-            url: BASE_URL + UNITS_API,
-        }).then((result) => {
-            setUnits(result.data.data)
-        }, (error) => {
-            toast.error("Server Down", { autoClose: 5000 });
-        });
-    }, []);
-    useEffect(retrieveData, [retrieveData]);
 
 
     const storeOrderData = useCallback(() => {

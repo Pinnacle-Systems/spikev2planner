@@ -4,10 +4,34 @@ import { NoRecordFound } from '../configs/Responses.js';
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { month, isReport } = req.query;
+    const { month, isReport, selectedUnits } = req.query;
     if (isReport) {
-        const data = await prisma.line.findMany({});
-        return { statusCode: 0, data };
+        const data = await prisma.line.findMany({
+            where: {
+                unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
+                    in: selectedUnits.map(i => parseInt(i))
+                } : undefined
+            }
+        });
+        const reportData = await prisma.orderLines.findMany({
+            where: {
+                Line: {
+                    unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
+                        in: selectedUnits.map(i => parseInt(i))
+                    } : undefined
+                }
+            },
+            include: {
+                learningCurveItems: true,
+                Line: true,
+                Orders: {
+                    select: {
+                        orderNo: true
+                    }
+                }
+            }
+        });
+        return { statusCode: 0, data, reportData };
     }
     let date, firstDay, lastDay;
     if (month) {

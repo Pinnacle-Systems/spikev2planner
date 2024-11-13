@@ -1,10 +1,12 @@
 import React, { useCallback, useContext, useEffect } from 'react'
 import { useState } from 'react'
-import { findWorkingDaysBetweenDates, getDateFromDateTimeFormatToDisplay } from '../../helper';
+import { findWorkingDaysBetweenDates, getCurrentCapacity, getDateFromDateTimeFormatToDisplay, isDateBetweenDates, isSameDay } from '../../helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import axios from 'axios';
 import { LINES_API } from '../../../Constants/Api';
 import { toast } from 'react-toastify';
+import Cell from './Cell';
+import Parameter from './Parameter';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -13,28 +15,37 @@ const ProductionPlanningReport = () => {
 
     const {
         holidays,
-        setOpenProductionPlanningReport
+        units
     } = useContext(CapacityPlannerContext);
 
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [selectedUnits, setSelectedUnits] = useState([]);
     const [dates, setDates] = useState([]);
 
+    useEffect(() => {
+        setSelectedUnits(units.map(i => i.id))
+    }, [units])
+
     const [allUnitLines, setAllUnitLines] = useState([]);
+    const [reportData, setReportData] = useState([]);
+
 
     const retrieveAllLines = useCallback(() => {
         axios({
             method: 'get',
             url: BASE_URL + LINES_API,
             params: {
-                isReport: true
+                isReport: true,
+                selectedUnits
             }
         }).then((result) => {
             setAllUnitLines(result?.data?.data || [])
+            setReportData(result?.data?.reportData || [])
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
         });
-    }, []);
+    }, [selectedUnits]);
 
     useEffect(retrieveAllLines, [retrieveAllLines]);
 
@@ -53,33 +64,87 @@ const ProductionPlanningReport = () => {
         setDates(findWorkingDaysBetweenDates(startDate, endDate, holidays));
     }, [startDate, endDate, holidays]);
 
+    function getDataForStartDateAndLine(date, line) {
+        return reportData.find(orderLine => (orderLine.lineId == line.id) && isSameDay(new Date(date), new Date(orderLine.startDate)))
+    }
+    let reportDataWithLearningCurvePercentage = reportData.map(lineObj => {
+        const learningCurveItems = lineObj.learningCurveItems || [];
+        const productionSchedule = [];
+        let currentLine = lineObj.Line;
+        const workingDays = findWorkingDaysBetweenDates(lineObj.startDate, lineObj.endDate, holidays);
+        const currentCapacity = parseInt(getCurrentCapacity(currentLine.efficiency, currentLine.capacity));
+        let totalPcs = lineObj.pcs || 0;
+        let totalProductionSchedulePcs = 0;
+        for (let i = 0; i < workingDays.length; i++) {
+            let currentEfficiency = (i < (learningCurveItems.length)) ? (learningCurveItems[i]?.percentage || 0) : (learningCurveItems[learningCurveItems.length - 1]?.percentage || 0);
+            let currentDatePcs = getCurrentCapacity(parseInt(currentEfficiency), currentCapacity);
+            let balanceQty = totalPcs - totalProductionSchedulePcs;
+            let allocationQty = 0;
+            if (currentDatePcs > balanceQty) {
+                allocationQty += balanceQty
+            } else {
+                allocationQty += currentDatePcs
+            }
+            totalProductionSchedulePcs += allocationQty;
+            productionSchedule.push({ date: workingDays[i], pcs: allocationQty })
+        }
+        return { ...lineObj, productionSchedule }
+    })
+
+    function getDataForDateAndLine(date, line) {
+        return reportDataWithLearningCurvePercentage.find(orderLine => (orderLine.lineId == line.id) && isDateBetweenDates(new Date(orderLine.startDate), new Date(orderLine.endDate), new Date(date)))
+    }
+
     return (
-        <div className='mt-10 w-full h-full'>
-            <div className='w-full h-[95%] overflow-auto'>
-                <table id='plannedOrders' className='w-full table-auto'>
+        <div className='pt-2 w-full h-full text-sm p-2'>
+            <div className='text-center bg-blue-200 text-2xl '>
+                Production Schedule Report
+            </div>
+            <Parameter selectedUnits={selectedUnits} setSelectedUnits={setSelectedUnits} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} refetch={retrieveAllLines} />
+            <div className='text-center bg-gray-200 mt-1'>
+                <strong>
+                    Date From {getDateFromDateTimeFormatToDisplay(startDate)} to {getDateFromDateTimeFormatToDisplay(endDate)}
+                    <span className='pl-10'>
+                        Units:  {(selectedUnits.length === 0)
+                            ?
+                            units.map(i => i.name).join(',')
+                            :
+                            units.filter(i => selectedUnits.includes(i.id)).map(i => i.name).join(',')}
+                    </span>
+                </strong>
+            </div>
+            <div className='w-full h-[90%] overflow-auto'>
+                <table id='production-report' className='w-full table-auto'>
                     <thead className="table-header sticky top-0 left-0 bg-gray-200">
                         <tr className=''>
-                            <th className='sticky left-0 top-0 z-5 bg-gray-200 '>
-                                <span className='w-20'>
+                            <th>
+                                <span className='bg-gray-200'>
                                     Lines →
                                     Date ↓
                                 </span>
                             </th>
                             {allUnitLines.map(line =>
-                                <th>{line.name}</th>
+                                <React.Fragment key={line.id}>
+                                    <th>
+                                        <span className='w-20 whitespace-nowrap p-1'>
+                                            {line.name}
+                                        </span>
+                                    </th>
+                                    <th className='border-r border-gray-400'>Pcs</th>
+                                </React.Fragment>
                             )}
                         </tr>
                     </thead>
                     <tbody>
                         {dates.map(date =>
-                            <tr key={date} className="table-row ">
-                                <td className='sticky left-0 z-10 bg-gray-200'>
-                                    <div className='w-20'>
+                            <tr key={date} className="table-row-report">
+                                <td className='sticky left-0 '>
+                                    <div className='w-20 z-0 bg-gray-200'>
                                         {getDateFromDateTimeFormatToDisplay(date)}
                                     </div>
                                 </td>
                                 {allUnitLines.map(line =>
-                                    <td></td>
+                                    <Cell key={line.id} date={date} line={line} getDataForDateAndLine={getDataForDateAndLine} getDataForStartDateAndLine={getDataForStartDateAndLine} endDate={endDate} />
                                 )}
                             </tr>
                         )}
