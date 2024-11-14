@@ -51,6 +51,8 @@ const CapacityPlanner = () => {
 
     const [findOrder, setFindOrder] = useState({});
 
+    const [scrollLine, setScrollLine] = useState('');
+
     const [openProductionPlanningReport, setOpenProductionPlanningReport] = useState(false);
 
 
@@ -150,6 +152,14 @@ const CapacityPlanner = () => {
         return () => clearTimeout(timer);
     }, [orders, manualSelect]);
 
+    useEffect(() => {
+        if (!scrollLine) return
+        let lineElement = document.getElementById(`line${scrollLine?.lineId}`);
+        if (!lineElement) return
+        lineElement.scrollIntoView();
+        setScrollLine(null)
+    }, [scrollLine, selectedUnit, lines])
+
     return (
         <CapacityPlannerContext.Provider
             value={{
@@ -169,8 +179,8 @@ const CapacityPlanner = () => {
                 isOrderLineDetailOptions, setIsOrderLineDetailOptions,
                 setFindOrder, findOrder,
                 openProductionPlanningReport, setOpenProductionPlanningReport,
-                units, setUnits
-
+                units, setUnits,
+                scrollLine, setScrollLine
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />

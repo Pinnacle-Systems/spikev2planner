@@ -6,11 +6,10 @@ import { adjust, isCurrentOrderActive, isCurrentOrderLineActive } from '../../he
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 import { BAN_ICON, VIEW } from '../../../utils/icons';
-import bgChangingColor from "../../../assets/colorchanging.gif"
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
-        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit
+        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine
     } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
@@ -43,8 +42,8 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
         if (lines[0]?.Line?.unitId) {
             setSelectedUnit(lines[0]?.Line?.unitId);
         }
-
         setFindOrder({ orderId: order.id })
+        setScrollLine({ lineId: lines[0]?.id })
     }
     function handleFindOrderDisable() {
         setFindOrder({})
