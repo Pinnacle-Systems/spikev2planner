@@ -204,6 +204,7 @@ export const getDateArray = function (start, end) {
     let arr = [];
     let dt = new Date(start);
     end = new Date(end);
+    end.setHours(23, 59, 59, 99)
     while (dt <= end) {
         arr.push(new Date(dt));
         dt.setDate(dt.getDate() + 1);

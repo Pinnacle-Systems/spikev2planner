@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from 'react'
+import React, { useCallback, useContext, useEffect, useRef } from 'react'
 import { useState } from 'react'
 import { findWorkingDaysBetweenDates, getCurrentCapacity, getDateFromDateTimeFormatToDisplay, isDateBetweenDates, isSameDay } from '../../helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
@@ -23,6 +23,7 @@ const ProductionPlanningReport = () => {
     const [selectedUnits, setSelectedUnits] = useState([]);
     const [dates, setDates] = useState([]);
 
+
     useEffect(() => {
         setSelectedUnits(units.map(i => i.id))
     }, [units])
@@ -30,24 +31,6 @@ const ProductionPlanningReport = () => {
     const [allUnitLines, setAllUnitLines] = useState([]);
     const [reportData, setReportData] = useState([]);
 
-
-    const retrieveAllLines = useCallback(() => {
-        axios({
-            method: 'get',
-            url: BASE_URL + LINES_API,
-            params: {
-                isReport: true,
-                selectedUnits
-            }
-        }).then((result) => {
-            setAllUnitLines(result?.data?.data || [])
-            setReportData(result?.data?.reportData || [])
-        }, (error) => {
-            toast.error("Server Down", { autoClose: 5000 });
-        });
-    }, [selectedUnits]);
-
-    useEffect(retrieveAllLines, [retrieveAllLines]);
 
     useEffect(() => {
         let startDate = new Date();
@@ -59,6 +42,25 @@ const ProductionPlanningReport = () => {
         setStartDate(startDate);
         setEndDate(endDate);
     }, []);
+
+    const retrieveAllLines = useCallback(() => {
+        if (!startDate || !endDate) return
+        axios({
+            method: 'get',
+            url: BASE_URL + LINES_API,
+            params: {
+                isReport: true,
+                selectedUnits,
+                startDate, endDate
+            }
+        }).then((result) => {
+            setAllUnitLines(result?.data?.data || [])
+            setReportData(result?.data?.reportData || []);
+        }, (error) => {
+            toast.error("Server Down", { autoClose: 5000 });
+        });
+    }, [selectedUnits, startDate, endDate]);
+
 
     useEffect(() => {
         setDates(findWorkingDaysBetweenDates(startDate, endDate, holidays));
@@ -95,6 +97,18 @@ const ProductionPlanningReport = () => {
         return reportDataWithLearningCurvePercentage.find(orderLine => (orderLine.lineId == line.id) && isDateBetweenDates(new Date(orderLine.startDate), new Date(orderLine.endDate), new Date(date)))
     }
 
+    function getLineWiseTotal(lineId) {
+        let reportData = reportDataWithLearningCurvePercentage.filter(orderLine => (orderLine.lineId == lineId))
+        let qty = 0;
+        reportData.forEach(dateData => {
+            let productionSchedule = dateData?.productionSchedule || [];
+            qty += productionSchedule.filter(i =>
+                isDateBetweenDates(new Date(startDate), new Date(endDate), new Date(i.date))
+            ).reduce((a, c) => a + parseFloat(c?.pcs || 0), 0);
+        })
+        return qty
+    }
+
     return (
         <div className='pt-2 w-full h-full text-sm p-2'>
             <div className='text-center bg-blue-200 text-2xl '>
@@ -113,44 +127,67 @@ const ProductionPlanningReport = () => {
                     </span>
                 </strong>
             </div>
-            <div className='w-full h-[90%] overflow-auto'>
-                <table id='production-report' className='w-full table-auto'>
-                    <thead className="table-header sticky top-0 left-0 bg-gray-200">
-                        <tr className=''>
-                            <th>
-                                <span className='bg-gray-200'>
-                                    Lines →
-                                    Date ↓
-                                </span>
-                            </th>
-                            {allUnitLines.map(line =>
-                                <React.Fragment key={line.id}>
-                                    <th>
-                                        <span className='w-20 whitespace-nowrap p-1'>
-                                            {line.name}
-                                        </span>
-                                    </th>
-                                    <th className='border-r border-gray-400'>Pcs</th>
-                                </React.Fragment>
+            {reportData?.length == 0 ?
+                <div className='text-2xl text-center h-[90%] flex justify-center items-center'>
+                    <span>
+                        Generate Report to View
+                    </span>
+                </div>
+                :
+                <div className='w-full h-[90%] overflow-auto'>
+                    <table id='production-report' className='w-full table-auto'>
+                        <thead className="table-header sticky top-0 left-0 bg-gray-200">
+                            <tr className=''>
+                                <th>
+                                    <span className='bg-gray-200'>
+                                        Lines →
+                                        Date ↓
+                                    </span>
+                                </th>
+                                {allUnitLines.map(line =>
+                                    <React.Fragment key={line.id}>
+                                        <th>
+                                            <span className='w-20 whitespace-nowrap p-1'>
+                                                {line.name}
+                                            </span>
+                                        </th>
+                                        <th className='border-r border-gray-400'>Pcs</th>
+                                    </React.Fragment>
+                                )}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {dates.map(date =>
+                                <tr key={date} className="table-row-report">
+                                    <td className='sticky left-0 '>
+                                        <div className='w-20 z-0 bg-gray-200'>
+                                            {getDateFromDateTimeFormatToDisplay(date)}
+                                        </div>
+                                    </td>
+                                    {allUnitLines.map(line =>
+                                        <Cell key={line.id} date={date} line={line} getDataForDateAndLine={getDataForDateAndLine} getDataForStartDateAndLine={getDataForStartDateAndLine} endDate={endDate} />
+                                    )}
+                                </tr>
                             )}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {dates.map(date =>
-                            <tr key={date} className="table-row-report">
+                            <tr className="table-row-report">
                                 <td className='sticky left-0 '>
                                     <div className='w-20 z-0 bg-gray-200'>
-                                        {getDateFromDateTimeFormatToDisplay(date)}
+                                        Total
                                     </div>
                                 </td>
                                 {allUnitLines.map(line =>
-                                    <Cell key={line.id} date={date} line={line} getDataForDateAndLine={getDataForDateAndLine} getDataForStartDateAndLine={getDataForStartDateAndLine} endDate={endDate} />
+                                    <td className='' colSpan={2}>
+                                        <div className='z-0 bg-gray-200 text-right'>
+                                            {getLineWiseTotal(line.id)}
+                                        </div>
+                                    </td>
                                 )}
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            }
+
         </div>
     )
 }

@@ -4,7 +4,7 @@ import { NoRecordFound } from '../configs/Responses.js';
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { month, isReport, selectedUnits } = req.query;
+    const { month, isReport, selectedUnits, startDate, endDate } = req.query;
     if (isReport) {
         const data = await prisma.line.findMany({
             where: {
@@ -13,12 +13,19 @@ async function get(req) {
                 } : undefined
             }
         });
+        let fromDate = new Date(startDate);
+        fromDate.setHours(0, 0, 0, 0);
+        let toDate = new Date(endDate);
+        toDate.setHours(23, 59, 59, 99);
         const reportData = await prisma.orderLines.findMany({
             where: {
                 Line: {
                     unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
                         in: selectedUnits.map(i => parseInt(i))
                     } : undefined
+                },
+                startDate: {
+                    gte: fromDate
                 }
             },
             include: {
@@ -31,6 +38,7 @@ async function get(req) {
                 }
             }
         });
+
         return { statusCode: 0, data, reportData };
     }
     let date, firstDay, lastDay;

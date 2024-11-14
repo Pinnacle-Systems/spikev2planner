@@ -2,17 +2,23 @@ import React from 'react'
 import { isSameDay } from '../../helper';
 import { dateDiffBetweenDays } from '../../../utils/helper';
 
-const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, endDate }) => {
+const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, endDate, }) => {
     let data = getDataForStartDateAndLine(date, line);
     let dateData = getDataForDateAndLine(date, line);
     let productionSchedule = dateData?.productionSchedule || [];
     let qty = productionSchedule.find(i => isSameDay(new Date(i.date), new Date(date)))?.pcs || 0;
 
-    let days = data?.days || 1;
+    let days = parseFloat(data?.days || 0);
     let dateDiff = dateDiffBetweenDays(new Date(endDate), new Date(data?.endDate));
-    if (dateDiff > 0) {
-        days -= (dateDiff - 1);
+
+    if (data) {
+        console.log(endDate, data, dateDiff, 'datediff')
     }
+
+    if (dateDiff > 0) {
+        days -= (dateDiff);
+    }
+
     return (
         <React.Fragment key={line.id}>
             {data ?
