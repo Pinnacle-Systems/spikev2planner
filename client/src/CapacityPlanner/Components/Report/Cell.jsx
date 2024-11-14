@@ -1,23 +1,26 @@
-import React from 'react'
-import { isSameDay } from '../../helper';
+import React, { useContext } from 'react'
+import { findNationalHolidaysBetweenDates, isNationalHoliday, isSameDay } from '../../helper';
 import { dateDiffBetweenDays } from '../../../utils/helper';
+import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, endDate, }) => {
+const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, startDate, endDate, }) => {
+    const {
+        holidays,
+    } = useContext(CapacityPlannerContext);
     let data = getDataForStartDateAndLine(date, line);
     let dateData = getDataForDateAndLine(date, line);
     let productionSchedule = dateData?.productionSchedule || [];
     let qty = productionSchedule.find(i => isSameDay(new Date(i.date), new Date(date)))?.pcs || 0;
 
+    let dateDiff = dateDiffBetweenDays(new Date(endDate), new Date(data?.endDate)) - findNationalHolidaysBetweenDates(new Date(endDate), new Date(data?.endDate), holidays) + (isNationalHoliday(endDate, holidays) ? 1 : 0);
     let days = parseFloat(data?.days || 0);
-    let dateDiff = dateDiffBetweenDays(new Date(endDate), new Date(data?.endDate));
-
     if (data) {
-        console.log(endDate, data, dateDiff, 'datediff')
+        console.log(days, 'days', dateDiff, 'dateDiff', endDate, data?.endDate);
     }
-
     if (dateDiff > 0) {
         days -= (dateDiff);
-    }
+    };
+
 
     return (
         <React.Fragment key={line.id}>

@@ -165,7 +165,7 @@ const ProductionPlanningReport = () => {
                                         </div>
                                     </td>
                                     {allUnitLines.map(line =>
-                                        <Cell key={line.id} date={date} line={line} getDataForDateAndLine={getDataForDateAndLine} getDataForStartDateAndLine={getDataForStartDateAndLine} endDate={endDate} />
+                                        <Cell key={line.id} date={date} line={line} getDataForDateAndLine={getDataForDateAndLine} getDataForStartDateAndLine={getDataForStartDateAndLine} endDate={endDate} startDate={startDate} />
                                     )}
                                 </tr>
                             )}
