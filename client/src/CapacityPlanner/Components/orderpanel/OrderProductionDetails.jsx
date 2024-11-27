@@ -26,12 +26,22 @@ const OrderProductionDetails = () => {
         totalProductionSchedulePcs += allocationQty;
         productionSchedule.push({ date: workingDays[i], pcs: allocationQty })
     }
+
+
+    let lineAndDateWiseProductionQtyList = (order.lineWiseProductionData || []);
+    function getLineWiseDateProductionQty(date) {
+        return lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name && getDateFromDateTimeFormatToDisplay(i.date) == getDateFromDateTimeFormatToDisplay(date)).reduce((a, c) => a + parseFloat(c.productionqty || 0), 0)
+    }
+
+    let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.productionqty || 0), 0);
+
+    let totalBalanceQty = totalProductionSchedulePcs - lineAndDateWiseProductionQty;
     return (
         <div className=' p-5 mt-5 text-center max-h-[500px] overflow-y-auto'>
             <table className='table-fixed mt-4'>
                 <thead className='top-0 sticky bg-gray-100'>
                     <tr className=' font-bold mb-1 bg-blue-300 '>
-                        <th colSpan={4}>
+                        <th colSpan={5}>
                             Production Schedule Details
                         </th>
                     </tr>
@@ -39,25 +49,35 @@ const OrderProductionDetails = () => {
                         <th className='border border-black'> Order no.</th>
                         <th className='border border-black'> {order.orderNo}</th>
                         <th className='border border-black'> Line</th>
-                        <th className='border border-black'> {currentLine?.name}</th>
+                        <th className='border border-black' colSpan={2}> {currentLine?.name}</th>
                     </tr>
                     <tr>
                         <th className='border border-black w-5'> S.no</th>
                         <th className='border border-black'> Date</th>
-                        <th className='border border-black' colSpan={2}> Pcs</th>
+                        <th className='border border-black' > Pcs</th>
+                        <th className='border border-black' > Prod.Qty</th>
+                        <th className='border border-black' > Balance</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {productionSchedule.map((prod, index) =>
-                        <tr key={prod.date}>
+                    {productionSchedule.map((prod, index) => {
+                        let prodQty = getLineWiseDateProductionQty(prod.date);
+                        let balQty = parseFloat(prod?.pcs || 0) - prodQty;
+                        return (<tr key={prod.date}>
                             <td className='border border-black'> {index + 1}</td>
                             <td className='border border-black'> {getDateFromDateTimeFormatToDisplay(prod.date)}</td>
-                            <td className='border border-black' colSpan={2}> {prod?.pcs}</td>
-                        </tr>
+                            <td className='border border-black' > {prod?.pcs}</td>
+                            <td className='border border-black' > {prodQty}</td>
+                            {/* <td className='border border-black' > {balQty < 0 ? 0 : balQty}</td> */}
+                            <td className={`border border-black ${balQty > 0 ? "text-red-700" : "text-green-700"}`} > {Math.abs(balQty)}</td>
+                        </tr>)
+                    }
                     )}
-                    <tr>
+                    <tr className='font-bold'>
                         <td className='border border-black' colSpan={2}>Total</td>
-                        <td className='border border-black' colSpan={2}> {totalProductionSchedulePcs}</td>
+                        <td className='border border-black'> {totalProductionSchedulePcs}</td>
+                        <td className='border border-black'> {lineAndDateWiseProductionQty}</td>
+                        <td className={`border border-black ${totalBalanceQty > 0 ? "text-red-700" : "text-green-700"} `}> {Math.abs(totalBalanceQty)}</td>
                     </tr>
                 </tbody>
             </table>

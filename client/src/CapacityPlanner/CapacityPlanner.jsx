@@ -24,6 +24,7 @@ import { LearningCurveInputGridStandalone } from './Components/LineDataCoformati
 import OrderProductionDetails from './Components/orderpanel/OrderProductionDetails';
 import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptions';
 import ProductionPlanningReport from './Components/Report/Report';
+import ProductionDetails from './Components/orderpanel/ProductionDetails';
 
 export const CapacityPlannerContext = createContext();
 
@@ -55,6 +56,8 @@ const CapacityPlanner = () => {
 
     const [openProductionPlanningReport, setOpenProductionPlanningReport] = useState(false);
 
+    const [productionDetails, setProductionDetails] = useState(false);
+
 
     const [split, setSplit] = useState(false);
     const [currentOrder, setCurrentOrder] = useState({});
@@ -68,6 +71,8 @@ const CapacityPlanner = () => {
     const [holidays, setHolidays] = useState([]);
 
     const [productionMode, setProductionMode] = useState(false);
+
+
 
     const [lines, setLines] = useState([]);
 
@@ -180,7 +185,8 @@ const CapacityPlanner = () => {
                 setFindOrder, findOrder,
                 openProductionPlanningReport, setOpenProductionPlanningReport,
                 units, setUnits,
-                scrollLine, setScrollLine
+                scrollLine, setScrollLine,
+                productionDetails, setProductionDetails
             }}>
             <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -205,6 +211,9 @@ const CapacityPlanner = () => {
             </Modal>
             <Modal widthClass={'w-[90%] h-[80%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
                 <ProductionPlanningReport />
+            </Modal>
+            <Modal widthClass={''} isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
+                <ProductionDetails />
             </Modal>
             <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>

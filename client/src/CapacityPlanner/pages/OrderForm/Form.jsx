@@ -18,7 +18,7 @@ import { styleTypeOptions } from "../../../utils/selectOptions";
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 
-function Form({ id, setId }) {
+function Form({ id, setId, getOrders }) {
     const [orderNo, setOrderNo] = useState("");
     const [buyer, setBuyer] = useState("");
     const [dDate, setDDate] = useState("");
@@ -133,6 +133,13 @@ function Form({ id, setId }) {
                         <span>
                             Order Details Form
                         </span>
+                        <button
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            type="button"
+                            onClick={() => { getOrders({ isGetOrdersFromERP: true }) }}
+                        >
+                            Get New Orders
+                        </button>
                         <button
                             className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
                             type="button"

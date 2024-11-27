@@ -47,7 +47,7 @@ const OrderList = () => {
                 <table className='table-fixed border border-black'>
                     <thead className='text-xs sticky z-10 top-0 '>
                         <tr>
-                            <td className='border border-black' colSpan={8} >
+                            <td className='border border-black' colSpan={9} >
                                 <div className='flex justify-center items-center'>
                                     <input type="text" placeholder='Search Order,Style' className='w-full p-1 my-1 outline-none' autoFocus
                                         value={searchText} onChange={(e) => { setSearchText(e.target.value) }}
@@ -58,7 +58,7 @@ const OrderList = () => {
                     </thead>
                     <thead className='text-xs sticky z-10 top-0 '>
                         <tr>
-                            <td className='border border-black' colSpan={8} >
+                            <td className='border border-black' colSpan={9} >
                                 <div className='flex items-center gap-16'>
                                     <label htmlFor="" className='w-1/4 pl-2'>Status</label>
                                     <select name="" id="" className='text-center w-3/4' value={statusFilter}
@@ -82,6 +82,7 @@ const OrderList = () => {
                             <td className='border border-black'>Qty</td>
                             <td className='border border-black'>Status</td>
                             <td className='border border-black'>Find</td>
+                            <td className='border border-black'>Prod.Det</td>
                         </tr>
                     </thead>
                     <tbody>

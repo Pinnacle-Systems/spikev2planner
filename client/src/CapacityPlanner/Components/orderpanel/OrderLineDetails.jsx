@@ -8,7 +8,7 @@ import { LearningCurveInputGrid } from '../LineDataCoformationForm/LearningCurve
 const OrderLineDetails = () => {
     const { currentOrder: order, currentLine, holidays, } = useContext(CapacityPlannerContext)
     const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(currentLine?.id))
-    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).filter(i => i.line === currentLine?.name).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
+    const totalLineWiseProductionQty = (order.lineWiseProductionData || []).filter(i => i.line === currentLine?.name).reduce((a, c) => a + parseFloat(c?.productionqty || 0), 0)
     const totalPcsProductionShouldBeCompletedByYesterday = getTotalPcsProductionShouldBeCompletedByYesterday(currentLine, lineObj, holidays)
 
     return (

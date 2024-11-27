@@ -10,10 +10,11 @@ const BASE_URL = process.env.REACT_APP_SERVER_URL;
 const OrderForm = () => {
   const [id, setId] = useState("");
   const [orders, setOrders] = useState([]);
-  const retrieveData = useCallback(() => {
+  const retrieveData = useCallback((params) => {
     axios({
       method: 'get',
       url: BASE_URL + ORDERS_API,
+      params
     }).then((result) => {
       setOrders(result.data.data)
     }, (error) => {
@@ -25,7 +26,7 @@ const OrderForm = () => {
   return (
     <div className='h-screen w-screen'>
       <div className='h-full border w-3/4 float-left'>
-        <Form id={id} setId={setId} />
+        <Form id={id} setId={setId} getOrders={retrieveData} />
       </div>
       <div className='h-full w-1/4 float-right'>
         <Report orders={orders} setOrders={setOrders} setId={setId} />

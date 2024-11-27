@@ -9,7 +9,7 @@ import { BAN_ICON, VIEW } from '../../../utils/icons';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
-        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine
+        setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine, setProductionDetails,
     } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
@@ -17,7 +17,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
         setCurrentDraggedLine(line)
     }
     const lineObj = (order?.lines || []).find(lineItem => parseInt(lineItem.id) === parseInt(line?.id))
-    const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).filter(i => i.line === line?.name).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
+    const totalLineWiseProductionQty = (order.lineWiseProductionData || []).filter(i => i.line === line?.name).reduce((a, c) => a + parseFloat(c?.productionqty || 0), 0)
     const productionPercent = Math.floor(totalLineWiseProductionQty / parseFloat(order.quantity || 0) * 100);
     const balProductionPercent = 100 - productionPercent;
 
@@ -88,6 +88,10 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             <button >{VIEW}</button>
                         </td>
                     }
+
+                    <td onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
+                        <button >{VIEW}</button>
+                    </td>
                 </tr>
                 :
                 <>
