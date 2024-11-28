@@ -7,9 +7,10 @@ import { getProductionDataFromErpLineDateWise, getProductionQty, getProductionQt
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { lines, isGetOrdersFromERP } = req.query;
+    const { lines, isGetOrdersFromERP, startDate, endDate } = req.query;
     if (isGetOrdersFromERP) {
-        await getOrdersFromErp()
+        if (!startDate || !endDate) return { statusCode: 1, message: "Start Date and End Date Mandatory...!!!" }
+        await getOrdersFromErp(startDate, endDate)
     }
     let data = await prisma.orders.findMany({
         where: {

@@ -14,6 +14,7 @@ import OrderExcelImport from "./OrderExcelImport";
 import OrderSizeColorWiseDetails from "./OrderSizeColorWiseDetails";
 import FloatingLabelSelect from "../../../Components/FloatingLabelSelect";
 import { styleTypeOptions } from "../../../utils/selectOptions";
+import { getDateFromDateTimeFormat } from "../../helper";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -28,7 +29,10 @@ function Form({ id, setId, getOrders }) {
     const [productionExcelImportForm, setProductionExcelImportForm] = useState(false);
     const [orderExcelImportForm, setOrderExcelImportForm] = useState(false);
     const [orderSizeColorWiseDetails, setOrderSizeColorWiseDetails] = useState([]);
-    const [styleType, setStyleType] = useState('basic')
+    const [styleType, setStyleType] = useState('basic');
+    const [loadNewOrders, setLoadNewOrders] = useState(false);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -117,6 +121,11 @@ function Form({ id, setId, getOrders }) {
         setOrderSizeColorWiseDetails([]);
         setStyleType('');
     }
+    function handleGetOrders() {
+        if (!startDate || !endDate) return toast.info("Start Date and End Date Mandatory...!!!")
+        setLoadNewOrders(false);
+        getOrders({ isGetOrdersFromERP: true, startDate, endDate })
+    }
 
     return (
         <>
@@ -125,6 +134,26 @@ function Form({ id, setId, getOrders }) {
             </Modal>
             <Modal isOpen={orderExcelImportForm} onClose={() => { setOrderExcelImportForm(false) }}>
                 <OrderExcelImport />
+            </Modal>
+            <Modal isOpen={loadNewOrders} onClose={() => { setLoadNewOrders(false) }}>
+                <div className="p-5">
+                    <div>Sync Orders from ERP</div>
+                    <div className="flex">
+                        <div>
+                            From: <input type="date" value={getDateFromDateTimeFormat(startDate)} onChange={(e) => { setStartDate(e.target.value) }} />
+                        </div>
+                        <div>
+                            To: <input type="date" value={getDateFromDateTimeFormat(endDate)} onChange={(e) => { setEndDate(e.target.value) }} />
+                        </div>
+                        <button
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            type="button"
+                            onClick={handleGetOrders}
+                        >
+                            Retrieve Orders
+                        </button>
+                    </div>
+                </div>
             </Modal>
             <div className="flex mt-5 h-full w-full">
                 <form className="mx-auto w-[90%] mt-2 border h-[400px]" onSubmit={handleSubmit}>
@@ -136,11 +165,11 @@ function Form({ id, setId, getOrders }) {
                         <button
                             className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
                             type="button"
-                            onClick={() => { getOrders({ isGetOrdersFromERP: true }) }}
+                            onClick={() => { setLoadNewOrders(true) }}
                         >
                             Get New Orders
                         </button>
-                        <button
+                        {/* <button
                             className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
                             type="button"
                             onClick={resetForm}
@@ -160,21 +189,21 @@ function Form({ id, setId, getOrders }) {
                             onClick={() => { setProductionExcelImportForm(true) }}
                         >
                             Production Data
-                        </button>
+                        </button> */}
                     </header>
                     <div className="grid md:grid-cols-2 gap-1 w-full">
-                        <FloatingLabelInput label={"Order no"} autoFocus={true} value={orderNo} setValue={setOrderNo} />
-                        <FloatingLabelInput label={"Buyer"} value={buyer} setValue={setBuyer} />
-                        <FloatingLabelInput label={"Delivery Date"} type={"date"} value={dDate} setValue={setDDate} />
-                        <FloatingLabelInput label={"Style Ref."} value={style} setValue={setStyle} />
-                        <FloatingLabelInput label={"Quantity"} type={"number"} value={quantity} setValue={setQuantity} />
-                        <FloatingLabelInput label={"Sam"} value={sam} type={"number"} setValue={setSam} />
-                        <FloatingLabelSelect label={"Style Type"} value={styleType} setValue={setStyleType} options={styleTypeOptions} />
+                        <FloatingLabelInput label={"Order no"} autoFocus={true} value={orderNo} setValue={setOrderNo} disabled />
+                        <FloatingLabelInput label={"Buyer"} value={buyer} setValue={setBuyer} disabled />
+                        <FloatingLabelInput label={"Delivery Date"} type={"date"} value={dDate} setValue={setDDate} disabled />
+                        <FloatingLabelInput label={"Style Ref."} value={style} setValue={setStyle} disabled />
+                        <FloatingLabelInput label={"Quantity"} type={"number"} value={quantity} setValue={setQuantity} disabled />
+                        {/* <FloatingLabelInput label={"Sam"} value={sam} type={"number"} setValue={setSam} disabled /> */}
+                        <FloatingLabelSelect label={"Style Type"} value={styleType} setValue={setStyleType} options={styleTypeOptions} disabled />
                     </div>
                     <OrderSizeColorWiseDetails orderSizeColorWiseDetails={orderSizeColorWiseDetails} />
                     <div className="flex md:justify-evenly mt-3">
                         <button
-                            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded "
+                            className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded "
                             type="button"
                             onClick={() => navigate(-1)}
                         >
@@ -192,12 +221,12 @@ function Form({ id, setId, getOrders }) {
                             </button>
                             :
                             ""}
-                        <button
+                        {/* <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold p-1 rounded"
                             type="submit"
                         >
                             Submit
-                        </button>
+                        </button> */}
                     </div>
                 </form>
             </div>

@@ -21,7 +21,11 @@ const OrderForm = () => {
       url: BASE_URL + ORDERS_API,
       params
     }).then((result) => {
-      setOrders(result.data.data)
+      if (result.data.statusCode == 1) {
+        toast.warning(result.data.message)
+      } else {
+        setOrders(result?.data?.data || []);
+      }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });
     }).finally(() => { setLoading(false) });

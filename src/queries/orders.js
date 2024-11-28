@@ -2,6 +2,7 @@ import _ from "lodash";
 import prisma from "../models/getPrisma.js";
 import { convertToImportFormat } from "../utils/excelDataTransform.js";
 import { getConnection } from "../utils/db.connection.js";
+import moment from "moment"
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -68,7 +69,7 @@ export async function importProduction(importedData) {
 
 
 
-export async function getOrdersFromErp() {
+export async function getOrdersFromErp(startDate, endDate) {
     let connection;
     try {
         const existingOrders = await prisma.$queryRaw`select orderNo from orders`;
@@ -79,7 +80,9 @@ export async function getOrdersFromErp() {
             SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
             A.COLOR as color,A.shipqty as qty,'' sam ,'' styletype
             FROM ORDERALLOWDET A
-            WHERE A.ORDERNO not in (${existingOrderNumbers.join(',')}) and rowNum < 10`);
+            WHERE A.ORDERNO not in (${existingOrderNumbers.join(',')}) 
+            AND A.ORDERDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+            AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')`);
         let convertedRows = result.rows.map((row) => {
             let newRow = {};
             row.forEach((value, index) => {
