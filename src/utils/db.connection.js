@@ -20,6 +20,7 @@ export async function getConnection() {
             });
             return connection
       } catch (err) {
+            console.log(err)
             throw { message: "Database Connection Issue...!!!" }
       }
 }
