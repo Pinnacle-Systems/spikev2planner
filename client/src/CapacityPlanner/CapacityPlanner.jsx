@@ -32,7 +32,7 @@ export const CapacityPlannerContext = createContext();
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const CapacityPlanner = () => {
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [previousOrders, setPreviousOrders] = useState([]);
 
     const [openModalDeliveryWarning, setOpenModalDeliveryWarning] = useState(false);
@@ -131,6 +131,7 @@ const CapacityPlanner = () => {
     useEffect(getHolidays, [getHolidays])
 
     const retrieveData = useCallback(() => {
+        setLoading(true);
         axios({
             method: 'get',
             url: BASE_URL + ORDERS_API,
@@ -142,20 +143,20 @@ const CapacityPlanner = () => {
             }))
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
-        });
+        }).finally(() => { setLoading(false) });
     }, []);
 
     useEffect(retrieveData, [retrieveData]);
     useEffect(toasterTrigger, []);
     const navigate = useNavigate()
-    useEffect(() => {
-        if (manualSelect) return
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, [orders, manualSelect]);
+    // useEffect(() => {
+    //     if (manualSelect) return
+    //     setLoading(true);
+    //     const timer = setTimeout(() => {
+    //         setLoading(false);
+    //     }, 1000);
+    //     return () => clearTimeout(timer);
+    // }, [orders, manualSelect]);
 
     useEffect(() => {
         if (!scrollLine) return
@@ -218,7 +219,7 @@ const CapacityPlanner = () => {
             <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
-                    Processing...
+                    Loading...
                 </button>
             </Modal>
             <div className=''>

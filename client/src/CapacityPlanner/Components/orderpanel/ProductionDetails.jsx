@@ -7,6 +7,8 @@ const ProductionDetails = () => {
 
     let lineAndDateWiseProductionQtyList = (order?.lineWiseProductionData || []);
 
+    let totalProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.productionqty || 0), 0)
+
     return (
         <div className=' p-5 mt-5 text-center overflow-y-auto'>
             <table className='table-fixed mt-4'>
@@ -47,6 +49,10 @@ const ProductionDetails = () => {
                             }
                         </>
                     }
+                    <tr className='font-bold'>
+                        <td className='border border-black' colSpan={3}>Total</td>
+                        <td className='border border-black'> {totalProductionQty}</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
