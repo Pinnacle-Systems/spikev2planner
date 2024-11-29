@@ -80,7 +80,7 @@ export async function getOrdersFromErp(startDate, endDate) {
             SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
             A.COLOR as color,A.shipqty as qty,'' sam ,'' styletype
             FROM ORDERALLOWDET A
-            WHERE A.ORDERDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+            WHERE ${existingOrderNumbers.length > 0 ? `A.ORDERNO not in (${existingOrderNumbers.join(',')}) AND` : ""} A.ORDERDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')`);
         let convertedRows = result.rows.map((row) => {
             let newRow = {};
