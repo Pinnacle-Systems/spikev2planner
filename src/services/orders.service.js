@@ -2,15 +2,18 @@ import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
 import { getOrdersFromErp, importOrders, importProduction } from '../queries/orders.js';
-import { getProductionDataFromErpLineDateWise, getProductionQty, getProductionQtyLineWise } from '../queries/production.js';
+import { fetchProductionDataFromErp } from '../queries/production.js';
 
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { lines, isGetOrdersFromERP, startDate, endDate } = req.query;
+    const { lines, isGetOrdersFromERP, startDate, endDate, isGetProductionDataFromErp } = req.query;
     if (isGetOrdersFromERP) {
         if (!startDate || !endDate) return { statusCode: 1, message: "Start Date and End Date Mandatory...!!!" }
         await getOrdersFromErp(startDate, endDate)
+    }
+    if (isGetProductionDataFromErp) {
+        await fetchProductionDataFromErp()
     }
     let data = await prisma.orders.findMany({
         where: {
@@ -42,18 +45,20 @@ async function get(req) {
             }
         }
     });
-    // let sizeColorWiseDetails = await prisma.$queryRaw`
-    //  select orders.orderno as orderNo, det.size, det.color,sum(det.qty) as qty
-    // from OrderSizeColorWiseDetails det
-    // join orders on orders.id = det.ordersId
-    // group by orders.orderno, det.size, det.color
-    // `
-    // sizeColorWiseDetails = await getProductionQtyLineWise(sizeColorWiseDetails);
-    // data[index]["OrderSizeColorWiseDetails"] = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo);
-    for (let index = 0; index < data.length; index++) {
-        const i = data[index];
-        data[index]["lineWiseProductionData"] = await getProductionDataFromErpLineDateWise({ orderNo: i.orderNo })
-    }
+    const sizeColorWiseDetails = await prisma.$queryRaw`
+    select * from ProductionDetails
+    `
+    const productionDetailsDateWise = await prisma.$queryRaw`
+    select DATE_FORMAT(date,'%d-%m-%Y') as date,orderNo,line, sum(qty) as qty 
+    from ProductionDetails
+    group by date, orderNo, line
+    `
+    data = data.map(i => {
+        let newItem = { ...i };
+        newItem['lineWiseProductionData'] = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo)
+        newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo)
+        return newItem
+    })
     return { statusCode: 0, data };
 }
 
@@ -64,14 +69,14 @@ async function getOne(id) {
             id: parseInt(id)
         }
     })
-    let sizeColorWiseDetails = await prisma.$queryRaw`
-    select orders.orderno as orderNo, det.size, det.color, sum(det.qty) as qty
+    data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
+    select orders.orderno as orderNo, det.size, det.color, sum(det.qty) as qty, coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - coalesce(sum(productionDetails.qty),0) as balanceQty
 from OrderSizeColorWiseDetails det
 join orders on orders.id = det.ordersId
+left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
 where orders.orderno = ${data.orderNo}
 group by orders.orderno, det.size, det.color
-        `
-    data["OrderSizeColorWiseDetails"] = await getProductionQty(sizeColorWiseDetails, data.orderNo);
+    `
     if (!data) return NoRecordFound("orders");
     return { statusCode: 0, data };
 }

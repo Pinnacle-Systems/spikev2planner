@@ -6,8 +6,17 @@ async function get(req, res, next) {
     try {
         res.json(await _get(req));
         console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
     }
 }
 

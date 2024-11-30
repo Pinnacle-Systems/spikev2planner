@@ -169,6 +169,13 @@ function Form({ id, setId, getOrders }) {
                         >
                             Get New Orders
                         </button>
+                        <button
+                            className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
+                            type="button"
+                            onClick={() => { getOrders({ isGetProductionDataFromErp: true }) }}
+                        >
+                            Sync Production Data
+                        </button>
                         {/* <button
                             className="bg-green-600 hover:bg-green-700 text-white font-bold hover:rounded p-1 disabled:bg-red-300"
                             type="button"

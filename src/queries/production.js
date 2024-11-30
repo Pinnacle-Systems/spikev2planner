@@ -1,3 +1,4 @@
+import prisma from "../models/getPrisma.js";
 import { getConnection } from "../utils/db.connection.js";
 
 export async function getProductionDataFromErp(params) {
@@ -100,4 +101,60 @@ export async function getProductionQty(sizeColorWiseDetails, orderNo) {
         sizeColorWiseDetails[index]['balanceQty'] = parseFloat(sizeColorWiseDetails[index]['qty'] || 0) - parseFloat(sizeColorWiseDetails[index]['productionQty'] || 0)
     }
     return sizeColorWiseDetails
-} 
+}
+
+export async function runOracleQuery(sql) {
+    let connection;
+    try {
+        connection = await getConnection();
+        let result = await connection.execute(sql);
+        let convertedRows = result.rows.map((row) => {
+            let newRow = {};
+            row.forEach((value, index) => {
+                newRow[(result.metaData[index]?.name).toLocaleLowerCase()] = value;
+            });
+            return newRow;
+        })
+        return convertedRows;
+    } catch (error) {
+        console.log(error)
+    } finally {
+        if (connection) {
+            connection.close()
+        }
+    }
+}
+
+export async function fetchProductionDataFromErp() {
+    const existingOrders = await prisma.orders.findMany({ select: { orderNo: true } });
+    if (existingOrders.length == 0) {
+        throw { message: "No Existing Orders...!!!" }
+    }
+    const sql = `
+                SELECT A.docdate "date",A.ORDERNO,D.SIZENAME "size",E.COLORNAME color,F.SHORTCODE line,SUM(B.PRODQTY) productionQty
+                    FROM GTGP A JOIN GTGPDET B ON  A.GTGPID=B.GTGPID
+                    JOIN GTCOMPMAST C ON C.GTCOMPMASTID=A.COMPCODE
+                    JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
+                    JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
+                    JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
+                    WHERE B.PRODQTY >0 and  A.ORDERNO IN (${existingOrders.map(i => `'${i.orderNo}'`).join(",")}) 
+                    group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.docdate
+                    ORDER BY 1,2,3
+    `;
+    console.log(sql)
+    const data = await runOracleQuery(sql);
+    if (!data) {
+        throw { message: "Production Data Sync Failed...!!!" }
+    }
+    console.log(data, 'data')
+    await prisma.$transaction(async (tx) => {
+        await tx.productionDetails.deleteMany({});
+        await tx.productionDetails.createMany({
+            data: data.map(i => ({
+                orderNo: i.orderno, date: new Date(i.date), size: i.size, color: i.color, line: i.line,
+                qty: parseInt(i.productionqty)
+            }))
+        })
+    })
+
+}

@@ -28,17 +28,18 @@ const OrderProductionDetails = () => {
     }
 
 
-    let lineAndDateWiseProductionQtyList = (order.lineWiseProductionData || []);
+    let lineAndDateWiseProductionQtyList = (order.productionDetailsDateWise || []);
     function getLineWiseDateProductionQty(date) {
-        return lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name && getDateFromDateTimeFormatToDisplay(i.date) == getDateFromDateTimeFormatToDisplay(date)).reduce((a, c) => a + parseFloat(c.productionqty || 0), 0)
+        return lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name && i.date == getDateFromDateTimeFormatToDisplay(date)).reduce((a, c) => a + parseFloat(c.qty || 0), 0)
     }
 
-    let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.productionqty || 0), 0);
+    console.log(productionSchedule, lineAndDateWiseProductionQtyList)
+    let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.qty || 0), 0);
 
     let totalBalanceQty = totalProductionSchedulePcs - lineAndDateWiseProductionQty;
     return (
-        <div className=' p-5 mt-5 text-center max-h-[500px] overflow-y-auto'>
-            <table className='table-fixed mt-4'>
+        <div className=' px-5 text-center max-h-[500px] overflow-y-auto'>
+            <table className='table-fixed'>
                 <thead className='top-0 sticky bg-gray-100'>
                     <tr className=' font-bold mb-1 bg-blue-300 '>
                         <th colSpan={5}>

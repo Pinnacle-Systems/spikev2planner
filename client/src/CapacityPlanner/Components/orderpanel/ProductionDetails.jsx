@@ -5,9 +5,9 @@ import { getDateFromDateTimeFormatToDisplay } from '../../helper';
 const ProductionDetails = () => {
     const { currentOrder: order } = useContext(CapacityPlannerContext)
 
-    let lineAndDateWiseProductionQtyList = (order?.lineWiseProductionData || []);
+    let lineAndDateWiseProductionQtyList = (order?.productionDetailsDateWise || []);
 
-    let totalProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.productionqty || 0), 0)
+    let totalProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.qty || 0), 0)
 
     return (
         <div className=' p-5 mt-5 text-center overflow-y-auto'>
@@ -40,9 +40,9 @@ const ProductionDetails = () => {
                                 lineAndDateWiseProductionQtyList.map((prod, index) => {
                                     return (<tr key={prod.date}>
                                         <td className='border border-black'> {index + 1}</td>
-                                        <td className='border border-black'> {getDateFromDateTimeFormatToDisplay(prod.date)}</td>
+                                        <td className='border border-black'> {prod.date}</td>
                                         <td className='border border-black' > {prod?.line}</td>
-                                        <td className='border border-black' > {prod?.productionqty}</td>
+                                        <td className='border border-black' > {prod?.qty}</td>
                                     </tr>)
                                 }
                                 )
