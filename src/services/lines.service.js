@@ -17,16 +17,13 @@ async function get(req) {
         fromDate.setHours(0, 0, 0, 0);
         let toDate = new Date(endDate);
         toDate.setHours(23, 59, 59, 99);
-        const reportData = await prisma.orderLines.findMany({
+        let reportData = await prisma.orderLines.findMany({
             where: {
                 Line: {
                     unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
                         in: selectedUnits.map(i => parseInt(i))
                     } : undefined
                 },
-                startDate: {
-                    gte: fromDate
-                }
             },
             include: {
                 learningCurveItems: true,
@@ -38,6 +35,12 @@ async function get(req) {
                 }
             }
         });
+        reportData = reportData.map(i => ({
+            ...i,
+            startDate: (i["startDate"] < new Date(startDate)) ? startDate : i["startDate"],
+            endDate: (i["endDate"] > new Date(endDate)) ? endDate : i["endDate"],
+        }))
+
 
         return { statusCode: 0, data, reportData };
     }

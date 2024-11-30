@@ -4,7 +4,7 @@ import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 import { getDateFromDateTimeFormat } from '../../helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-const Parameter = ({ startDate, endDate, setStartDate, setEndDate, selectedUnits, setSelectedUnits, refetch }) => {
+const Parameter = ({ startDate, endDate, setStartDate, setEndDate, selectedUnits, setSelectedUnits }) => {
     const {
         units,
     } = useContext(CapacityPlannerContext);
@@ -22,7 +22,6 @@ const Parameter = ({ startDate, endDate, setStartDate, setEndDate, selectedUnits
         setStartDate(localFromDate);
         setEndDate(localToDate);
         setSelectedUnits(localSelectedUnits);
-        refetch();
     }
 
     function isSelected(unitId) {

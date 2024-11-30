@@ -43,23 +43,28 @@ const ProductionPlanningReport = () => {
         setEndDate(endDate);
     }, []);
 
-    const retrieveAllLines = useCallback(() => {
-        if (!startDate || !endDate) return
-        axios({
-            method: 'get',
-            url: BASE_URL + LINES_API,
-            params: {
-                isReport: true,
-                selectedUnits,
-                startDate, endDate
-            }
-        }).then((result) => {
-            setAllUnitLines(result?.data?.data || [])
-            setReportData(result?.data?.reportData || []);
-        }, (error) => {
-            toast.error("Server Down", { autoClose: 5000 });
-        });
-    }, [selectedUnits, startDate, endDate]);
+
+    useEffect(() => {
+        const retrieveAllLines = () => {
+            if (!startDate || !endDate) return
+            axios({
+                method: 'get',
+                url: BASE_URL + LINES_API,
+                params: {
+                    isReport: true,
+                    selectedUnits,
+                    startDate, endDate
+                }
+            }).then((result) => {
+                setAllUnitLines(result?.data?.data || [])
+                setReportData(result?.data?.reportData || []);
+            }, (error) => {
+                toast.error("Server Down", { autoClose: 5000 });
+            });
+        }
+        retrieveAllLines()
+    }, [selectedUnits, startDate, endDate])
+
 
 
     useEffect(() => {
@@ -109,12 +114,13 @@ const ProductionPlanningReport = () => {
         return qty
     }
 
+
     return (
         <div className='pt-2 w-full h-full text-sm p-2'>
             <div className='text-center bg-blue-200 text-2xl '>
                 Production Schedule Report
             </div>
-            <Parameter selectedUnits={selectedUnits} setSelectedUnits={setSelectedUnits} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} refetch={retrieveAllLines} />
+            <Parameter selectedUnits={selectedUnits} setSelectedUnits={setSelectedUnits} startDate={startDate} endDate={endDate} setStartDate={setStartDate} setEndDate={setEndDate} />
             <div className='text-center bg-gray-200 mt-1'>
                 <strong>
                     Date From {getDateFromDateTimeFormatToDisplay(startDate)} to {getDateFromDateTimeFormatToDisplay(endDate)}

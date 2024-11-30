@@ -12,15 +12,9 @@ const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, s
     let productionSchedule = dateData?.productionSchedule || [];
     let qty = productionSchedule.find(i => isSameDay(new Date(i.date), new Date(date)))?.pcs || 0;
 
-    let dateDiff = dateDiffBetweenDays(new Date(endDate), new Date(data?.endDate)) - findNationalHolidaysBetweenDates(new Date(endDate), new Date(data?.endDate), holidays) + (isNationalHoliday(endDate, holidays) ? 1 : 0);
-    let days = parseFloat(data?.days || 0);
-    if (data) {
-        console.log(days, 'days', dateDiff, 'dateDiff', endDate, data?.endDate);
-    }
-    if (dateDiff > 0) {
-        days -= (dateDiff);
-    };
 
+    let nationalHolidays = findNationalHolidaysBetweenDates(new Date(data?.startDate), new Date(data?.endDate), holidays)
+    let days = dateDiffBetweenDays(new Date(data?.startDate), new Date(data?.endDate)) - nationalHolidays + 1;
 
     return (
         <React.Fragment key={line.id}>
