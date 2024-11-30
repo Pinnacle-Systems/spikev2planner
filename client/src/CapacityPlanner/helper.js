@@ -184,6 +184,8 @@ export function findNationalHolidaysBetweenDates(start, end, holidays) {
     return allDates.filter(date => isNationalHoliday(date, holidays)).length
 }
 
+
+
 export function findSundaysBetweenDates(start, end) {
     const allDates = getDateArray(start, end);
     return allDates.filter(date => isSunday(date)).length

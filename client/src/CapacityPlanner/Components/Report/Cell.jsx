@@ -1,9 +1,9 @@
 import React, { useContext } from 'react'
-import { findNationalHolidaysBetweenDates, isNationalHoliday, isSameDay } from '../../helper';
+import { findNationalHolidaysBetweenDates, getDateArray, isSameDay } from '../../helper';
 import { dateDiffBetweenDays } from '../../../utils/helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, startDate, endDate, }) => {
+const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, }) => {
     const {
         holidays,
     } = useContext(CapacityPlannerContext);
@@ -12,9 +12,11 @@ const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, s
     let productionSchedule = dateData?.productionSchedule || [];
     let qty = productionSchedule.find(i => isSameDay(new Date(i.date), new Date(date)))?.pcs || 0;
 
+    let calculatedStartDate = new Date(data?.startDate);
+    let calculatedEndDate = new Date(data?.endDate);
 
-    let nationalHolidays = findNationalHolidaysBetweenDates(new Date(data?.startDate), new Date(data?.endDate), holidays)
-    let days = dateDiffBetweenDays(new Date(data?.startDate), new Date(data?.endDate)) - nationalHolidays + 1;
+    let nationalHolidays = findNationalHolidaysBetweenDates(calculatedStartDate, calculatedEndDate, holidays)
+    let days = dateDiffBetweenDays(calculatedStartDate, calculatedEndDate) - nationalHolidays + 1;
 
     return (
         <React.Fragment key={line.id}>

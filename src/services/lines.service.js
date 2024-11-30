@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { getDateArray, getFirstNonHoliday } from '../utils/dateHelper.js';
 
 const prisma = new PrismaClient()
 
@@ -35,13 +36,18 @@ async function get(req) {
                 }
             }
         });
-        reportData = reportData.map(i => ({
-            ...i,
-            startDate: (i["startDate"] < new Date(startDate)) ? startDate : i["startDate"],
-            endDate: (i["endDate"] > new Date(endDate)) ? endDate : i["endDate"],
-        }))
-
-
+        let holidays = await prisma.holiday.findMany({});
+        for (let index = 0; index < reportData.length; index++) {
+            const i = reportData[index];
+            let startDateCalculated = (i["startDate"] < new Date(startDate)) ? startDate : i["startDate"];
+            let endDateCalculated = (i["endDate"] > new Date(endDate)) ? endDate : i["endDate"];
+            let dateArr = getDateArray(startDateCalculated, endDateCalculated);
+            startDateCalculated = getFirstNonHoliday(dateArr, holidays);
+            dateArr.sort((a, b) => b - a);
+            endDateCalculated = getFirstNonHoliday(dateArr, holidays);
+            i['startDate'] = startDateCalculated;
+            i['endDate'] = endDateCalculated;
+        }
         return { statusCode: 0, data, reportData };
     }
     let date, firstDay, lastDay;
