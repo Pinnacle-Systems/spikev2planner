@@ -1,16 +1,16 @@
 import React from 'react'
 import { Dropdown } from 'semantic-ui-react'
 
-const DropdownWithSearch = ({ options, placeholder = "Select", value, onChange }) => (
-    <Dropdown
+const DropdownWithSearch = ({ options, placeholder = "Select", value, onChange }) => {
+    return (<Dropdown
         placeholder={placeholder}
-        fluid
-        selection
+        onBlur={(e) => { e.preventDefault() }}
         options={options}
         value={value}
         onChange={onChange}
-    // handle
-    />
-)
+        selectOnBlur={false}
+    />)
+}
+
 
 export default DropdownWithSearch

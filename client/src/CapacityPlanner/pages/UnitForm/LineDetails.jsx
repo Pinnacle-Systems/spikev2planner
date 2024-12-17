@@ -126,8 +126,10 @@ const LineDetails = ({ lines, setLines }) => {
                                                     text: i.linename,
                                                     value: i.linename,
                                                 }))}
-                                                onChange={(e, { value }) =>
+                                                onChange={(e, { value }) => {
+                                                    console.log(value, 'value')
                                                     handleInputChange(value, index, "name")
+                                                }
                                                 }
                                             />
                                         </td>
