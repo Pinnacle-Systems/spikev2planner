@@ -1,5 +1,5 @@
 import prisma from "../models/getPrisma.js";
-import { getConnection } from "../utils/db.connection.js";
+import { getConnection, runOracleQuery } from "../utils/db.connection.js";
 
 export async function getProductionDataFromErp(params) {
     let connection;
@@ -103,27 +103,7 @@ export async function getProductionQty(sizeColorWiseDetails, orderNo) {
     return sizeColorWiseDetails
 }
 
-export async function runOracleQuery(sql) {
-    let connection;
-    try {
-        connection = await getConnection();
-        let result = await connection.execute(sql);
-        let convertedRows = result.rows.map((row) => {
-            let newRow = {};
-            row.forEach((value, index) => {
-                newRow[(result.metaData[index]?.name).toLocaleLowerCase()] = value;
-            });
-            return newRow;
-        })
-        return convertedRows;
-    } catch (error) {
-        console.log(error)
-    } finally {
-        if (connection) {
-            connection.close()
-        }
-    }
-}
+
 
 export async function fetchProductionDataFromErp() {
     const existingOrders = await prisma.orders.findMany({ select: { orderNo: true } });
@@ -141,12 +121,10 @@ export async function fetchProductionDataFromErp() {
                     group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.docdate
                     ORDER BY 1,2,3
     `;
-    console.log(sql)
     const data = await runOracleQuery(sql);
     if (!data) {
         throw { message: "Production Data Sync Failed...!!!" }
     }
-    console.log(data, 'data')
     await prisma.$transaction(async (tx) => {
         await tx.productionDetails.deleteMany({});
         await tx.productionDetails.createMany({
