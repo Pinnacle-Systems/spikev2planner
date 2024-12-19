@@ -7,7 +7,6 @@ import SelectionPanel from './Components/SelectionPanel/SelectionPanel';
 import axios from 'axios';
 import { ORDERS_API, HOLIDAYS_API, UNITS_API } from '../Constants/Api';
 import { toast } from 'react-toastify';
-import Modal from '../Components/Modal';
 import DeliveryDateWarning from './Components/DeliveryDate/DeliveryDateWarning';
 import IncludeNationalHolidays from './Components/DeliveryDate/IncludeNationalHolidays';
 import LineDataConformationForm from './Components/LineDataCoformationForm';
@@ -25,6 +24,7 @@ import OrderProductionDetails from './Components/orderpanel/OrderProductionDetai
 import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptions';
 import ProductionPlanningReport from './Components/Report/Report';
 import ProductionDetails from './Components/orderpanel/ProductionDetails';
+import Modal from '../Components/Modal';
 
 export const CapacityPlannerContext = createContext();
 
@@ -189,31 +189,31 @@ const CapacityPlanner = () => {
                 scrollLine, setScrollLine,
                 productionDetails, setProductionDetails
             }}>
-            <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
+            <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
             </Modal>
-            <Modal isOpen={openIncludeHolidayModal} onClose={() => setOpenIncludeHolidayModal(false)}>
+            <Modal isOpen={openIncludeHolidayModal} closeIcon onClose={() => setOpenIncludeHolidayModal(false)}>
                 <IncludeNationalHolidays />
             </Modal>
-            <Modal isOpen={lineEntryConformation} onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
+            <Modal isOpen={lineEntryConformation} closeIcon onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
                 <LineDataConformationForm />
             </Modal>
-            <Modal isOpen={learningCurvePopup} >
+            <Modal isOpen={learningCurvePopup} closeIcon >
                 <LearningCurveInputGridStandalone />
             </Modal>
-            <Modal isOpen={openOrderDetail} onClose={() => { setOpenOrderDetail(false); }}>
+            <Modal isOpen={openOrderDetail} closeIcon onClose={() => { setOpenOrderDetail(false); }}>
                 <OrderLineDetails />
             </Modal>
-            <Modal isOpen={isOrderProductionDetails} onClose={() => { setIsOrderProductionDetails(false); }}>
+            <Modal isOpen={isOrderProductionDetails} closeIcon onClose={() => { setIsOrderProductionDetails(false); }}>
                 <OrderProductionDetails />
             </Modal>
-            <Modal isOpen={isOrderLineDetailOptions} onClose={() => { setIsOrderLineDetailOptions(false); }}>
+            <Modal isOpen={isOrderLineDetailOptions} closeIcon onClose={() => { setIsOrderLineDetailOptions(false); }}>
                 <OrderLineDetailOptions />
             </Modal>
-            <Modal widthClass={'w-[90%] h-[80%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
+            <Modal widthClass={'w-[90%] h-[80%]'} closeIcon isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
                 <ProductionPlanningReport />
             </Modal>
-            <Modal widthClass={'h-[80%] w-[90%]'} isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
+            <Modal widthClass={''} closeIcon isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
                 <ProductionDetails />
             </Modal>
             <Modal isOpen={loading}>
