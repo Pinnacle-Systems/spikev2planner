@@ -1,6 +1,5 @@
 import React, { useContext } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
-import { getDateFromDateTimeFormatToDisplay } from '../../helper';
 
 const ProductionDetails = () => {
     const { currentOrder: order } = useContext(CapacityPlannerContext)
@@ -10,7 +9,7 @@ const ProductionDetails = () => {
     let totalProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.qty || 0), 0)
 
     return (
-        <div className=' p-5 mt-5 text-center overflow-y-auto'>
+        <div className='mt-10 text-center overflow-y-auto'>
             <table className='table-fixed mt-4'>
                 <thead className='top-0 sticky bg-gray-100'>
                     <tr className=' font-bold mb-1 bg-blue-300 '>

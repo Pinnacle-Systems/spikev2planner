@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
-import { orderAssignment, findDays, findEndDate } from '../../helper';
+import { orderAssignment, findDays, findEndDate, getDateFromDateTimeFormat } from '../../helper';
 
 import { GridForm } from './GridForm';
 import { LearningCurveInputGrid } from './LearningCurveInputGrid';
@@ -25,20 +25,28 @@ const LineDataConformationForm = () => {
     const orderLines = structuredClone(orders[currentOrderIndex]?.['lines'] || []);
     const currentOrderLineIndex = orderLines.findIndex(i => i.id == currentLine.id);
     if (currentOrderLineIndex == -1) {
-      orderLines.push({ id: currentLine.id, Line: currentLine, pcs: 0 })
+      orderLines.push({ id: currentLine.id, Line: currentLine, pcs: 0, startDate: currentDate })
+    } else {
+      orderLines[currentOrderLineIndex]['startDate'] = currentDate;
     }
     setLineItems(orderLines)
-  }, [orders, currentOrder, currentLine])
+  }, [orders, currentOrder, currentLine, currentDate])
 
   const [learningCurveItems, setLearningCurveItems] = useState([]);
 
-  const handleNoSplit = () => {
+  const handleNoSplit = (e) => {
+    e.preventDefault();
+    if (!window.confirm("Confirm Update Changes ?")) {
+      return
+    }
     if (learningCurveItems.filter(i => i.percentage).length == 0) return toast.info("Invalid Learning Curve...!!!")
     setLineEntryConformation(false);
-    let pcs = lineItems?.find(i => i.id == currentLine.id)?.pcs || 0;
+    let currentLineDetails = lineItems?.find(i => i.id == currentLine.id);
+    if (!currentLineDetails) return
+    let pcs = currentLineDetails?.pcs || 0;
     const days = findDays(pcs, { ...currentLine, learningCurveItems });
     const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
-    let endDate = findEndDate(currentDate, days, holidays);
+    let endDate = findEndDate(currentLineDetails?.startDate, days, holidays);
     let currentOrderLineIndex = -1;
     let newOrders = structuredClone(orders);
     if (currentOrderIndex != -1) {
@@ -49,7 +57,17 @@ const LineDataConformationForm = () => {
         newOrders[currentOrderIndex]["lines"].push({ id: currentLine.id, learningCurveItems })
       }
     }
-    orderAssignment(newOrders, setOrders, currentOrder, currentLine, pcs, days, currentDate, endDate, holidays)
+    orderAssignment(newOrders, setOrders, currentOrder, currentLine, pcs, days, currentLineDetails?.startDate, endDate, holidays)
+  }
+
+  function getEstimatedEndDate() {
+    if (learningCurveItems.filter(i => i.percentage).length == 0) return ""
+    let currentLineDetails = lineItems?.find(i => i.id == currentLine.id);
+    if (!currentLineDetails) return ""
+    let pcs = currentLineDetails?.pcs || 0;
+    const days = findDays(pcs, { ...currentLine, learningCurveItems });
+    let endDate = findEndDate(currentLineDetails?.startDate, days, holidays);
+    return getDateFromDateTimeFormat(endDate)
   }
 
   function removeOrderFromLine(updatingOrder, lineObj) {
@@ -106,6 +124,8 @@ const LineDataConformationForm = () => {
     })
   }
 
+  let estimatedEndDate = getEstimatedEndDate()
+
   return (
     <>
       {split ?
@@ -119,17 +139,13 @@ const LineDataConformationForm = () => {
           <GridForm />
         </div>
         :
-
-        <div className={`w-[450px] flex flex-col items-center justify-center p-2 mt-5`}>
-          {/* <div className='font-bold'>
-            Do you want to Select Manual or Auto Allocation ?
-          </div> */}
+        <form className={`w-[450px] flex flex-col items-center justify-center p-2 mt-5`} onSubmit={handleNoSplit} >
           <table className='table-fixed mt-4 w-full'>
             <thead className='top-0 sticky bg-gray-100'>
               <tr className=' font-bold mb-1 bg-blue-300 '>
                 <th className='w-10'>
                 </th>
-                <th colSpan={2}>
+                <th colSpan={4}>
                   Line Schedule Details
                 </th>
               </tr>
@@ -142,11 +158,15 @@ const LineDataConformationForm = () => {
               <tr>
                 <th className='border border-black'> S.no</th>
                 <th className='border border-black'> Line</th>
+                <th className='border border-black' > Start.Date</th>
+                <th className='border border-black' > Est.End.Date</th>
                 <th className='border border-black' > Pcs</th>
               </tr>
               <tr>
                 <th className='border border-black'> </th>
                 <th className='border border-black'> Order Total Pcs</th>
+                <th className='border border-black'> </th>
+                <th className='border border-black'> </th>
                 <th className='border border-black text-right' > {currentOrder.quantity || 0}</th>
               </tr>
             </thead>
@@ -156,18 +176,29 @@ const LineDataConformationForm = () => {
                   <td className='border border-black text-center'> {index + 1}</td>
                   <td className='border border-black'> {line?.Line?.name}</td>
                   <td className='border border-black text-right' >
-                    <input type="number" min={0} className='text-right' value={line?.pcs}
+                    <input required type="date" className='text-right focus:outline-none w-full' value={getDateFromDateTimeFormat(line?.startDate)}
+                      disabled={currentLine.id != line.id} onChange={(e) => { handleChange(index, 'startDate', e.target.value) }} /> </td>
+                  <td className='border border-black text-right' >
+                    <input type="date" className='text-right focus:outline-none w-full'
+                      value={estimatedEndDate}
+                      disabled /> </td>
+                  <td className='border border-black text-right' >
+                    <input type="number" min={0} className='text-right focus:outline-none w-full' value={line?.pcs}
                       disabled={currentLine.id != line.id} onChange={(e) => { handleChange(index, 'pcs', e.target.value) }} /> </td>
                 </tr>
               )}
               <tr>
                 <td className='border border-black' colSpan={1}></td>
                 <td className='border border-black text-center' colSpan={1}>Total Allocated</td>
+                <td className='border border-black text-center' colSpan={1}></td>
+                <td className='border border-black text-center' colSpan={1}></td>
                 <td className='border border-black text-right' > {totalAllocatedQty}</td>
               </tr>
               <tr>
                 <td className='border border-black' colSpan={1}></td>
                 <td className='border border-black text-center' colSpan={1}>Balance</td>
+                <td className='border border-black text-center' colSpan={1}></td>
+                <td className='border border-black text-center' colSpan={1}></td>
                 <td className='border border-black text-right' > {balanceQty}</td>
               </tr>
             </tbody>
@@ -176,12 +207,12 @@ const LineDataConformationForm = () => {
           <div className='flex justify-evenly w-full mt-5'>
             {/* <button autoFocus id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'
               onClick={handleManualSelect}> Manual Select</button> */}
-            <button className='bg-red-200 text-red-700 p-1 rounded hover:bg-red-300'
+            <button type='button' className='bg-red-200 text-red-700 p-1 rounded hover:bg-red-300'
               onClick={() => { setLineEntryConformation(false) }}> Cancel</button>
-            <button className='bg-green-200 text-green-700 p-1 rounded hover:bg-red-300'
-              onClick={handleNoSplit}> Update Changes</button>
+            <button type='submit' className='bg-green-200 text-green-700 p-1 rounded hover:bg-red-300'
+            > Update Changes</button>
           </div>
-        </div>
+        </form>
       }
     </>
   )

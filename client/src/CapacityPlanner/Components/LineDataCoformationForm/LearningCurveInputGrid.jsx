@@ -54,7 +54,11 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                     <th className="table-data  py-2 w-5">S.No</th>
                     <th className="table-data  py-2 w-16">Learning Curve</th>
                     {!readOnly &&
-                        <th className="table-data  w-10 p-0.5">  <button onClick={addNewGrid}>{PLUS}</button></th>
+                        <th className="table-data  w-10 p-0.5">
+                            <button
+                                type='button'
+                                onClick={addNewGrid}>{PLUS}</button>
+                        </th>
                     }
                 </tr>
             </thead>

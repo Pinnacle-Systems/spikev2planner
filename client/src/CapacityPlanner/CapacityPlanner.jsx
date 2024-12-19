@@ -213,7 +213,7 @@ const CapacityPlanner = () => {
             <Modal widthClass={'w-[90%] h-[80%]'} isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
                 <ProductionPlanningReport />
             </Modal>
-            <Modal widthClass={''} isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
+            <Modal widthClass={'h-[80%] w-[90%]'} isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
                 <ProductionDetails />
             </Modal>
             <Modal isOpen={loading}>

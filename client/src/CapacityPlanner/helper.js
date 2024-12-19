@@ -139,11 +139,6 @@ export const findPcs = (targetDays, line) => {
     return allocatablePcs
 }
 
-
-// export const findDays = (pcs, line) => {
-//     return Math.ceil(pcs / getCurrentCapacity(line.efficiency, line.capacity));
-// }
-
 export function getCurrentCapacity(efficiency, capacity) {
     return (parseInt(efficiency) * parseInt(capacity)) / 100;
 }
