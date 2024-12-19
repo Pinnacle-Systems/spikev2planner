@@ -55,8 +55,10 @@ async function get(req) {
     `
     data = data.map(i => {
         let newItem = { ...i };
-        newItem['lineWiseProductionData'] = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo)
-        newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo)
+        let orderDetails = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo);
+        newItem['lineWiseProductionData'] = orderDetails;
+        newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo);
+        newItem["productionQty"] = orderDetails.reduce((a, c) => a + parseFloat(c.qty), 0);
         return newItem
     })
     return { statusCode: 0, data };
@@ -70,12 +72,13 @@ async function getOne(id) {
         }
     })
     data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
-    select orders.orderno as orderNo, det.size, det.color, sum(det.qty) as qty, coalesce(sum(productionDetails.qty),0) as productionQty, sum(det.qty) - coalesce(sum(productionDetails.qty),0) as balanceQty
+    select orders.orderno as orderNo, det.size, det.color, det.qty as qty, coalesce(sum(productionDetails.qty),0) as productionQty, 
+    det.qty - coalesce(sum(productionDetails.qty),0) as balanceQty
 from OrderSizeColorWiseDetails det
 join orders on orders.id = det.ordersId
 left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
-where orders.orderno = ${data.orderNo}
-group by orders.orderno, det.size, det.color
+where orders.id = ${id}
+group by orders.orderno, det.size, det.color,det.qty
     `
     if (!data) return NoRecordFound("orders");
     return { statusCode: 0, data };
