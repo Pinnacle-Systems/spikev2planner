@@ -3,6 +3,7 @@ import prisma from "../models/getPrisma.js";
 import { convertToImportFormat } from "../utils/excelDataTransform.js";
 import { getConnection } from "../utils/db.connection.js";
 import moment from "moment"
+import { fetchProductionDataFromErp } from "./production.js";
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -67,8 +68,6 @@ export async function importProduction(importedData) {
     })
 }
 
-
-
 export async function getOrdersFromErp(startDate, endDate) {
     let connection;
     try {
@@ -78,7 +77,7 @@ export async function getOrdersFromErp(startDate, endDate) {
 
         let result = await connection.execute(`
             SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
-            A.COLOR as color,A.shipqty as qty,'' sam ,'' styletype
+            A.COLOR as color,A.PRODQTY as qty,'' sam ,'' styletype
             FROM ORDERALLOWDET A
             WHERE ${existingOrderNumbers.length > 0 ? `A.ORDERNO not in (${existingOrderNumbers.join(',')}) AND` : ""} A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')`);
@@ -97,4 +96,13 @@ export async function getOrdersFromErp(startDate, endDate) {
             connection.close()
         }
     }
+}
+
+
+export async function replanOrder(prevOrder) {
+    let createdOrder;
+    await prisma.$transaction(async (tx) => {
+        await fetchProductionDataFromErp(tx);
+        await tx.$queryRaw`SELECT `
+    })
 }
