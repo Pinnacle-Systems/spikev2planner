@@ -11,7 +11,7 @@ export async function getProductionDataFromErp(params) {
                     JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
                     JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
                     JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
-                    WHERE B.PRODQTY >0 AND A.FPROCESSNAME = 'SEWING'
+                    WHERE B.PRODQTY >0 AND A.TPROCESSNAME = 'SEWING'
                     group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE
                     ORDER BY 1,2,3`
         if (params?.orderNo) {
@@ -21,7 +21,7 @@ export async function getProductionDataFromErp(params) {
                     JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
                     JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
                     JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
-                    WHERE B.PRODQTY >0 AND A.FPROCESSNAME = 'SEWING' and A.ORDERNO = '${params.orderNo}' 
+                    WHERE B.PRODQTY >0 AND A.TPROCESSNAME = 'SEWING' and A.ORDERNO = '${params.orderNo}' 
                     group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE
                     ORDER BY 1,2,3`
         }
@@ -52,7 +52,7 @@ export async function getProductionDataFromErpLineDateWise(params) {
                     JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
                     JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
                     JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
-                    WHERE B.PRODQTY >0 and A.ORDERNO = '${params.orderNo}' AND A.FPROCESSNAME = 'SEWING'
+                    WHERE B.PRODQTY >0 and A.ORDERNO = '${params.orderNo}' AND A.TPROCESSNAME = 'SEWING'
                     group by A.ORDERNO, F.SHORTCODE,A.docdate
                     ORDER BY 1,2,3`
         let result = await connection.execute(sql);
@@ -117,7 +117,7 @@ export async function fetchProductionDataFromErp() {
                     JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
                     JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
                     JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
-                    WHERE B.PRODQTY >0 and  A.ORDERNO IN (${existingOrders.map(i => `'${i.orderNo}'`).join(",")}) AND A.FPROCESSNAME = 'SEWING'
+                    WHERE B.PRODQTY >0 and  A.ORDERNO IN (${existingOrders.map(i => `'${i.orderNo}'`).join(",")}) AND A.TPROCESSNAME = 'SEWING'
                     group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.docdate
                     ORDER BY 1,2,3
     `;
