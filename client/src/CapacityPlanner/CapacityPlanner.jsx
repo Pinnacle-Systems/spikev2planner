@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, createContext } from 'react'
+import React, { useEffect, useState, useCallback, createContext, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { getRandomColor } from '../utils/helper';
 import Calendar from './Components/CalendarWithManyLines';
@@ -25,6 +25,8 @@ import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptio
 import ProductionPlanningReport from './Components/Report/Report';
 import ProductionDetails from './Components/orderpanel/ProductionDetails';
 import Modal from '../Components/Modal';
+import ViewPlanDetails from './Components/LineDataCoformationForm/ViewPlanDetails';
+import ReduceEndDate from './Components/LineDataCoformationForm/ReduceEndDate';
 
 export const CapacityPlannerContext = createContext();
 
@@ -35,10 +37,14 @@ const CapacityPlanner = () => {
     const [loading, setLoading] = useState(false);
     const [previousOrders, setPreviousOrders] = useState([]);
 
+    const prevOrders = useRef([]);
+
     const [openModalDeliveryWarning, setOpenModalDeliveryWarning] = useState(false);
     const [openIncludeHolidayModal, setOpenIncludeHolidayModal] = useState(false);
     // const [openHolidaysSelectionForm, setOpenHolidaysSelectionForm] = useState(false);
     const [lineEntryConformation, setLineEntryConformation] = useState(false);
+    const [viewPlanDetails, setViewPlanDetails] = useState(false);
+    const [reduceEndDate, setReduceEndDate] = useState(false);
     const [learningCurvePopup, setLearningCurvePopup] = useState(false);
 
     const [manualSelect, setManualSelect] = useState(false);
@@ -141,6 +147,10 @@ const CapacityPlanner = () => {
                 order['lines'] = order.lines.map(i => ({ ...i, id: i.lineId }));
                 return order
             }))
+            prevOrders.current = (result?.data?.data || []).map(order => {
+                order['lines'] = order.lines.map(i => ({ ...i, id: i.lineId }));
+                return order
+            });
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
         }).finally(() => { setLoading(false) });
@@ -187,7 +197,10 @@ const CapacityPlanner = () => {
                 openProductionPlanningReport, setOpenProductionPlanningReport,
                 units, setUnits,
                 scrollLine, setScrollLine,
-                productionDetails, setProductionDetails
+                productionDetails, setProductionDetails,
+                viewPlanDetails, setViewPlanDetails,
+                reduceEndDate, setReduceEndDate,
+                prevOrders
             }}>
             <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -197,6 +210,12 @@ const CapacityPlanner = () => {
             </Modal>
             <Modal isOpen={lineEntryConformation} closeIcon onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
                 <LineDataConformationForm />
+            </Modal>
+            <Modal isOpen={viewPlanDetails} closeIcon onClose={() => { setViewPlanDetails(false); setSplit(false); }}>
+                <ViewPlanDetails />
+            </Modal>
+            <Modal isOpen={reduceEndDate} closeIcon onClose={() => { setReduceEndDate(false); setSplit(false); }}>
+                <ReduceEndDate />
             </Modal>
             <Modal isOpen={learningCurvePopup} closeIcon >
                 <LearningCurveInputGridStandalone />
@@ -222,7 +241,7 @@ const CapacityPlanner = () => {
                     Loading...
                 </button>
             </Modal>
-            <div className=''>
+            <div className='relative'>
                 <div className='w-[25%] h-full float-left'>
                     <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
                         <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>

@@ -1,8 +1,16 @@
 import React, { useContext } from 'react'
 import { CapacityPlannerContext } from '../../CapacityPlanner';
+import axios from 'axios';
+import { ORDERS_API } from '../../../Constants/Api';
+import { toast } from 'react-toastify';
+
+const BASE_URL = process.env.REACT_APP_SERVER_URL;
+
 
 const OrderLineDetailOptions = () => {
-    const { setIsOrderProductionDetails, setLineEntryConformation, setOpenOrderDetail, setIsOrderLineDetailOptions, setOrders, currentOrder, currentLine } = useContext(CapacityPlannerContext)
+    const { setIsOrderProductionDetails, setLineEntryConformation, setOpenOrderDetail, setIsOrderLineDetailOptions, setOrders, currentOrder, currentLine, setViewPlanDetails,
+        setReduceEndDate, prevOrders
+    } = useContext(CapacityPlannerContext)
     function removeOrderFromLine() {
         if (!window.confirm("Do you want to delete this strip?")) return
         setOrders(prev => {
@@ -25,13 +33,41 @@ const OrderLineDetailOptions = () => {
         });
         setIsOrderLineDetailOptions(false);
     }
-    const options = [
+
+    function replanOrder() {
+        axios.put(BASE_URL + ORDERS_API + `/${currentOrder.id}`, { isReplanOrder: true })
+            .then(data => {
+                if (data.data?.statusCode == 1) {
+                    toast.error(data?.data?.message);
+                } else {
+                    window.location.reload();
+                    toast.success("Order Replanned Successfully...!!!");
+                }
+            }).catch(err => {
+                console.error(err)
+            })
+    }
+
+    let options = [
         { name: "Production Schedule", onClick: () => { setIsOrderProductionDetails(true); setIsOrderLineDetailOptions(false); }, className: "bg-green-600" },
         { name: "Order Details", onClick: () => { setOpenOrderDetail(true); setIsOrderLineDetailOptions(false); }, className: "bg-blue-600" },
-        { name: "Edit Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
-        { name: "Delete Strip", onClick: () => { removeOrderFromLine(); }, className: "bg-red-600" },
-        { name: "Delete All Strips ", onClick: () => { removeOrder(); }, className: "bg-red-600" },
+
     ];
+    if (!currentOrder.isReplanned) {
+        options = [
+            ...options,
+            { name: "Edit Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
+            { name: "Delete Strip", onClick: () => { removeOrderFromLine(); }, className: "bg-red-600" },
+            { name: "Delete All Strips ", onClick: () => { removeOrder(); }, className: "bg-red-600" },
+            { name: "Replan Order", onClick: replanOrder, className: "bg-orange-600" },
+        ]
+    } else {
+        options = [
+            ...options,
+            { name: "View Plan", onClick: () => { setViewPlanDetails(true); setIsOrderLineDetailOptions(false); }, className: "bg-violet-600" },
+            { name: "Change End Date", onClick: () => { setReduceEndDate(true); setIsOrderLineDetailOptions(false); }, className: "bg-red-600" },
+        ]
+    }
     return (
         <div className='mt-10'>
             <div className='grid grid-cols-2 bg-gray-200 p-1'>

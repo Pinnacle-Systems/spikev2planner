@@ -87,6 +87,10 @@ const OrderList = () => {
                     </thead>
                     <tbody>
                         {ordersForLines.filter(i =>
+                            (!i.isReplanned)
+                            &&
+                            (i.balanceQty > 0)
+                            &&
                             (statusFilter ? (i.status == statusFilter) : true)
                             &&
                             (searchText ? ((i?.orderNo || '').toLowerCase().includes(searchText.toLowerCase()) || (i?.style || '').toLowerCase().includes(searchText.toLowerCase())) : true)

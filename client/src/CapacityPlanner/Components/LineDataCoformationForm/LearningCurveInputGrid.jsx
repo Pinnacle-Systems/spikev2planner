@@ -12,7 +12,7 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
     } = useContext(CapacityPlannerContext)
 
     useEffect(() => {
-        if (readOnly) return
+        // if (readOnly) return
         const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
         let currentOrderLineIndex = -1;
         if (currentOrderIndex == -1) {
@@ -102,7 +102,7 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
 
 
 
-export const LearningCurveInputGridStandalone = () => {
+export const LearningCurveInputGridStandalone = ({ readOnly }) => {
     const {
         currentOrder,
         setOrders,

@@ -105,7 +105,7 @@ export async function getProductionQty(sizeColorWiseDetails, orderNo) {
 
 
 
-export async function fetchProductionDataFromErp() {
+export async function fetchProductionDataFromErp(txObj) {
     const existingOrders = await prisma.orders.findMany({ select: { orderNo: true } });
     if (existingOrders.length == 0) {
         throw { message: "No Existing Orders...!!!" }
@@ -125,14 +125,24 @@ export async function fetchProductionDataFromErp() {
     if (!data) {
         throw { message: "Production Data Sync Failed...!!!" }
     }
-    await prisma.$transaction(async (tx) => {
-        await tx.productionDetails.deleteMany({});
-        await tx.productionDetails.createMany({
+    if (txObj) {
+        await txObj.productionDetails.deleteMany({});
+        await txObj.productionDetails.createMany({
             data: data.map(i => ({
                 orderNo: i.orderno, date: new Date(i.date), size: i.size, color: i.color, line: i.line,
                 qty: parseInt(i.productionqty)
             }))
         })
-    })
+    } else {
+        await prisma.$transaction(async (tx) => {
+            await tx.productionDetails.deleteMany({});
+            await tx.productionDetails.createMany({
+                data: data.map(i => ({
+                    orderNo: i.orderno, date: new Date(i.date), size: i.size, color: i.color, line: i.line,
+                    qty: parseInt(i.productionqty)
+                }))
+            })
+        })
+    }
 
 }

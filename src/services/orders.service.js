@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
-import { getOrdersFromErp, importOrders, importProduction } from '../queries/orders.js';
+import { getOrdersFromErp, importOrders, importProduction, replanOrder } from '../queries/orders.js';
 import { fetchProductionDataFromErp } from '../queries/production.js';
 
 const prisma = new PrismaClient()
@@ -27,6 +27,12 @@ async function get(req) {
                 undefined
         },
         include: {
+            Orders: { select: { id: true } },
+            PrevOrder: {
+                select: {
+                    id: true
+                }
+            },
             lines: {
                 include: {
                     learningCurveItems: true,
@@ -59,6 +65,8 @@ async function get(req) {
         newItem['lineWiseProductionData'] = orderDetails;
         newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo);
         newItem["productionQty"] = orderDetails.reduce((a, c) => a + parseFloat(c.qty), 0);
+        newItem["balanceQty"] = (newItem.quantity - newItem.productionQty)
+        newItem["isReplanned"] = i.Orders ? true : false;
         return newItem
     })
     return { statusCode: 0, data };
@@ -161,13 +169,17 @@ export async function excelImport(req) {
 }
 
 async function update(id, body) {
-    const { orderNo, buyer, dDate, style, quantity, sam, styleType } = await body
+    const { orderNo, buyer, dDate, style, quantity, sam, styleType, isReplanOrder } = await body
     const dataFound = await prisma.orders.findUnique({
         where: {
             id: parseInt(id)
-        },
+        }
     })
     if (!dataFound) return NoRecordFound("orders");
+    if (isReplanOrder) {
+        const data = await replanOrder(id)
+        return { statusCode: 0, data }
+    }
     const data = await prisma.orders.update({
         where: {
             id: parseInt(id),
@@ -181,26 +193,38 @@ async function update(id, body) {
 
 async function updateMany(req) {
     const { orders } = await req.body
-    orders.forEach(async (order) => {
-        await prisma.orders.update({
-            where: {
-                id: parseInt(order.id),
-            },
-            data: {
-                lines: {
-                    deleteMany: {},
-                    create: order.lines.map(line => {
-                        return {
-                            lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
-                            endDate: new Date(line.endDate), days: parseInt(line.days),
-                            learningCurveItems: {
-                                create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
-                            }
-                        }
-                    }),
+    await prisma.$transaction(async (tx) => {
+        for (let index = 0; index < orders.length; index++) {
+            const order = orders[index];
+            const data = await tx.orders.findUnique({
+                where: {
+                    id: parseInt(order.id),
                 },
-            }
-        })
+                include: {
+                    Orders: { select: { id: true } }
+                }
+            })
+            if (data.Orders) continue
+            await tx.orders.update({
+                where: {
+                    id: parseInt(order.id),
+                },
+                data: {
+                    lines: {
+                        deleteMany: {},
+                        create: order.lines.map(line => {
+                            return {
+                                lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
+                                endDate: new Date(line.endDate), days: parseInt(line.days),
+                                learningCurveItems: {
+                                    create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
+                                }
+                            }
+                        }),
+                    },
+                }
+            })
+        }
     })
     return { statusCode: 0, data: "Updated Successfull" };
 };

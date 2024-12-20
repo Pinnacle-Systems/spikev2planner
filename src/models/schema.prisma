@@ -19,6 +19,10 @@ model Orders {
   styleType                 String                      @default("basic")
   lines                     OrderLines[]
   OrderSizeColorWiseDetails OrderSizeColorWiseDetails[]
+  PrevOrder                 Orders?                     @relation("Replan", fields: [prevOrdersId], references: [id])
+  prevOrdersId              Int?                        @unique
+  Orders                    Orders?                     @relation("Replan")
+  version                   Int?                        @default(1)
 }
 
 model OrderSizeColorWiseDetails {

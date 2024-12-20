@@ -5,7 +5,7 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { adjust, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
-import { BAN_ICON, VIEW } from '../../../utils/icons';
+import { BAN_ICON, VIEW, LOCK_ICON } from '../../../utils/icons';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
@@ -54,7 +54,9 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
             {fromOrderList
                 ?
                 <tr
-                    style={{ fontSize: "10px" }} id={order.id} draggable={["Pending", "Partial"].includes(order.status)} onDragStart={(e) => { drag(e) }}
+                    style={{ fontSize: "10px" }} id={order.id}
+                    draggable={["Pending", "Partial"].includes(order.status) && !order.isReplanned}
+                    onDragStart={(e) => { drag(e) }}
                     onDragOver={(e) => { e.preventDefault(); }}
                     className={`orderItem noDrop select-none text-center border grabbable`}
                 >
@@ -97,7 +99,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                 <>
                     {index === 0 ?
                         <div onMouseOver={(e) => { e.stopPropagation(); }} id={`${order?.id}/${line ? line.id : ""}`}
-                            draggable={!manualSelect} onDragStart={(e) => { drag(e) }}
+                            draggable={!manualSelect && !order.isReplanned} onDragStart={(e) => { drag(e) }}
                             onDragOver={(e) => { e.preventDefault(); }}
                             onClick={() => {
                                 if (manualSelect) return
@@ -106,13 +108,6 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                 setCurrentDate(lineObj?.startDate);
                                 setIsOrderLineDetailOptions(true)
                             }}
-                            // onContextMenu={(e) => {
-                            //     e.preventDefault()
-                            //     if (manualSelect) return
-                            //     setCurrentOrder(order);
-                            //     setCurrentLine(line);
-                            //     setIsOrderProductionDetails(true)
-                            // }}
                             style={{
                                 background: (productionMode
                                     ?
@@ -120,11 +115,11 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     : (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ? adjust(order.color, -100) : order.color)),
                                 width: width,
                                 fontSize: "10px",
-                                // backgroundImage: isCurrentOrderActive(order.id, findOrder) ? `url(${bgChangingColor})` : undefined
                             }}
                             className={` mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
-                            ${manualSelect ? "pointer-events-none" : "grabbable"} select-none 
-                           
+                            ${manualSelect ? "pointer-events-none" : ""}
+                            ${(order.isReplanned) ? "cursor-pointer" : "grabbable"}
+                            select-none 
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 animate-bounce" : "") : ""}
@@ -176,7 +171,16 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     <div> {totalLineWiseProductionQty} </div>
                                 </div>
                             </div>
-                            <strong className='text-xs font-bold relative z-20'> {order.orderNo}-{order.style} </strong>
+                            <strong className='text-xs font-bold relative z-20'>
+                                <span>
+                                    {order.orderNo}-{order.style}
+                                </span>
+                                <span>
+                                    {order.isReplanned ?
+                                        <> {LOCK_ICON}  </>
+                                        : <></>}
+                                </span>
+                            </strong>
                         </div>
                         :
                         <tr className='hidden'></tr>

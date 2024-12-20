@@ -17,7 +17,6 @@ const LineDataConformationForm = () => {
     holidays,
   } = useContext(CapacityPlannerContext);
 
-
   const [lineItems, setLineItems] = useState([]);
 
   useEffect(() => {
@@ -180,7 +179,7 @@ const LineDataConformationForm = () => {
                       disabled={currentLine.id != line.id} onChange={(e) => { handleChange(index, 'startDate', e.target.value) }} /> </td>
                   <td className='border border-black text-right' >
                     <input type="date" className='text-right focus:outline-none w-full'
-                      value={estimatedEndDate}
+                      value={currentLine.id == line.id ? estimatedEndDate : getDateFromDateTimeFormat(line.endDate)}
                       disabled /> </td>
                   <td className='border border-black text-right' >
                     <input type="number" min={0} className='text-right focus:outline-none w-full' value={line?.pcs}

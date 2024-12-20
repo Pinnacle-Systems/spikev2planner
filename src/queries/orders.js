@@ -99,10 +99,43 @@ export async function getOrdersFromErp(startDate, endDate) {
 }
 
 
-export async function replanOrder(prevOrder) {
+export async function replanOrder(orderId) {
     let createdOrder;
     await prisma.$transaction(async (tx) => {
+        const dataFound = await tx.orders.findUnique({
+            where: {
+                id: parseInt(orderId)
+            },
+            include: {
+                PrevOrder: {
+                    select: {
+                        id: true
+                    }
+                },
+                Orders: { select: { id: true } }
+            }
+        })
+        if (dataFound?.Orders) throw { message: "This Order Already Replanned...!!!" }
         await fetchProductionDataFromErp(tx);
-        await tx.$queryRaw`SELECT `
+        const sizeColorWiseDetails = await tx.$queryRaw`
+            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`}
+            `
+        const productionQty = sizeColorWiseDetails.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
+        let balanceQty = dataFound.quantity - productionQty;
+        if (balanceQty < 0) throw { message: "Production Aleady Completed...!!!" }
+        createdOrder = await tx.orders.create({
+            data: {
+                orderNo: dataFound.orderNo,
+                buyer: dataFound.buyer,
+                dDate: dataFound.dDate ? new Date(dataFound.dDate) : undefined,
+                style: dataFound.style,
+                sam: dataFound.sam,
+                styleType: dataFound.styleType,
+                quantity: balanceQty,
+                prevOrdersId: parseInt(dataFound.id),
+                version: dataFound.version + 1
+            }
+        })
     })
+    return createdOrder;
 }
