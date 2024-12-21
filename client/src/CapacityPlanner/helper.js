@@ -97,6 +97,7 @@ function filterItem(itemArray, itemId) {
 }
 
 export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getYearMonthFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM");
 export const getDateFromDateTimeFormatToDisplay = (date) => moment.utc(date).format("DD-MM-YYYY");
 
 

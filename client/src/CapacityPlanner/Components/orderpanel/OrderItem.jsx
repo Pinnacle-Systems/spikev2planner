@@ -175,7 +175,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                 <span>
                                     {order.orderNo}-{order.style}
                                 </span>
-                                <span>
+                                <span className="text-red-500">
                                     {order.isReplanned ?
                                         <> {LOCK_ICON}  </>
                                         : <></>}

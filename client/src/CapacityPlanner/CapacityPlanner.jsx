@@ -144,11 +144,15 @@ const CapacityPlanner = () => {
         }).then((result) => {
             setOrders(result.data.data.map(order => {
                 order["color"] = getRandomColor();
-                order['lines'] = order.lines.map(i => ({ ...i, id: i.lineId }));
+                order['lines'] = order.lines.map(i => {
+                    return { ...i, id: i.lineId, }
+                });
                 return order
             }))
             prevOrders.current = (result?.data?.data || []).map(order => {
-                order['lines'] = order.lines.map(i => ({ ...i, id: i.lineId }));
+                order['lines'] = order.lines.map(i => {
+                    return { ...i, id: i.lineId, }
+                });
                 return order
             });
         }, (error) => {

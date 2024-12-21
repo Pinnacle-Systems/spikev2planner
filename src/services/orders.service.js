@@ -61,6 +61,7 @@ async function get(req) {
     `
     data = data.map(i => {
         let newItem = { ...i };
+        newItem['lines'] = newItem['lines'].map(i => ({ ...i, ordersLineId: i.id }))
         let orderDetails = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo);
         newItem['lineWiseProductionData'] = orderDetails;
         newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo);
@@ -204,26 +205,40 @@ async function updateMany(req) {
                     Orders: { select: { id: true } }
                 }
             })
-            if (data.Orders) continue
-            await tx.orders.update({
-                where: {
-                    id: parseInt(order.id),
-                },
-                data: {
-                    lines: {
-                        deleteMany: {},
-                        create: order.lines.map(line => {
-                            return {
-                                lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
-                                endDate: new Date(line.endDate), days: parseInt(line.days),
-                                learningCurveItems: {
-                                    create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
-                                }
-                            }
-                        }),
-                    },
+            if (data.Orders) {
+                let orderLines = order.lines.filter(i => i.id);
+                for (let index = 0; index < orderLines.length; index++) {
+                    const orderLine = orderLines[index];
+                    await tx.orderLines.update({
+                        where: {
+                            id: parseInt(orderLine.ordersLineId)
+                        },
+                        data: {
+                            endDate: new Date(orderLine.endDate)
+                        }
+                    })
                 }
-            })
+            } else {
+                await tx.orders.update({
+                    where: {
+                        id: parseInt(order.id),
+                    },
+                    data: {
+                        lines: {
+                            deleteMany: {},
+                            create: order.lines.map(line => {
+                                return {
+                                    lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
+                                    endDate: new Date(line.endDate), days: parseInt(line.days),
+                                    learningCurveItems: {
+                                        create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
+                                    }
+                                }
+                            }),
+                        },
+                    }
+                })
+            }
         }
     })
     return { statusCode: 0, data: "Updated Successfull" };

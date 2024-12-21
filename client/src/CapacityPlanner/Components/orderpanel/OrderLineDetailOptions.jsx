@@ -40,6 +40,7 @@ const OrderLineDetailOptions = () => {
                 if (data.data?.statusCode == 1) {
                     toast.error(data?.data?.message);
                 } else {
+                    window.location.search = data?.data?.data?.orderNo;
                     window.location.reload();
                     toast.success("Order Replanned Successfully...!!!");
                 }

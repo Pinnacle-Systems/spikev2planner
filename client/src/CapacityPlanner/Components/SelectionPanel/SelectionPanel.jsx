@@ -23,6 +23,7 @@ const SelectionPanel = () => {
 
 
     const storeOrderData = useCallback(() => {
+        // console.log(orders.filter(i => i.lines.length > 0))
         axios({
             method: 'patch',
             url: BASE_URL + ORDERS_API,
