@@ -28,12 +28,12 @@ export async function importOrders(importedData) {
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,
             dDate: new Date(deliveryDate),
-            quantity: val.reduce((a, c) => a + parseInt(c.qty), 0),
+            quantity: val.reduce((a, c) => a + parseInt(c.qty || 0), 0),
             OrderSizeColorWiseDetails: {
                 create: val.map(i => ({
                     size: i.size,
                     color: i.color,
-                    qty: parseInt(i.qty)
+                    qty: parseInt(i.qty || 0)
                 }))
             }
         })
