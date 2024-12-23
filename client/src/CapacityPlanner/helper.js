@@ -59,7 +59,9 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
                 startDate,
                 endDate,
                 days: days,
-                learningCurveItems
+                learningCurveItems,
+                capacity: line.capacity,
+                efficiency: line.efficiency
             })
     }
     newOrders[orderIndex]["line"] = [];
@@ -98,6 +100,7 @@ function filterItem(itemArray, itemId) {
 
 export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
 export const getYearMonthFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM");
+export const getYearFromDateTimeFormat = (date) => moment.utc(date).format("YYYY");
 export const getDateFromDateTimeFormatToDisplay = (date) => moment.utc(date).format("DD-MM-YYYY");
 
 

@@ -54,6 +54,8 @@ model OrderLines {
   startDate          DateTime             @db.Date
   endDate            DateTime             @db.Date
   days               Int
+  efficiency         Int?                 @default(0)
+  capacity           Int?                 @default(0)
   learningCurveItems LearningCurveItems[]
 }
 

@@ -22,20 +22,58 @@ const TableEg = () => {
                 <TableRow>
                     <TableHeaderCell>Month</TableHeaderCell>
                     <TableHeaderCell>Line</TableHeaderCell>
-                    <TableHeaderCell>Type</TableHeaderCell>
-                    <TableHeaderCell>Orders</TableHeaderCell>
+                    <TableHeaderCell>Order</TableHeaderCell>
                     <TableHeaderCell >Pcs</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 <TableRow>
-                    <TableCell>Alpha Team</TableCell>
-                    <TableCell>Project 1</TableCell>
-                    <TableCell textAlign='right'>2</TableCell>
+                    <TableCell rowSpan={3} >Jan</TableCell>
+                    <TableCell rowSpan={2}>Line 1</TableCell>
                     <TableCell textAlign='center'>
-                        <Icon color='green' name='checkmark' size='large' />
+                        BVK/24/0713
                     </TableCell>
-                    <TableCell>Project 1</TableCell>
+                    <TableCell textAlign='right'>2300</TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell textAlign='center'>
+                        BVK/24/0714
+                    </TableCell>
+                    <TableCell textAlign='right'>3000</TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell >Line 2</TableCell>
+                    <TableCell textAlign='center'>
+                        BVK/24/0714
+                    </TableCell>
+                    <TableCell textAlign='right'>2000</TableCell>
+                </TableRow>
+
+                <TableRow>
+                    <TableCell rowSpan={3} >Feb</TableCell>
+                    <TableCell rowSpan={2}>Line 1</TableCell>
+                    <TableCell textAlign='center'>
+                        BVK/24/0713
+                    </TableCell>
+                    <TableCell textAlign='right'>2300</TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell textAlign='center'>
+                        BVK/24/0714
+                    </TableCell>
+                    <TableCell textAlign='right'>3000</TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell >Line 2</TableCell>
+                    <TableCell textAlign='center'>
+                        BVK/24/0714
+                    </TableCell>
+                    <TableCell textAlign='right'>2000</TableCell>
+                </TableRow>
+
+                <TableRow className='font-bold'>
+                    <TableCell colSpan={3} textAlign='center' >Total</TableCell>
+                    <TableCell textAlign='right'>10000</TableCell>
                 </TableRow>
             </TableBody>
         </Table>

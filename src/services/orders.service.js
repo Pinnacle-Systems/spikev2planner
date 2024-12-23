@@ -230,6 +230,8 @@ async function updateMany(req) {
                                 return {
                                     lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
                                     endDate: new Date(line.endDate), days: parseInt(line.days),
+                                    efficiency: parseFloat(line.efficiency || 0),
+                                    capacity: parseFloat(line.capacity || 0),
                                     learningCurveItems: {
                                         create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
                                     }

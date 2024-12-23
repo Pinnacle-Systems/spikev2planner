@@ -26,7 +26,7 @@ const Calendar = () => {
         lines,
         manualSelect, setManualSelect,
         setPreviousOrders, previousOrders, productionMode,
-        setLearningCurvePopup
+        setLearningCurvePopup,
     } = useContext(CapacityPlannerContext)
 
     const [currentMonthDays, setCurrentMonthDays] = useState([]);
@@ -199,7 +199,7 @@ const Calendar = () => {
             pcs = getCurrentCapacity(parseInt(currentDayPerc), lineObj.capacity) * (parseInt(dateDiffInDays(date, endDate, holidays)) - 1) + parseInt(balancePcs);
         }
 
-        linesLocal.push({ ...currentLineFromOrders, id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
+        linesLocal.push({ ...currentLineFromOrders, capacity: line.capacity, efficiency: line.efficiency, id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
         newOrders[currentOrderIndex]["lines"] = linesLocal;
         setOrders(newOrders);
     }
@@ -243,7 +243,7 @@ const Calendar = () => {
                 pcs += currentDayCapacity;
             }
             // if (maxDays.current < days) return
-            linesLocal.push({ ...currentLineFromOrders, id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
+            linesLocal.push({ ...currentLineFromOrders, capacity: line.capacity, efficiency: line.efficiency, id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
             newOrders[currentOrderIndex]["lines"] = linesLocal;
             if (validateAllocatedQuantity(orders, currentOrder)) {
                 flushSync(() => {

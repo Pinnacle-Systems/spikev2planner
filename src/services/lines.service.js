@@ -1,12 +1,16 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { getDateArray, getFirstNonHoliday } from '../utils/dateHelper.js';
-import { getLinesFromERP } from '../queries/lines.js';
+import { getLinesFromERP, getMonthlyWiseReport } from '../queries/lines.js';
 
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { month, isReport, selectedUnits, startDate, endDate, isGetLinesFromERP } = req.query;
+    const { month, isReport, selectedUnits, startDate, endDate, isGetLinesFromERP, isGetMonthlyWiseReport } = req.query;
+    if (isGetMonthlyWiseReport) {
+        const data = await getMonthlyWiseReport();
+        return { statusCode: 0, data }
+    }
     if (isGetLinesFromERP) {
         const data = await getLinesFromERP();
         return { statusCode: 0, data }
