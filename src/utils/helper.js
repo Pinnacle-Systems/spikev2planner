@@ -30,3 +30,8 @@ export function excelDateToJSDate(excelDate) {
 
   return date;
 }
+
+
+export function getCurrentCapacity(efficiency, capacity) {
+  return (parseInt(efficiency) * parseInt(capacity)) / 100;
+}

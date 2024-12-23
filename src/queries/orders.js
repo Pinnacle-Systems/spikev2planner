@@ -76,11 +76,28 @@ export async function getOrdersFromErp(startDate, endDate) {
         connection = await getConnection();
 
         let result = await connection.execute(`
-            SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
-            A.COLOR as color,A.PRODQTY as qty,'' sam ,'' styletype
+           SELECT * FROM (SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
+            A.COLOR as color,
+            A.PRODQTY
+            -
+            (
+            SELECT SUM(BB.PRODQTY) productionQty
+FROM GTGP AA JOIN GTGPDET BB ON  AA.GTGPID=BB.GTGPID
+JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+JOIN GTSIZEMAST  DD ON DD.GTSIZEMASTID=BB.SIZES
+JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=BB.COLOR
+JOIN GTLINEMAST FF ON FF.GTLINEMASTID=AA.LINENAME
+WHERE BB.PRODQTY >0 and AA.ORDERNO = A.ORDERNO AND AA.TPROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+            )
+             as qty,  
+            '' sam ,'' styletype
             FROM ORDERALLOWDET A
-            WHERE ${existingOrderNumbers.length > 0 ? `A.ORDERNO not in (${existingOrderNumbers.join(',')}) AND` : ""} A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
-            AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')`);
+             WHERE ${existingOrderNumbers.length > 0 ? `A.ORDERNO not in (${existingOrderNumbers.join(',')}) AND` : ""} A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+            AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')
+           ) AAA
+            WHERE AAA.QTY > 0
+           
+            `);
         let convertedRows = result.rows.map((row) => {
             let newRow = {};
             row.forEach((value, index) => {
