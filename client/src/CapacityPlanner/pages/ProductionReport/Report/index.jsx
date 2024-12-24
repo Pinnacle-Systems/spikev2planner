@@ -9,8 +9,9 @@ const formatCurrency = (value) => {
     }).format(value || 0);
 };
 function Report({ data }) {
+
     const gridRef = React.useRef(null);
-    const pageSettings = { pageSize: 10 };
+    const pageSettings = { pageSize: 20 };
     const aggregates = [
         {
             columns: [

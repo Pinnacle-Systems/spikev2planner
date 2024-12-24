@@ -4,6 +4,7 @@ import { convertToImportFormat } from "../utils/excelDataTransform.js";
 import { getConnection } from "../utils/db.connection.js";
 import moment from "moment"
 import { fetchProductionDataFromErp } from "./production.js";
+import { getDateFromDateTimeFormat } from "../utils/dateHelper.js";
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -23,14 +24,14 @@ export async function importOrders(importedData) {
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
         let orderNo = key.split("--")[0];
-        const deliveryDate = (key.split("--")[1]).split("/").reverse().join("-");
+        const deliveryDate = new Date((key.split("--")[1]).split("/").reverse().join("-"));
         orderDetailsArr.push({
             orderNo,
             styleType: val[0]?.styletype,
             style: val[0]?.styleno,
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,
-            dDate: new Date(deliveryDate),
+            dDate: deliveryDate,
             quantity: val.reduce((a, c) => a + parseInt(c.qty || 0), 0),
             OrderSizeColorWiseDetails: {
                 create: val.map(i => ({
@@ -41,8 +42,6 @@ export async function importOrders(importedData) {
             }
         })
     }
-    console.log(orderDetailsArr);
-
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orderDetailsArr.length; index++) {
             const order = orderDetailsArr[index];
@@ -76,32 +75,44 @@ export async function importProduction(importedData) {
 export async function getOrdersFromErp(startDate, endDate) {
     let connection;
     try {
-        const existingOrders = await prisma.$queryRaw`select orderNo from orders`;
-        let existingOrderNumbers = existingOrders.map(i => `'${i.orderNo}'`)
-        connection = await getConnection();
 
+        const existingOrders = await prisma.orders.findMany({ select: { orderNo: true, dDate: true } });
+        let existingOrderNumbers = existingOrders.map(i => `('${i.orderNo}',TO_DATE('${moment(i.dDate).format("DD-MM-YYYY")}','DD-MM-YYYY'))`).join(',');
+        connection = await getConnection();
         let result = await connection.execute(`
-           SELECT * FROM (SELECT A.ORDERNO as orderno,A.STYLEREFNO as styleno,A.BUYER as buyer,A.BUYERDELDATE as deliverydate,A.SIZES as "size",
-            A.COLOR as color,
-            A.PRODQTY
-            -
-            (
-            SELECT SUM(BB.PRODQTY) productionQty
+           SELECT * FROM (
+SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
+A.COLOR AS COLOR,
+A.PRODQTY,
+NVL((
+SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
 FROM GTGP AA JOIN GTGPDET BB ON  AA.GTGPID=BB.GTGPID
 JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
 JOIN GTSIZEMAST  DD ON DD.GTSIZEMASTID=BB.SIZES
 JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=BB.COLOR
 JOIN GTLINEMAST FF ON FF.GTLINEMASTID=AA.LINENAME
-WHERE BB.PRODQTY >0 and AA.ORDERNO = A.ORDERNO AND AA.TPROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
-            )
-             as qty,  
-            '' sam ,'' styletype
-            FROM ORDERALLOWDET A
-             WHERE ${existingOrderNumbers.length > 0 ? `A.ORDERNO not in (${existingOrderNumbers.join(',')}) AND` : ""} A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+WHERE BB.PRODQTY >0 AND AA.ORDERNO = A.ORDERNO AND AA.TPROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+),0) SEWINGDONE,
+A.PRODQTY
+-
+NVL((
+SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
+FROM GTGP AA JOIN GTGPDET BB ON  AA.GTGPID=BB.GTGPID
+JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+JOIN GTSIZEMAST  DD ON DD.GTSIZEMASTID=BB.SIZES
+JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=BB.COLOR
+JOIN GTLINEMAST FF ON FF.GTLINEMASTID=AA.LINENAME
+WHERE BB.PRODQTY >0 AND AA.ORDERNO = A.ORDERNO AND AA.TPROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+),0)
+AS QTY,  
+'' SAM ,'' STYLETYPE
+FROM ORDERALLOWDET A
+             WHERE  
+             ${existingOrderNumbers.length > 0 ? `(A.ORDERNO, AA.BUYERDELDATE) NOT IN (${existingOrderNumbers}) AND` : ""} 
+             A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')
            ) AAA
             WHERE AAA.QTY > 0
-           
             `);
         let convertedRows = result.rows.map((row) => {
             let newRow = {};
@@ -110,6 +121,7 @@ WHERE BB.PRODQTY >0 and AA.ORDERNO = A.ORDERNO AND AA.TPROCESSNAME = 'SEWING' AN
             });
             return newRow;
         })
+        console.log(convertedRows, 'convertedRows');
         await importOrders(convertedRows);
     } catch (error) {
         console.log(error)
@@ -140,7 +152,7 @@ export async function replanOrder(orderId) {
         if (dataFound?.Orders) throw { message: "This Order Already Replanned...!!!" }
         await fetchProductionDataFromErp(tx);
         const sizeColorWiseDetails = await tx.$queryRaw`
-            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`}
+            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`} AND DELIVERYDATE = ${getDateFromDateTimeFormat(dataFound.dDate)}
             `
         const productionQty = sizeColorWiseDetails.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
         let balanceQty = dataFound.quantity - productionQty;

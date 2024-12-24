@@ -129,6 +129,7 @@ WHERE B.PRODQTY > 0 AND  (A.ORDERNO, AA.DELDATE) IN (${existingOrderNumbers}) AN
 GROUP BY A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.DOCDATE,AA.DELDATE
 ORDER BY 1,2,3 
     `;
+
     const data = await runOracleQuery(sql);
     if (!data) {
         throw { message: "Production Data Sync Failed...!!!" }
@@ -138,7 +139,8 @@ ORDER BY 1,2,3
         await txObj.productionDetails.createMany({
             data: data.map(i => ({
                 orderNo: i.orderno, date: new Date(i.date), size: i.size, color: i.color, line: i.line,
-                qty: parseInt(i.productionqty)
+                qty: parseInt(i.productionqty),
+                deliveryDate: new Date(i.deldate)
             }))
         })
     } else {
@@ -147,7 +149,8 @@ ORDER BY 1,2,3
             await tx.productionDetails.createMany({
                 data: data.map(i => ({
                     orderNo: i.orderno, date: new Date(i.date), size: i.size, color: i.color, line: i.line,
-                    qty: parseInt(i.productionqty)
+                    qty: parseInt(i.productionqty),
+                    deliveryDate: new Date(i.deldate)
                 }))
             })
         })

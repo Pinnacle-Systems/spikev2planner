@@ -35,13 +35,14 @@ model OrderSizeColorWiseDetails {
 }
 
 model ProductionDetails {
-  id      Int      @id @default(autoincrement())
-  date    DateTime @default(now())
-  orderNo String
-  size    String
-  color   String
-  line    String
-  qty     Int
+  id           Int       @id @default(autoincrement())
+  date         DateTime  @default(now())
+  orderNo      String
+  size         String
+  color        String
+  line         String
+  qty          Int
+  deliveryDate DateTime? @db.Date
 }
 
 model OrderLines {

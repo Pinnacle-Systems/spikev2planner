@@ -262,10 +262,3 @@ export function sortWeekDaysIfLastWeek(currentMonthDays) {
     return weekArray
 }
 
-export function styleTypeMatchingWarningMessage(line, order) {
-    if (line?.styleType !== order?.styleType) {
-        toast.warning(STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE)
-        return false
-    }
-    return true
-}
