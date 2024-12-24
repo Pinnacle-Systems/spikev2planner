@@ -1,24 +1,27 @@
 import prisma from "../models/getPrisma.js";
-import { findWorkingDaysBetweenDates, getCurrentCapacity } from "../utils/dateHelper.js";
+import { findWorkingDaysBetweenDates, getCurrentCapacity, getDateFromDateTimeFormatToDisplay } from "../utils/dateHelper.js";
 import { runOracleQuery } from "../utils/db.connection.js";
+import { getMonthName } from "../utils/helper.js";
 
 export async function getLinesFromERP() {
     return await runOracleQuery("SELECT SHORTCODE as LINENAME FROM GTLINEMAST");
 }
 
-export async function getMonthlyWiseReport() {
+export async function getPlannedOrdersReport() {
     const orderLines = await prisma.orderLines.findMany({
         include: {
             learningCurveItems: true,
             Line: true,
             Orders: {
                 select: {
-                    orderNo: true
+                    orderNo: true,
+                    dDate: true
                 }
             }
         }
     })
     const data = [];
+    const holidays = await prisma.holiday.findMany({});
     for (let index = 0; index < orderLines.length; index++) {
         const line = orderLines[index];
         let learningCurveItems = line.learningCurveItems;
@@ -38,7 +41,7 @@ export async function getMonthlyWiseReport() {
             }
             totalProductionSchedulePcs += allocationQty;
             let date = new Date(workingDays[i]);
-            data.push({ date, pcs: allocationQty, month: date.getMonth() + 1, year: date.getFullYear(), line: line.Line.linename });
+            data.push({ date: getDateFromDateTimeFormatToDisplay(date), pcs: allocationQty, month: getMonthName(new Date(date)), year: date.getFullYear(), line: line.Line.linename, orderNo: line.Orders.orderNo, deliveryDate: getDateFromDateTimeFormatToDisplay(line.Orders.dDate) });
         }
     }
     return data;

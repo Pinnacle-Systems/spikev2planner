@@ -43,14 +43,14 @@ export async function importOrders(importedData) {
     }
     console.log(orderDetailsArr);
 
-    // await prisma.$transaction(async (tx) => {
-    //     for (let index = 0; index < orderDetailsArr.length; index++) {
-    //         const order = orderDetailsArr[index];
-    //         await tx.orders.create({
-    //             data: order
-    //         })
-    //     }
-    // })
+    await prisma.$transaction(async (tx) => {
+        for (let index = 0; index < orderDetailsArr.length; index++) {
+            const order = orderDetailsArr[index];
+            await tx.orders.create({
+                data: order
+            })
+        }
+    })
 }
 
 export async function importProduction(importedData) {

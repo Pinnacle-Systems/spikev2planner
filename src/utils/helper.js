@@ -35,3 +35,8 @@ export function excelDateToJSDate(excelDate) {
 export function getCurrentCapacity(efficiency, capacity) {
   return (parseInt(efficiency) * parseInt(capacity)) / 100;
 }
+
+
+export function getMonthName(month) {
+  return new Date(month).toLocaleString('default', { month: 'short' });
+}

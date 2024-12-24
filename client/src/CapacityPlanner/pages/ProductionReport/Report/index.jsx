@@ -1,6 +1,6 @@
-import { Aggregate, ColumnDirective, ColumnsDirective, Filter, GridComponent, Group, Inject, Page, Sort } from '@syncfusion/ej2-react-grids';
+import { Aggregate, ColumnDirective, ColumnsDirective, ExcelExport, Filter, GridComponent, Group, Inject, Page, PdfExport, Search, Sort, Toolbar } from '@syncfusion/ej2-react-grids';
 import * as React from 'react';
-import { data } from './datasource';
+// import { data } from './datasource';
 
 const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
@@ -8,42 +8,58 @@ const formatCurrency = (value) => {
         currency: 'INR',
     }).format(value || 0);
 };
-function Report() {
-    const pageSettings = { pageSize: 6 };
+function Report({ data }) {
+    const gridRef = React.useRef(null);
+    const pageSettings = { pageSize: 10 };
     const aggregates = [
         {
             columns: [
                 {
                     type: 'Sum',
-                    field: 'Freight',
-                    groupFooterTemplate: (data) => `Group Total: ${formatCurrency(data.Sum)}`,
-                },
-                {
-                    type: 'Count',
-                    field: 'OrderID',
-                    groupFooterTemplate: (data) => `Count: ${data.Count}`,
+                    field: 'pcs',
+                    groupFooterTemplate: (data) => `${data.groupKey} Total: ${parseFloat(data.Sum || 0).toFixed(2)}`,
+                    footerTemplate: (data) => `${parseFloat(data.Sum || 0).toFixed(2)}`,
                 },
             ],
         },
     ];
+
+    const toolbarClick = (args) => {
+        console.log(args);
+        if (args.item.id === 'Grid_excelexport') {
+            gridRef.current.excelExport();
+        }
+    };
     return (
-        <GridComponent dataSource={data} allowPaging={true} allowGrouping
-            groupSettings={{ columns: ['ShipCountry'] }}
+        <GridComponent
+            ref={gridRef}
+            dataSource={data} allowPaging={true} allowGrouping
+            // groupSettings={{ columns: ['ShipCountry'] }}
             pageSettings={pageSettings}
             aggregates={aggregates}
-            toolbar={['Group']}
+            toolbar={['Search', 'ExcelExport', 'PdfExport',]}
+            allowSorting={true}
             showGroupingBar={false}
+            allowSearching={true}
+            allowExcelExport={true}
+            allowPdfExport={true}
+            // toolbarClick={toolbarClick}
+            title='Production Report'
+            searchSettings={{ operator: 'contains', key: '', ignoreCase: true }}
+            allowFiltering={true}
+            filterSettings={{ type: 'Menu' }}
         >
             <ColumnsDirective>
-                <ColumnDirective field='OrderID' width='100' textAlign="Right" allowGrouping={false} />
-                <ColumnDirective field='CustomerID' width='100' />
-                <ColumnDirective field='EmployeeID' width='100' textAlign="Right" />
-                <ColumnDirective field='Freight' width='100' format="C2" textAlign="Right"
-                    template={(props) => formatCurrency(props.Freight)}
+                <ColumnDirective headerText='Date' field='date' width='100' textAlign="Right" />
+                <ColumnDirective headerText='Month' field='month' width='100' textAlign="Right" />
+                <ColumnDirective headerText='Year' field='year' width='100' textAlign="Right" />
+                <ColumnDirective headerText='Order No' field='orderNo' width='100' allowSearching />
+                <ColumnDirective headerText='Delivery Date' field='deliveryDate' width='100' textAlign="Right" />
+                <ColumnDirective headerText='Pcs' field='pcs' width='100' textAlign="Right" allowGrouping={false}
+                    template={(props) => parseFloat(props.pcs || 0).toFixed(2)}
                 />
-                <ColumnDirective field='ShipCountry' width='100' />
             </ColumnsDirective>
-            <Inject services={[Page, Sort, Filter, Group, Aggregate]} />
+            <Inject services={[Page, Sort, Filter, Group, Aggregate, Search, Toolbar, ExcelExport, PdfExport]} />
         </GridComponent>
     );
 }
