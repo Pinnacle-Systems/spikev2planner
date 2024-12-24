@@ -17,12 +17,15 @@ export async function importOrders(importedData) {
         "styletype"
     ]
     const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
-    const orderDetails = _.groupBy(multipleOrderDetails, 'orderno');
+    const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
+        return `${item['orderno']}--${item['deliverydate']}`;
+    });
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
-        const deliveryDate = (val[0]?.deliverydate).split("/").reverse().join("-");
+        let orderNo = key.split("--")[0];
+        const deliveryDate = (key.split("--")[1]).split("/").reverse().join("-");
         orderDetailsArr.push({
-            orderNo: key,
+            orderNo,
             styleType: val[0]?.styletype,
             style: val[0]?.styleno,
             buyer: val[0]?.buyer,
@@ -38,14 +41,16 @@ export async function importOrders(importedData) {
             }
         })
     }
-    await prisma.$transaction(async (tx) => {
-        for (let index = 0; index < orderDetailsArr.length; index++) {
-            const order = orderDetailsArr[index];
-            await tx.orders.create({
-                data: order
-            })
-        }
-    })
+    console.log(orderDetailsArr);
+
+    // await prisma.$transaction(async (tx) => {
+    //     for (let index = 0; index < orderDetailsArr.length; index++) {
+    //         const order = orderDetailsArr[index];
+    //         await tx.orders.create({
+    //             data: order
+    //         })
+    //     }
+    // })
 }
 
 export async function importProduction(importedData) {

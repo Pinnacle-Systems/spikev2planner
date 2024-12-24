@@ -1,3 +1,4 @@
+import moment from "moment";
 import prisma from "../models/getPrisma.js";
 import { getConnection, runOracleQuery } from "../utils/db.connection.js";
 
@@ -106,20 +107,27 @@ export async function getProductionQty(sizeColorWiseDetails, orderNo) {
 
 
 export async function fetchProductionDataFromErp(txObj) {
-    const existingOrders = await prisma.orders.findMany({ select: { orderNo: true } });
+    const existingOrders = await prisma.orders.findMany({ select: { orderNo: true, dDate: true } });
     if (existingOrders.length == 0) {
         throw { message: "No Existing Orders...!!!" }
     }
+    let existingOrderNumbers = existingOrders.map(i => `('${i.orderNo}',TO_DATE('${moment(i.dDate).format("DD-MM-YYYY")}','DD-MM-YYYY'))`).join(',');
     const sql = `
-                SELECT A.docdate "date",A.ORDERNO,D.SIZENAME "size",E.COLORNAME color,F.SHORTCODE line,SUM(B.PRODQTY) productionQty
-                    FROM GTGP A JOIN GTGPDET B ON  A.GTGPID=B.GTGPID
-                    JOIN GTCOMPMAST C ON C.GTCOMPMASTID=A.COMPCODE
-                    JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
-                    JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
-                    JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
-                    WHERE B.PRODQTY >0 and  A.ORDERNO IN (${existingOrders.map(i => `'${i.orderNo}'`).join(",")}) AND A.TPROCESSNAME = 'SEWING'
-                    group by A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.docdate
-                    ORDER BY 1,2,3
+               SELECT A.DOCDATE "date",A.ORDERNO,D.SIZENAME "size",E.COLORNAME COLOR,F.SHORTCODE LINE,SUM(B.PRODQTY) PRODUCTIONQT,AA.DELDATE
+FROM GTGP A JOIN GTGPDET B ON  A.GTGPID=B.GTGPID
+JOIN GTCOMPMAST C ON C.GTCOMPMASTID=A.COMPCODE
+JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES
+JOIN GTCOLORMAST E ON E.GTCOLORMASTID=B.COLOR
+JOIN GTLINEMAST F ON F.GTLINEMASTID=A.LINENAME
+JOIN
+(
+SELECT MAX(AAA.BUYERDELDATE) DELDATE,AAA.ORDERNO,AAA.COLOR,AAA.SIZES FROM ORDERALLOWDET AAA
+GROUP BY AAA.ORDERNO,AAA.COLOR,AAA.SIZES 
+) AA ON AA.ORDERNO = A.ORDERNO AND AA.COLOR = E.COLORNAME
+AND AA.SIZES = D.SIZENAME
+WHERE B.PRODQTY > 0 AND  (A.ORDERNO, AA.DELDATE) IN (${existingOrderNumbers}) AND A.TPROCESSNAME = 'SEWING'
+GROUP BY A.ORDERNO, D.SIZENAME, E.COLORNAME, F.SHORTCODE,A.DOCDATE,AA.DELDATE
+ORDER BY 1,2,3 
     `;
     const data = await runOracleQuery(sql);
     if (!data) {
