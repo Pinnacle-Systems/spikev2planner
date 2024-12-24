@@ -3,6 +3,7 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import axios from 'axios';
 import { ORDERS_API } from '../../../Constants/Api';
 import { toast } from 'react-toastify';
+import { getDateFromDateTimeFormatToDisplay } from '../../helper';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -71,11 +72,17 @@ const OrderLineDetailOptions = () => {
     }
     return (
         <div className='mt-10'>
-            <div className='grid grid-cols-2 bg-gray-200 p-1'>
+            <div className='grid grid-cols-3 bg-gray-200 p-1 gap-3'>
                 <div>
                     Current Selected Order:
                     <strong>
                         {currentOrder.orderNo}
+                    </strong>
+                </div>
+                <div>
+                    Del.Date:
+                    <strong>
+                        {getDateFromDateTimeFormatToDisplay(currentOrder.dDate)}
                     </strong>
                 </div>
                 <div>

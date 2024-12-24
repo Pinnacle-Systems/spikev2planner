@@ -76,6 +76,7 @@ const OrderList = () => {
                         <tr>
                             <td className='border border-black'>S.no</td>
                             <td className='border border-black'>Order&nbsp;no.</td>
+                            <td className='border border-black'>Del.Date</td>
                             <td className='border border-black'>Style</td>
                             <td className='border border-black'>Buyer</td>
                             <td className='border border-black'>Style Type</td>

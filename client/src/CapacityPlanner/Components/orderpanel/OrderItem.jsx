@@ -2,7 +2,7 @@ import moment from 'moment';
 import React, { useContext } from 'react'
 import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../utils/nationHolidaysHelper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
-import { adjust, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
+import { adjust, getDateFromDateTimeFormat, getDateFromDateTimeFormatToDisplay, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 import { BAN_ICON, VIEW, LOCK_ICON } from '../../../utils/icons';
@@ -65,6 +65,9 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                     </td>
                     <td>
                         {order.orderNo}
+                    </td>
+                    <td>
+                        {getDateFromDateTimeFormatToDisplay(order.dDate)}
                     </td>
                     <td>
                         {order.style}
