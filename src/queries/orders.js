@@ -4,7 +4,7 @@ import { convertToImportFormat } from "../utils/excelDataTransform.js";
 import { getConnection } from "../utils/db.connection.js";
 import moment from "moment"
 import { fetchProductionDataFromErp } from "./production.js";
-import { getDateFromDateTimeFormat } from "../utils/dateHelper.js";
+import { getDateFromDateTimeFormatToDisplay } from "../utils/dateHelper.js";
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -152,7 +152,7 @@ export async function replanOrder(orderId) {
         if (dataFound?.Orders) throw { message: "This Order Already Replanned...!!!" }
         await fetchProductionDataFromErp(tx);
         const sizeColorWiseDetails = await tx.$queryRaw`
-            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`} AND DELIVERYDATE = ${getDateFromDateTimeFormat(dataFound.dDate)}
+            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`} AND DELIVERYDATE = ${`${getDateFromDateTimeFormatToDisplay(dataFound.dDate)}`}
             `
         const productionQty = sizeColorWiseDetails.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
         let balanceQty = dataFound.quantity - productionQty;
