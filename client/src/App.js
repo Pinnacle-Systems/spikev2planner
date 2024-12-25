@@ -19,7 +19,6 @@ function App() {
         <Route path={CLIENT_UNIT_URL} element={<UnitForm />} />
         <Route path={CLIENT_HOLIDAY_URL} element={<HolidayCalendar />} />
         <Route path={CLIENT_PLANNED_ORDERS_URL} element={<ProductionReport />} />
-        {/* <Route path={CLIENT_PLANNED_ORDERS_URL} element={<PlannedOrdersReport />} /> */}
         <Route path={CLIENT_UNPLANNED_ORDERS_URL} element={<UnPlannedOrdersReport />} />
       </Routes>
     </HashRouter >

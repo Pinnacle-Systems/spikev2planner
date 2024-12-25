@@ -18,8 +18,8 @@ function Report({ data }) {
                 {
                     type: 'Sum',
                     field: 'pcs',
-                    groupFooterTemplate: (data) => `${data.groupKey} Total: ${parseFloat(data.Sum || 0).toFixed(2)}`,
-                    footerTemplate: (data) => `${parseFloat(data.Sum || 0).toFixed(2)}`,
+                    groupFooterTemplate: (data) => `${data.groupKey} Total: ${parseFloat(data.Sum || 0).toFixed(0)}`,
+                    footerTemplate: (data) => `${parseFloat(data.Sum || 0).toFixed(0)}`,
                 },
             ],
         },
@@ -38,7 +38,7 @@ function Report({ data }) {
             // groupSettings={{ columns: ['ShipCountry'] }}
             pageSettings={pageSettings}
             aggregates={aggregates}
-            toolbar={['Search', 'ExcelExport', 'PdfExport',]}
+            toolbar={['Search',]}
             allowSorting={true}
             showGroupingBar={false}
             allowSearching={true}
@@ -57,7 +57,7 @@ function Report({ data }) {
                 <ColumnDirective headerText='Order No' field='orderNo' width='100' allowSearching />
                 <ColumnDirective headerText='Delivery Date' field='deliveryDate' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Pcs' field='pcs' width='100' textAlign="Right" allowGrouping={false}
-                    template={(props) => parseFloat(props.pcs || 0).toFixed(2)}
+                    template={(props) => parseFloat(props.pcs || 0).toFixed(0)}
                 />
             </ColumnsDirective>
             <Inject services={[Page, Sort, Filter, Group, Aggregate, Search, Toolbar, ExcelExport, PdfExport]} />
