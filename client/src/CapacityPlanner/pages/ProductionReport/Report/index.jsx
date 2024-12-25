@@ -54,6 +54,7 @@ function Report({ data }) {
                 <ColumnDirective headerText='Date' field='date' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Month' field='month' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Year' field='year' width='100' textAlign="Right" />
+                <ColumnDirective headerText='Line' field='line' width='100' textAlign="center" />
                 <ColumnDirective headerText='Order No' field='orderNo' width='100' allowSearching />
                 <ColumnDirective headerText='Delivery Date' field='deliveryDate' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Pcs' field='pcs' width='100' textAlign="Right" allowGrouping={false}

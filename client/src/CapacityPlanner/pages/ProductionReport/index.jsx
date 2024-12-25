@@ -18,8 +18,8 @@ const ProductionReport = () => {
             })
     }, [])
     return (
-        <div>
-            <Header as='h4' icon textAlign='center' >
+        <div className='mt-2'>
+            <Header as='h3' icon textAlign='center' >
                 <HeaderContent>Planned Orders</HeaderContent>
                 {/* <Icon name='unordered list' circular /> */}
             </Header>
