@@ -18,24 +18,18 @@ function Report({ data }) {
                 {
                     type: 'Sum',
                     field: 'pcs',
-                    groupFooterTemplate: (data) => `${data.groupKey} Total: ${parseFloat(data.Sum || 0).toFixed(0)}`,
+                    groupFooterTemplate: (data) => `Group Total: ${parseFloat(data.Sum || 0).toFixed(0)}`,
                     footerTemplate: (data) => `${parseFloat(data.Sum || 0).toFixed(0)}`,
                 },
             ],
         },
     ];
 
-    const toolbarClick = (args) => {
-        console.log(args);
-        if (args.item.id === 'Grid_excelexport') {
-            gridRef.current.excelExport();
-        }
-    };
     return (
         <GridComponent
+            rowHeight={30}
             ref={gridRef}
             dataSource={data} allowPaging={true} allowGrouping
-            // groupSettings={{ columns: ['ShipCountry'] }}
             pageSettings={pageSettings}
             aggregates={aggregates}
             toolbar={['Search',]}
@@ -44,6 +38,14 @@ function Report({ data }) {
             allowSearching={true}
             allowExcelExport={true}
             allowPdfExport={true}
+
+            created={() => {
+                const footerElement = document.querySelector('.e-gridfooter');
+                if (footerElement) {
+                    Object.assign(footerElement.style, { width: '120%', });
+                }
+            }}
+
             // toolbarClick={toolbarClick}
             title='Production Report'
             searchSettings={{ operator: 'contains', key: '', ignoreCase: true }}
