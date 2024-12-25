@@ -77,9 +77,8 @@ const ProductionPlanningReport = () => {
     let reportDataWithLearningCurvePercentage = reportData.map(lineObj => {
         const learningCurveItems = lineObj.learningCurveItems || [];
         const productionSchedule = [];
-        let currentLine = lineObj.Line;
         const workingDays = findWorkingDaysBetweenDates(lineObj.startDate, lineObj.endDate, holidays);
-        const currentCapacity = parseInt(getCurrentCapacity(currentLine.efficiency, currentLine.capacity));
+        const currentCapacity = parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity));
         let totalPcs = lineObj.pcs || 0;
         let totalProductionSchedulePcs = 0;
         for (let i = 0; i < workingDays.length; i++) {

@@ -5,7 +5,7 @@ import { getDateFromDateTimeFormat } from '../../../utils/helper';
 
 
 export const GridForm = () => {
-    const { lines,setSplit, orders, setOrders, currentOrder,  setLineEntryConformation, setCurrentOrder} = useContext(CapacityPlannerContext)
+    const { lines, setSplit, orders, setOrders, currentOrder, setLineEntryConformation, setCurrentOrder } = useContext(CapacityPlannerContext)
 
     const [lineSplit, setLineSplit] = useState([])
 
@@ -13,7 +13,7 @@ export const GridForm = () => {
         const value = event.target.value;
         const newLines = [...lineSplit];
         newLines[index][field] = value;
-        newLines[index]["endDate"] = getEndDate(newLines[index]["startDate"], newLines[index]["id"], newLines[index]["pcs"])
+        newLines[index]["endDate"] = getEndDate(newLines[index]["startDate"], newLines[index], newLines[index]["pcs"])
         newLines[index]["days"] = findDays(newLines[index]["id"], newLines[index]["pcs"])
         setLineSplit(newLines);
     };
@@ -29,18 +29,15 @@ export const GridForm = () => {
     }
     const addRow = () => {
         const newRow = { id: "", pcs: "", startDate: "", endDate: "", days: "" };
-        setLineSplit([ ...lineSplit, newRow]);
+        setLineSplit([...lineSplit, newRow]);
     };
     const handleDeleteRow = id => {
         const filteredRows = lineSplit.filter((row, index) => index !== id);
         setLineSplit(filteredRows);
     };
 
-    const getLineById = id => lines.find(line => parseInt(line.id) === parseInt(id))
-
-    const findDays = (lineId, lineOrderQty) => {
-        let currentLine = getLineById(lineId)
-        return Math.ceil(lineOrderQty / getCurrentCapacity(currentLine.efficiency, currentLine.capacity))
+    const findDays = (line, lineOrderQty) => {
+        return Math.ceil(lineOrderQty / getCurrentCapacity(line.efficiency, line.capacity))
     }
 
     const getEndDate = (startDate, line, lineOrderQty) => {
@@ -88,7 +85,7 @@ export const GridForm = () => {
                                     <input
                                         type="number"
                                         className="border rounded px-4 py-2 w-full"
-                                        value={getCurrentCapacity(getLineById(row.id)?.efficiency, getLineById(row.id)?.capacity)}
+                                        value={getCurrentCapacity(row?.efficiency, row?.capacity)}
                                         disabled
                                     />
                                 </td>
