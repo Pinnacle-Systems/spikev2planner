@@ -108,7 +108,7 @@ AS QTY,
 '' SAM ,'' STYLETYPE
 FROM ORDERALLOWDET A
              WHERE  
-             ${existingOrderNumbers.length > 0 ? `(A.ORDERNO, AA.BUYERDELDATE) NOT IN (${existingOrderNumbers}) AND` : ""} 
+             ${existingOrderNumbers.length > 0 ? `(A.ORDERNO, A.BUYERDELDATE) NOT IN (${existingOrderNumbers}) AND` : ""} 
              A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY')
            ) AAA
