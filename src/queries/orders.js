@@ -153,7 +153,10 @@ export async function replanOrder(orderId) {
         if (dataFound?.Orders) throw { message: "This Order Already Replanned...!!!" }
         await fetchProductionDataFromErp(tx);
         const sizeColorWiseDetails = await tx.$queryRaw`
-            select sum(qty) as qty from ProductionDetails WHERE ORDERNO = ${`${dataFound.orderNo}`} AND DELIVERYDATE = ${`${getDateFromDateTimeFormatToDisplay(dataFound.dDate)}`}
+            select sum(qty) as qty from ProductionDetails 
+            WHERE ORDERNO = ${`${dataFound.orderNo}`} 
+            AND DELIVERYDATE = ${`${getDateFromDateTimeFormatToDisplay(dataFound.dDate)}`}
+            AND DATE > ${`${getDateFromDateTimeFormatToDisplay(dataFound.createdAt)}`}
             `
         const productionQty = sizeColorWiseDetails.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
         let balanceQty = dataFound.quantity - productionQty;
