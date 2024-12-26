@@ -54,23 +54,26 @@ async function get(req) {
     const sizeColorWiseDetails = await prisma.$queryRaw`
     select * from ProductionDetails
     `
-    const productionDetailsDateWise = await prisma.$queryRaw`
-    select DATE_FORMAT(date,'%d-%m-%Y') as date,orderNo,line, sum(qty) as qty 
-    from ProductionDetails
-    group by date, orderNo, line
-    `
-    data = data.map(i => {
+    const out = [];
+    for (let index = 0; index < data.length; index++) {
+        const i = data[index];
+        const productionDetailsDateWise = await prisma.$queryRaw`
+        select DATE_FORMAT(date,'%d-%m-%Y') as date,orderNo,line, sum(qty) as qty 
+        from ProductionDetails
+        where orderNo = ${i.orderNo} and date > ${i.createdAt}
+        group by date, orderNo, line
+        `;
         let newItem = { ...i };
         newItem['lines'] = newItem['lines'].map(i => ({ ...i, ordersLineId: i.id }))
         let orderDetails = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo);
         newItem['lineWiseProductionData'] = orderDetails;
-        newItem['productionDetailsDateWise'] = productionDetailsDateWise.filter(item => item.orderNo === i.orderNo);
-        newItem["productionQty"] = orderDetails.reduce((a, c) => a + parseFloat(c.qty), 0);
+        newItem['productionDetailsDateWise'] = productionDetailsDateWise;
+        newItem["productionQty"] = productionDetailsDateWise.reduce((a, c) => a + parseFloat(c.qty), 0);
         newItem["balanceQty"] = (newItem.quantity - newItem.productionQty)
         newItem["isReplanned"] = i.Orders ? true : false;
-        return newItem
-    })
-    return { statusCode: 0, data };
+        out.push(newItem);
+    }
+    return { statusCode: 0, data: out };
 }
 
 
