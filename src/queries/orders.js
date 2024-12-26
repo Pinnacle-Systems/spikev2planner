@@ -45,6 +45,8 @@ export async function importOrders(importedData) {
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orderDetailsArr.length; index++) {
             const order = orderDetailsArr[index];
+            const data = await tx.orders.findMany({ where: { orderNo: order.orderNo, dDate: order.dDate } });
+            if (data.length > 0) continue;
             await tx.orders.create({
                 data: order
             })
@@ -121,7 +123,6 @@ FROM ORDERALLOWDET A
             });
             return newRow;
         })
-        console.log(convertedRows, 'convertedRows');
         await importOrders(convertedRows);
     } catch (error) {
         console.log(error)
