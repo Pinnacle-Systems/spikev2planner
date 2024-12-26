@@ -10,7 +10,7 @@ const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const OrderLineDetailOptions = () => {
     const { setIsOrderProductionDetails, setLineEntryConformation, setOpenOrderDetail, setIsOrderLineDetailOptions, setOrders, currentOrder, currentLine, setViewPlanDetails,
-        setReduceEndDate, prevOrders
+        setReduceEndDate, prevOrders, loading, setLoading
     } = useContext(CapacityPlannerContext)
     function removeOrderFromLine() {
         if (!window.confirm("Do you want to delete this strip?")) return
@@ -36,6 +36,7 @@ const OrderLineDetailOptions = () => {
     }
 
     function replanOrder() {
+        setLoading(true);
         axios.put(BASE_URL + ORDERS_API + `/${currentOrder.id}`, { isReplanOrder: true })
             .then(data => {
                 if (data.data?.statusCode == 1) {
@@ -45,8 +46,10 @@ const OrderLineDetailOptions = () => {
                     window.location.reload();
                     toast.success("Order Replanned Successfully...!!!");
                 }
+                setLoading(false);
             }).catch(err => {
                 console.error(err)
+                setLoading(false);
             })
     }
 
