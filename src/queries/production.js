@@ -113,7 +113,7 @@ export async function fetchProductionDataFromErp(txObj) {
     }
     let existingOrderNumbers = existingOrders.map(i => `('${i.orderNo}',TO_DATE('${moment(i.dDate).format("DD-MM-YYYY")}','DD-MM-YYYY'))`).join(',');
     const sql = `
-               SELECT A.DOCDATE "date",A.ORDERNO,D.SIZENAME "size",E.COLORNAME COLOR,F.SHORTCODE LINE,SUM(B.PRODQTY) PRODUCTIONQTY,AA.DELDATE
+               SELECT TO_CHAR(A.DOCDATE,'yyyy-mm-dd')"date",A.ORDERNO,D.SIZENAME "size",E.COLORNAME COLOR,F.SHORTCODE LINE,SUM(B.PRODQTY) PRODUCTIONQTY,TO_CHAR(AA.DELDATE,'yyyy-mm-dd') "deldate"
 FROM GTGP A JOIN GTGPDET B ON  A.GTGPID=B.GTGPID
 JOIN GTCOMPMAST C ON C.GTCOMPMASTID=A.COMPCODE
 JOIN GTSIZEMAST  D ON D.GTSIZEMASTID=B.SIZES

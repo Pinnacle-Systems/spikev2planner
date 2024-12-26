@@ -4,7 +4,7 @@ import { convertToImportFormat } from "../utils/excelDataTransform.js";
 import { getConnection } from "../utils/db.connection.js";
 import moment from "moment"
 import { fetchProductionDataFromErp } from "./production.js";
-import { getDateFromDateTimeFormatToDisplay } from "../utils/dateHelper.js";
+import { getDateFromDateTimeFormat } from "../utils/dateHelper.js";
 
 export async function importOrders(importedData) {
     const headerNames = ["orderno",
@@ -155,8 +155,8 @@ export async function replanOrder(orderId) {
         const sizeColorWiseDetails = await tx.$queryRaw`
             select sum(qty) as qty from ProductionDetails 
             WHERE ORDERNO = ${`${dataFound.orderNo}`} 
-            AND DELIVERYDATE = ${`${getDateFromDateTimeFormatToDisplay(dataFound.dDate)}`}
-            AND DATE > ${`${getDateFromDateTimeFormatToDisplay(dataFound.createdAt)}`}
+            AND DATE_FORMAT(DELIVERYDATE,'%Y-%m-%d') = ${`${getDateFromDateTimeFormat(dataFound.dDate)}`}
+            AND DATE_FORMAT(DATE,'%Y-%m-%d') > ${`${getDateFromDateTimeFormat(dataFound.createdAt)}`}
             `
         const productionQty = sizeColorWiseDetails.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
         let balanceQty = dataFound.quantity - productionQty;
@@ -174,6 +174,11 @@ export async function replanOrder(orderId) {
                 version: dataFound.version + 1
             }
         })
-    })
+    },
+        {
+            maxWait: 5000, // 5 seconds max wait to connect to prisma
+            timeout: 20000, // 20 seconds
+        }
+    )
     return createdOrder;
 }
