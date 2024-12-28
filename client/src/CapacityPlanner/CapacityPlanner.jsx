@@ -78,6 +78,7 @@ const CapacityPlanner = () => {
 
     const [productionMode, setProductionMode] = useState(false);
 
+    const [isModified, setIsModified] = useState(false);
 
 
     const [lines, setLines] = useState([]);
@@ -180,6 +181,23 @@ const CapacityPlanner = () => {
         setScrollLine(null)
     }, [scrollLine, selectedUnit, lines])
 
+    useEffect(() => {
+        const handleBeforeUnload = (event) => {
+            if (isModified) {
+                if (!window.confirm("Changes not saved ! Do you want to continue ?")) {
+                    event.preventDefault();
+                }
+            }
+        };
+
+        // Attach event listener for beforeunload
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        // Clean up event listener on component unmount
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [isModified]);
+
     return (
         <CapacityPlannerContext.Provider
             value={{
@@ -204,7 +222,8 @@ const CapacityPlanner = () => {
                 productionDetails, setProductionDetails,
                 viewPlanDetails, setViewPlanDetails,
                 reduceEndDate, setReduceEndDate,
-                prevOrders
+                prevOrders,
+                isModified, setIsModified
             }}>
             <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />

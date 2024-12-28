@@ -20,6 +20,7 @@ function Report({ data }) {
                     field: 'pcs',
                     groupFooterTemplate: (data) => `Group Total: ${parseFloat(data.Sum || 0).toFixed(0)}`,
                     footerTemplate: (data) => `${parseFloat(data.Sum || 0).toFixed(0)}`,
+
                 },
             ],
         },
@@ -38,15 +39,13 @@ function Report({ data }) {
             allowSearching={true}
             allowExcelExport={true}
             allowPdfExport={true}
-
+            // toolbarClick={toolbarClick}
             created={() => {
                 const footerElement = document.querySelector('.e-gridfooter');
                 if (footerElement) {
-                    Object.assign(footerElement.style, { width: '120%', });
+                    Object.assign(footerElement.style, { width: '100%', });
                 }
             }}
-
-            // toolbarClick={toolbarClick}
             title='Production Report'
             searchSettings={{ operator: 'contains', key: '', ignoreCase: true }}
             allowFiltering={true}
@@ -58,6 +57,7 @@ function Report({ data }) {
                 <ColumnDirective headerText='Year' field='year' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Line' field='line' width='100' textAlign="center" />
                 <ColumnDirective headerText='Order No' field='orderNo' width='100' allowSearching />
+                <ColumnDirective headerText='Style No' field='style' width='100' allowSearching />
                 <ColumnDirective headerText='Delivery Date' field='deliveryDate' width='100' textAlign="Right" />
                 <ColumnDirective headerText='Pcs' field='pcs' width='100' textAlign="Right" allowGrouping={false}
                     template={(props) => parseFloat(props.pcs || 0).toFixed(0)}

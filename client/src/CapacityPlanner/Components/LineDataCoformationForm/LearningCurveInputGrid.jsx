@@ -4,15 +4,14 @@ import { CapacityPlannerContext } from '../../CapacityPlanner'
 
 
 
-export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveItems, readOnly }) => {
+export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveItems, readOnly, lineItems, line }) => {
     const {
         currentOrder,
         orders,
         currentLine,
     } = useContext(CapacityPlannerContext)
-
+    const [pcsQty, setPcsQty] = useState('')
     useEffect(() => {
-        // if (readOnly) return
         const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
         let currentOrderLineIndex = -1;
         if (currentOrderIndex == -1) {
@@ -43,9 +42,12 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
             const newItems = structuredClone(prev);
             newItems[index][field] = value;
             return newItems
+
         }
+
         )
     }
+    const capacity = (line || currentLine)?.capacity || 0;
 
     return (
         <table className=" border border-gray-500 text-xs table-auto w-full">
@@ -53,6 +55,7 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                 <tr className=''>
                     <th className="table-data  py-2 w-5">S.No</th>
                     <th className="table-data  py-2 w-16">Learning Curve</th>
+                    <th className="table-data  py-2 w-5">Pcs</th>
                     {!readOnly &&
                         <th className="table-data  w-10 p-0.5">
                             <button
@@ -68,7 +71,8 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                         <td className='table-data text-center'>
                             {index + 1}
                         </td>
-                        <td className='table-data' onKeyDown={(e) => { if ((index == learningCurveItems.length - 1) && e.key == "Tab") { addNewGrid() } }}>
+                        <td className='table-data'
+                            onKeyDown={(e) => { if ((index == learningCurveItems.length - 1) && e.key == "Tab") { addNewGrid() } }}>
                             <input
                                 type="text"
                                 className="text-left rounded py-2 px-1 w-full table-data-input"
@@ -79,6 +83,12 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                                 disabled={readOnly}
                             />
                         </td>
+                        <td className="table-data">
+                            {item.percentage
+                                ? (item.percentage * capacity) / 100
+                                : 0}
+                        </td>
+
                         {!readOnly &&
                             <td className="border border-gray-500 text-xs text-center">
                                 <button

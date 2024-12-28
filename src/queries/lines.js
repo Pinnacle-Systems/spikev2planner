@@ -15,7 +15,8 @@ export async function getPlannedOrdersReport() {
             Orders: {
                 select: {
                     orderNo: true,
-                    dDate: true
+                    dDate: true,
+                    style: true
                 }
             }
         }
@@ -41,7 +42,11 @@ export async function getPlannedOrdersReport() {
             }
             totalProductionSchedulePcs += allocationQty;
             let date = new Date(workingDays[i]);
-            data.push({ date: getDateFromDateTimeFormatToDisplay(date), pcs: allocationQty, month: getMonthName(new Date(date)), year: date.getFullYear(), line: line.Line.name, orderNo: line.Orders.orderNo, deliveryDate: getDateFromDateTimeFormatToDisplay(line.Orders.dDate) });
+            data.push({
+                date: getDateFromDateTimeFormatToDisplay(date), pcs: allocationQty, month: getMonthName(new Date(date)), year: date.getFullYear(), line: line.Line.name, orderNo: line.Orders.orderNo,
+                style: line.Orders.style,
+                deliveryDate: getDateFromDateTimeFormatToDisplay(line.Orders.dDate)
+            });
         }
     }
     return data;

@@ -14,11 +14,11 @@ const LineDataConformationForm = () => {
     currentOrder, currentDate, currentLine,
     orders, setOrders,
     setManualSelect,
-    holidays,
+    holidays, setIsModified
   } = useContext(CapacityPlannerContext);
 
   const [lineItems, setLineItems] = useState([]);
-
+  const [allPcs, setAllpcs] = useState(false)
   useEffect(() => {
     const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
     const orderLines = structuredClone(orders[currentOrderIndex]?.['lines'] || []);
@@ -57,6 +57,7 @@ const LineDataConformationForm = () => {
       }
     }
     orderAssignment(newOrders, setOrders, currentOrder, currentLine, pcs, days, currentLineDetails?.startDate, endDate, holidays)
+    setIsModified(true);
   }
 
   function getEstimatedEndDate() {
@@ -122,9 +123,27 @@ const LineDataConformationForm = () => {
       return newItems
     })
   }
-
   let estimatedEndDate = getEstimatedEndDate()
-
+  const isAllPcsChecked = (checked) => {
+    if (checked) {
+      setLineItems((prev) =>
+        prev.map((item) =>
+          currentLine.id === item.id
+            ? { ...item, pcs: currentOrder.quantity || 0 }
+            : item
+        )
+      );
+    } else {
+      setLineItems((prev) =>
+        prev.map((item) =>
+          currentLine.id === item.id
+            ? { ...item, pcs: 0 }
+            : item
+        )
+      )
+    }
+    setAllpcs(checked);
+  };
   return (
     <>
       {split ?
@@ -159,14 +178,19 @@ const LineDataConformationForm = () => {
                 <th className='border border-black'> Line</th>
                 <th className='border border-black' > Start.Date</th>
                 <th className='border border-black' > Est.End.Date</th>
-                <th className='border border-black' > Pcs</th>
+                <th className='border border-black w-full flex justify-between' > Pcs <div> All<input type="checkBox"
+                  onChange={(e) => isAllPcsChecked(e.target.checked)}
+
+                /></div></th>
               </tr>
               <tr>
                 <th className='border border-black'> </th>
                 <th className='border border-black'> Order Total Pcs</th>
                 <th className='border border-black'> </th>
                 <th className='border border-black'> </th>
-                <th className='border border-black text-right' > {currentOrder.quantity || 0}</th>
+                <th className='border border-black text-right' > {currentOrder.quantity || 0}
+
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -183,7 +207,9 @@ const LineDataConformationForm = () => {
                       disabled /> </td>
                   <td className='border border-black text-right' >
                     <input type="number" min={0} className='text-right focus:outline-none w-full' value={line?.pcs}
-                      disabled={currentLine.id != line.id} onChange={(e) => { handleChange(index, 'pcs', e.target.value) }} /> </td>
+                      disabled={currentLine.id != line.id} onChange={(e) =>
+                        handleChange(index, 'pcs', !allPcs ? e.target.value : currentOrder.quantity)
+                      } /> </td>
                 </tr>
               )}
               <tr>
@@ -202,7 +228,7 @@ const LineDataConformationForm = () => {
               </tr>
             </tbody>
           </table>
-          <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} />
+          <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} lineItems={lineItems} />
           <div className='flex justify-evenly w-full mt-5'>
             {/* <button autoFocus id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'
               onClick={handleManualSelect}> Manual Select</button> */}

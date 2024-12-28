@@ -89,7 +89,7 @@ const ViewPlanDetails = () => {
                     </tr>
                 </tbody>
             </table>
-            <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} readOnly />
+            <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} readOnly line={lineItems.find(i => i.lineId == currentLine.id)} />
         </form>
     )
 }

@@ -40,6 +40,7 @@ async function get(req) {
                         select: {
                             name: true,
                             unitId: true,
+                            capacity: true,
                             Unit: {
                                 select: {
                                     name: true
