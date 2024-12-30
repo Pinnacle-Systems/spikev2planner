@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, createContext, useRef } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getRandomColor } from '../utils/helper';
 import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';
@@ -27,9 +27,9 @@ import ProductionDetails from './Components/orderpanel/ProductionDetails';
 import Modal from '../Components/Modal';
 import ViewPlanDetails from './Components/LineDataCoformationForm/ViewPlanDetails';
 import ReduceEndDate from './Components/LineDataCoformationForm/ReduceEndDate';
+import useNavigationBlocker from '../CustomHooks/useNavigationBlocker';
 
 export const CapacityPlannerContext = createContext();
-
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -163,15 +163,6 @@ const CapacityPlanner = () => {
 
     useEffect(retrieveData, [retrieveData]);
     useEffect(toasterTrigger, []);
-    const navigate = useNavigate()
-    // useEffect(() => {
-    //     if (manualSelect) return
-    //     setLoading(true);
-    //     const timer = setTimeout(() => {
-    //         setLoading(false);
-    //     }, 1000);
-    //     return () => clearTimeout(timer);
-    // }, [orders, manualSelect]);
 
     useEffect(() => {
         if (!scrollLine) return
@@ -181,23 +172,7 @@ const CapacityPlanner = () => {
         setScrollLine(null)
     }, [scrollLine, selectedUnit, lines])
 
-    useEffect(() => {
-        const handleBeforeUnload = (event) => {
-            if (isModified) {
-                if (!window.confirm("Changes not saved ! Do you want to continue ?")) {
-                    event.preventDefault();
-                }
-            }
-        };
-
-        // Attach event listener for beforeunload
-        window.addEventListener('beforeunload', handleBeforeUnload);
-        // Clean up event listener on component unmount
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, [isModified]);
-
+    const [navigate] = useNavigationBlocker({ hasUnsavedChanges: isModified, setHasUnsavedChanges: setIsModified });
     return (
         <CapacityPlannerContext.Provider
             value={{
