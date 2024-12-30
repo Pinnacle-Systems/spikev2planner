@@ -7,7 +7,8 @@ const ReduceEndDate = () => {
         setReduceEndDate,
         currentOrder, currentDate, currentLine,
         orders, setOrders,
-        prevOrders
+        prevOrders,
+        setIsModified
     } = useContext(CapacityPlannerContext);
 
     const [lineItems, setLineItems] = useState([]);
@@ -38,6 +39,7 @@ const ReduceEndDate = () => {
         }
         setOrders(newOrders);
         setReduceEndDate(false);
+        setIsModified(true);
     }
 
     const totalAllocatedQty = lineItems.reduce((a, c) => a + parseFloat(c.pcs || 0), 0)

@@ -63,7 +63,7 @@ const OrderLineDetails = () => {
                     <b className='border border-black'> Production Qty</b>
                     <div className='border border-black'> {totalLineWiseProductionQty} </div>
                 </div>
-                <LearningCurveInputGrid learningCurveItems={lineObj?.learningCurveItems || []} setLearningCurveItems={() => { }} readOnly />
+                <LearningCurveInputGrid line={lineObj} learningCurveItems={lineObj?.learningCurveItems || []} setLearningCurveItems={() => { }} readOnly />
             </div>
         </div>
     )
