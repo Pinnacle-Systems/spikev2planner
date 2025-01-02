@@ -43,7 +43,7 @@ const OrderProductionDetails = () => {
 
 
 
-    let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.qty || 0), 0);
+    let lineAndDateWiseProductionQty = filterLineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.qty || 0), 0);
     // let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
 
     console.log(lineAndDateWiseProductionQty, "lineAndDateWiseProductionQty")
