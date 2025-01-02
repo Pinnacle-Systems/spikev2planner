@@ -31,8 +31,12 @@ const OrderProductionDetails = () => {
     }
 
     console.log(order, "order")
-    // let lineAndDateWiseProductionQtyList = (order.productionDetailsDateWise || []);
-    let lineAndDateWiseProductionQtyList = (order.lineWiseProductionData || []);
+    console.log(currentLine.name, "currentLine.name")
+    let lineAndDateWiseProductionQtyList = (order.productionDetailsDateWise || []);
+    let lineWiseWiseProductionQtyList = (order.lineWiseProductionData || []);
+
+    console.log(lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name), "filter", lineWiseWiseProductionQtyList, "lineWiseWiseProductionQtyList")
+
     function getLineWiseDateProductionQty(date) {
         return lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name && i.date == getDateFromDateTimeFormatToDisplay(date)).reduce((a, c) => a + parseFloat(c.qty || 0), 0)
     }
