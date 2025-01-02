@@ -2,6 +2,12 @@ import React from 'react'
 import { getCurrentCapacity } from '../../../utils/helper'
 
 const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
+    console.log(line, "lonnn")
+
+    let orderNoSplit = line.name.split("-")
+
+    orderNoSplit = orderNoSplit.slice(1).join("");
+
     return (
         <td id={"line" + line.id}
             className={`onHover h-full`}

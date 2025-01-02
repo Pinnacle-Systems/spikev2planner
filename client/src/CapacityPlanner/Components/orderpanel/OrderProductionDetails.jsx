@@ -3,6 +3,9 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { findWorkingDaysBetweenDates, getCurrentCapacity, getDateFromDateTimeFormatToDisplay } from '../../helper';
 
 const OrderProductionDetails = () => {
+
+
+
     const { currentOrder: order, currentLine, holidays, } = useContext(CapacityPlannerContext)
     const lineObj = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(currentLine?.id))
     // const totalLineWiseProductionQty = (order.OrderSizeColorWiseDetails || []).filter(i => i.line === currentLine?.name).reduce((a, c) => a + parseFloat(c?.productionQty || 0), 0)
@@ -27,13 +30,20 @@ const OrderProductionDetails = () => {
         productionSchedule.push({ date: workingDays[i], pcs: allocationQty })
     }
 
-
-    let lineAndDateWiseProductionQtyList = (order.productionDetailsDateWise || []);
+    console.log(order, "order")
+    // let lineAndDateWiseProductionQtyList = (order.productionDetailsDateWise || []);
+    let lineAndDateWiseProductionQtyList = (order.lineWiseProductionData || []);
     function getLineWiseDateProductionQty(date) {
         return lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name && i.date == getDateFromDateTimeFormatToDisplay(date)).reduce((a, c) => a + parseFloat(c.qty || 0), 0)
     }
 
+
+
     let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.filter(i => i.line == currentLine.name).reduce((a, c) => a + parseFloat(c.qty || 0), 0);
+    // let lineAndDateWiseProductionQty = lineAndDateWiseProductionQtyList.reduce((a, c) => a + parseFloat(c.qty || 0), 0);
+
+    console.log(lineAndDateWiseProductionQty, "lineAndDateWiseProductionQty")
+
 
     let totalBalanceQty = totalProductionSchedulePcs - lineAndDateWiseProductionQty;
     return (

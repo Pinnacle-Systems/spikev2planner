@@ -49,6 +49,12 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
         setFindOrder({})
     }
 
+
+
+    let orderNoSplit = order.orderNo.split("/")
+
+    orderNoSplit = orderNoSplit.slice(1).join("/");
+
     return (
         <>
             {fromOrderList
@@ -176,7 +182,7 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                             </div>
                             <strong className='text-xs font-bold relative z-20'>
                                 <span>
-                                    {order.orderNo}-{order.style}
+                                    {orderNoSplit}-{order.style}
                                 </span>
                                 <span className="text-red-500">
                                     {order.isReplanned ?

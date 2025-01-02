@@ -18,12 +18,14 @@ const Cell = ({ line, date, getDataForStartDateAndLine, getDataForDateAndLine, }
     let nationalHolidays = findNationalHolidaysBetweenDates(calculatedStartDate, calculatedEndDate, holidays)
     let days = dateDiffBetweenDays(calculatedStartDate, calculatedEndDate) - nationalHolidays + 1;
 
+    console.log(data, "datadatadata")
+
     return (
         <React.Fragment key={line.id}>
             {data ?
                 <td rowSpan={days} className='border border-gray-700 p-1'>
                     <span className='w-24' >
-                        {data?.Orders?.orderNo}
+                        {data?.Orders?.style}
                     </span>
                 </td>
                 :

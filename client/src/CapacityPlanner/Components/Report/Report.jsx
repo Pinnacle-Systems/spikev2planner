@@ -32,6 +32,9 @@ const ProductionPlanningReport = () => {
     const [reportData, setReportData] = useState([]);
 
 
+
+    console.log(allUnitLines, "allUnitLines", reportData)
+
     useEffect(() => {
         let startDate = new Date();
         let endDate = new Date();

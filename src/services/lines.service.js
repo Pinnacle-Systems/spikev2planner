@@ -40,7 +40,8 @@ async function get(req) {
                 Line: true,
                 Orders: {
                     select: {
-                        orderNo: true
+                        orderNo: true,
+                        style: true
                     }
                 }
             }
