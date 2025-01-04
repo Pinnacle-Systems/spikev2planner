@@ -46,15 +46,15 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
     let orderIndex = findItemIndex(orders, order.id);
     const newOrders = structuredClone(orders);
     let learningCurveItems = (newOrders[orderIndex]?.["lines"] || []).find(i => i.id == line.id)?.learningCurveItems || [];
+    let currentOrderLine = findItem(newOrders[orderIndex]["lines"], line.id);
     let linesLocal = filterItem(newOrders[orderIndex]["lines"], line.id);
-    // if (parseInt(pcs) === parseInt(order.quantity)) {
-    //     linesLocal = [];
-    // }
     if (pcs > 0) {
         linesLocal.push(
             {
+                ordersLineId: currentOrderLine?.ordersLineId,
                 Line: line,
                 id: line.id,
+                lineId: line.id,
                 pcs: pcs,
                 startDate,
                 endDate,
@@ -74,9 +74,8 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
             let currentOrderCurrentLine = findItem(loopOrder.lines, line.id);
             let startDate = new Date(endDate)
             startDate.setDate(startDate.getDate() + 1);
-            let loopOrderDays = findDays(currentOrderCurrentLine.pcs, line);
-            let loopOrderendDate = getEndDate(startDate, loopOrderDays);
-            loopOrderendDate = endDateLoopFinder(startDate, loopOrderendDate, holidays);
+            let loopOrderDays = findDays(currentOrderCurrentLine.pcs || 0, currentOrderCurrentLine);
+            let loopOrderendDate = findEndDate(startDate, loopOrderDays, holidays);
             orderAssignment(newOrders, setOrders, loopOrder, line, currentOrderCurrentLine.pcs, loopOrderDays, startDate, loopOrderendDate, holidays)
         }
         return matchingDays
