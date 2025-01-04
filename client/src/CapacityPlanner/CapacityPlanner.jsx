@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback, createContext, useRef } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom';
 import { getRandomColor } from '../utils/helper';
 import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';

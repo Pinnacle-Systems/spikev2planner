@@ -13,7 +13,6 @@ const LineDataConformationForm = () => {
     split,
     currentOrder, currentDate, currentLine,
     orders, setOrders,
-    setManualSelect,
     holidays, setIsModified
   } = useContext(CapacityPlannerContext);
 
@@ -68,42 +67,6 @@ const LineDataConformationForm = () => {
     const days = findDays(pcs, { ...currentLine, learningCurveItems });
     let endDate = findEndDate(currentLineDetails?.startDate, days, holidays);
     return getDateFromDateTimeFormat(endDate)
-  }
-
-  function removeOrderFromLine(updatingOrder, lineObj) {
-    setOrders(orders => {
-      const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(updatingOrder.id));
-      const newOrders = [...orders]
-      newOrders[currentOrderIndex]["lines"] = newOrders[currentOrderIndex]["lines"].filter(line => parseInt(line.id) !== parseInt(lineObj.id))
-      // const lineIndex = newOrders[currentOrderIndex]["lines"].findIndex(line => parseInt(line.id) == parseInt(lineObj.id))
-      // newOrders[currentOrderIndex]["lines"][lineIndex]['startDate'] = '';
-      // newOrders[currentOrderIndex]["lines"][lineIndex]['endDate'] = '';
-      return newOrders
-    });
-  }
-
-  function assignLearningCurve() {
-    setOrders(orders => {
-      const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
-      let currentOrderLineIndex = -1;
-      let newOrders = structuredClone(orders);
-      if (currentOrderIndex != -1) {
-        currentOrderLineIndex = orders[currentOrderIndex]['lines'].findIndex(l => parseInt(l.id) == parseInt(currentLine.id));
-        if (currentOrderLineIndex != -1) {
-          newOrders[currentOrderIndex]["lines"][currentOrderLineIndex]["learningCurveItems"] = learningCurveItems.filter(i => i.percentage);
-        } else {
-          newOrders[currentOrderIndex]["lines"].push({ id: currentLine.id, learningCurveItems })
-        }
-      }
-      return newOrders;
-    })
-  }
-
-  const handleManualSelect = async () => {
-    // removeOrderFromLine(currentOrder, currentDraggedLine)
-    assignLearningCurve()
-    setLineEntryConformation(false);
-    setManualSelect(true);
   }
 
   const totalAllocatedQty = lineItems.reduce((a, c) => a + parseFloat(c.pcs || 0), 0)
