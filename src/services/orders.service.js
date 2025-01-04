@@ -3,6 +3,7 @@ import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
 import { getOrdersFromErp, importOrders, importProduction, replanOrder } from '../queries/orders.js';
 import { fetchProductionDataFromErp } from '../queries/production.js';
+import { getDateFromDateTimeFormat } from '../utils/dateHelper.js';
 
 const prisma = new PrismaClient()
 
@@ -213,6 +214,9 @@ async function updateMany(req) {
                 let orderLines = order.lines.filter(i => i.id);
                 for (let index = 0; index < orderLines.length; index++) {
                     const orderLine = orderLines[index];
+                    const oldOrderLine = await tx.orderLines.findUnique({ where: { id: parseInt(orderLine.ordersLineId) } });
+                    if (oldOrderLine.pcs !== parseInt(orderLine.pcs)) continue;
+                    if (getDateFromDateTimeFormat(oldOrderLine.startDate) !== getDateFromDateTimeFormat(orderLine.startDate)) continue;
                     await tx.orderLines.update({
                         where: {
                             id: parseInt(orderLine.ordersLineId)
