@@ -216,7 +216,7 @@ async function updateMany(req) {
                     const orderLine = orderLines[index];
                     const oldOrderLine = await tx.orderLines.findUnique({ where: { id: parseInt(orderLine.ordersLineId) } });
                     if (oldOrderLine.pcs !== parseInt(orderLine.pcs)) continue;
-                    if (getDateFromDateTimeFormat(oldOrderLine.startDate) !== getDateFromDateTimeFormat(orderLine.startDate)) continue;
+                    if (getDateFromDateTimeFormat(oldOrderLine.startDate) !== getDateFromDateTimeFormat(new Date(orderLine.startDate))) continue;
                     await tx.orderLines.update({
                         where: {
                             id: parseInt(orderLine.ordersLineId)
