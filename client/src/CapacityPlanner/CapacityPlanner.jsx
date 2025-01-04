@@ -260,14 +260,8 @@ const CapacityPlanner = () => {
                             </span>
                         </button>
                     </div>
-                    {manualSelect ?
-                        <OrderSplitDetail />
-                        :
-                        <>
-                            <ReportPanel />
-                            <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
-                        </>
-                    }
+                    <ReportPanel />
+                    <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
                 </div>
                 <div className='w-[75%] float-right overflow-auto h-screen'>
                     <SelectionPanel />

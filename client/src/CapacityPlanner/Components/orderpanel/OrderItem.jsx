@@ -2,19 +2,17 @@ import moment from 'moment';
 import React, { useContext } from 'react'
 import { findHolidaysBetweenDates, findSundaysBetweenDates } from '../../../utils/nationHolidaysHelper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
-import { adjust, getDateFromDateTimeFormat, getDateFromDateTimeFormatToDisplay, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
+import { adjust, getDateFromDateTimeFormatToDisplay, isCurrentOrderActive, isCurrentOrderLineActive } from '../../helper';
 import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COLOR } from '../../../Constants/colors';
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 import { BAN_ICON, VIEW, LOCK_ICON } from '../../../utils/icons';
 
 const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
-    const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, setCurrentDraggedLine, productionMode, setCurrentDate,
+    const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, productionMode, setCurrentDate,
         setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine, setProductionDetails,
     } = useContext(CapacityPlannerContext)
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
-        ev.dataTransfer.setData("line", JSON.stringify(line));
-        setCurrentDraggedLine(line)
     }
     const lineObj = (order?.lines || []).find(lineItem => parseInt(lineItem.id) === parseInt(line?.id))
     const totalLineWiseProductionQty = (order.lineWiseProductionData || []).filter(i => i.line === line?.name).reduce((a, c) => a + parseFloat(c?.productionqty || 0), 0)
