@@ -70,6 +70,7 @@ const LineDataConformationForm = () => {
   }
 
   const totalAllocatedQty = lineItems.reduce((a, c) => a + parseFloat(c.pcs || 0), 0)
+  console.log(totalAllocatedQty, 'totalAllocatedQty');
 
   const balanceQty = (currentOrder.quantity || 0) - totalAllocatedQty;
 
@@ -87,12 +88,15 @@ const LineDataConformationForm = () => {
     })
   }
   let estimatedEndDate = getEstimatedEndDate()
+  console.log(totalAllocatedQty, 'totalAllocatedQty');
+  console.log(currentOrder.quantity, 'totalAllocatedQty');
+
   const isAllPcsChecked = (checked) => {
     if (checked) {
       setLineItems((prev) =>
         prev.map((item) =>
           currentLine.id === item.id
-            ? { ...item, pcs: currentOrder.quantity || 0 }
+            ? { ...item, pcs: totalAllocatedQty === 0 ? currentOrder.quantity : balanceQty + totalAllocatedQty }
             : item
         )
       );
@@ -100,7 +104,7 @@ const LineDataConformationForm = () => {
       setLineItems((prev) =>
         prev.map((item) =>
           currentLine.id === item.id
-            ? { ...item, pcs: 0 }
+            ? { ...item, pcs: totalAllocatedQty }
             : item
         )
       )
@@ -141,10 +145,16 @@ const LineDataConformationForm = () => {
                 <th className='border border-black'> Line</th>
                 <th className='border border-black' > Start.Date</th>
                 <th className='border border-black' > Est.End.Date</th>
-                <th className='border border-black w-full flex justify-between' > Pcs <div> All<input type="checkBox"
-                  onChange={(e) => isAllPcsChecked(e.target.checked)}
-
-                /></div></th>
+                <th className='border border-black w-full flex justify-between' > Pcs <div>  <button
+                  className="bg-green-400 px-2 py-1 rounded hover:bg-green-500 text-white"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    isAllPcsChecked(true);
+                  }}
+                >
+                  All
+                </button>
+                </div></th>
               </tr>
               <tr>
                 <th className='border border-black'> </th>
