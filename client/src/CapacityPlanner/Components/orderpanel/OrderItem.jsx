@@ -86,6 +86,16 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                         {order.quantity}
                     </td>
                     <td>
+                        <strong>
+                            {parseInt(order?.timeAndAction?.fPer || 0)}%
+                        </strong>
+                    </td>
+                    <td>
+                        <strong>
+                            {parseInt(order?.timeAndAction?.tPer || 0)}%
+                        </strong>
+                    </td>
+                    <td>
                         {order.status}
                     </td>
                     {order.status == "Pending" ?

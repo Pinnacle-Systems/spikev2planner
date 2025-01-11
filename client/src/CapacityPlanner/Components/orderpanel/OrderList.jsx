@@ -81,6 +81,8 @@ const OrderList = () => {
                             <td className='border border-black'>Buyer</td>
                             <td className='border border-black'>Style Type</td>
                             <td className='border border-black'>Qty</td>
+                            <td className='border border-black'>F%</td>
+                            <td className='border border-black'>T%</td>
                             <td className='border border-black'>Status</td>
                             <td className='border border-black'>Find</td>
                             <td className='border border-black'>Prod.Det</td>

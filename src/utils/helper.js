@@ -40,3 +40,20 @@ export function getCurrentCapacity(efficiency, capacity) {
 export function getMonthName(month) {
   return new Date(month).toLocaleString('default', { month: 'short' });
 }
+
+
+export function groupByPropertyToArr(arr, property) {
+  return arr.reduce((map, curr) => {
+    if (!map.has(curr[property])) {
+      map.set(curr[property], [])
+    }
+    map.get(curr[property]).push(curr);
+    return map
+  }, new Map());
+}
+export function groupByPropertyToObj(arr, property) {
+  return arr.reduce((map, curr) => {
+    map.set(curr[property], curr)
+    return map
+  }, new Map());
+}

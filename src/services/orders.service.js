@@ -2,8 +2,9 @@ import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
 import { read, utils } from "xlsx";
 import { getOrdersFromErp, importOrders, importProduction, replanOrder } from '../queries/orders.js';
-import { fetchProductionDataFromErp } from '../queries/production.js';
+import { fetchProductionDataFromErp, fetchRawMaterialDataFromErp } from '../queries/production.js';
 import { getDateFromDateTimeFormat } from '../utils/dateHelper.js';
+import { groupByPropertyToArr, groupByPropertyToObj } from '../utils/helper.js';
 
 const prisma = new PrismaClient()
 
@@ -14,6 +15,7 @@ async function get(req) {
         await getOrdersFromErp(startDate, endDate)
     }
     if (isGetProductionDataFromErp) {
+        await fetchRawMaterialDataFromErp()
         await fetchProductionDataFromErp()
     }
     let data = await prisma.orders.findMany({
@@ -56,6 +58,11 @@ async function get(req) {
     const sizeColorWiseDetails = await prisma.$queryRaw`
     select * from ProductionDetails
     `
+    const sizeColorMap = groupByPropertyToArr(sizeColorWiseDetails, 'orderNo');
+    const timeAndActionDetails = await prisma.$queryRaw`
+    select * from timeAndAction;
+    `
+    const timeAndActionMap = groupByPropertyToObj(timeAndActionDetails, 'orderNo');
     const out = [];
     for (let index = 0; index < data.length; index++) {
         const i = data[index];
@@ -67,12 +74,13 @@ async function get(req) {
         `;
         let newItem = { ...i };
         newItem['lines'] = newItem['lines'].map(i => ({ ...i, ordersLineId: i.id }))
-        let orderDetails = sizeColorWiseDetails.filter(item => item.orderNo === i.orderNo);
+        let orderDetails = sizeColorMap.get(i.orderNo);
         newItem['lineWiseProductionData'] = orderDetails;
         newItem['productionDetailsDateWise'] = productionDetailsDateWise;
         newItem["productionQty"] = productionDetailsDateWise.reduce((a, c) => a + parseFloat(c.qty), 0);
         newItem["balanceQty"] = (newItem.quantity - newItem.productionQty)
         newItem["isReplanned"] = i.Orders ? true : false;
+        newItem["timeAndAction"] = timeAndActionMap.get(i.orderNo);
         out.push(newItem);
     }
     return { statusCode: 0, data: out };

@@ -104,7 +104,54 @@ export async function getProductionQty(sizeColorWiseDetails, orderNo) {
     return sizeColorWiseDetails
 }
 
-
+export async function fetchRawMaterialDataFromErp(txObj) {
+    const existingOrders = await prisma.orders.findMany({ select: { orderNo: true } });
+    if (existingOrders.length == 0) {
+        throw { message: "No Existing Orders...!!!" }
+    }
+    let existingOrderNumbers = existingOrders.map(i => `'${i.orderNo}'`).join(',');
+    const sql = `
+    SELECT * FROM TIMEANDACTIONTABLE A
+    WHERE (A.ORDERNO) IN (${existingOrderNumbers})
+    `;
+    const data = await runOracleQuery(sql);
+    if (!data) {
+        throw { message: "RawMaterial Data Sync Failed...!!!" }
+    }
+    if (txObj) {
+        await txObj.timeAndAction.deleteMany({});
+        await txObj.timeAndAction.createMany({
+            data: data.map(i => ({
+                orderNo: i.orderno,
+                fQty: i.fqty ? parseFloat(i.fqty) : undefined,
+                fcQty: i.fcqty ? parseFloat(i.fcqty) : undefined,
+                fPer: i.fper ? parseFloat(i.fper) : undefined,
+                fDays: i.fdays ? parseFloat(i.fdays) : undefined,
+                tQty: i.tqty ? parseFloat(i.tqty) : undefined,
+                tcQty: i.tcqty ? parseFloat(i.tcqty) : undefined,
+                tPer: i.tper ? parseFloat(i.tper) : undefined,
+                tDays: i.tdays ? parseFloat(i.tdays) : undefined,
+            }))
+        })
+    } else {
+        await prisma.$transaction(async (tx) => {
+            await tx.timeAndAction.deleteMany({});
+            await tx.timeAndAction.createMany({
+                data: data.map(i => ({
+                    orderNo: i.orderno,
+                    fQty: i.fqty ? parseFloat(i.fqty) : undefined,
+                    fcQty: i.fcqty ? parseFloat(i.fcqty) : undefined,
+                    fPer: i.fper ? parseFloat(i.fper) : undefined,
+                    fDays: i.fdays ? parseFloat(i.fdays) : undefined,
+                    tQty: i.tqty ? parseFloat(i.tqty) : undefined,
+                    tcQty: i.tcqty ? parseFloat(i.tcqty) : undefined,
+                    tPer: i.tper ? parseFloat(i.tper) : undefined,
+                    tDays: i.tdays ? parseFloat(i.tdays) : undefined,
+                }))
+            })
+        })
+    }
+}
 
 export async function fetchProductionDataFromErp(txObj) {
     const existingOrders = await prisma.orders.findMany({ select: { orderNo: true, dDate: true } });

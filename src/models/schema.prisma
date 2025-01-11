@@ -93,3 +93,20 @@ model Holiday {
   date        DateTime @db.Date
   description String?
 }
+
+model TimeAndAction {
+  id      Int       @id @default(autoincrement())
+  orderNo String
+  fetdt   DateTime? @db.Date
+  fcDate  DateTime? @db.Date
+  fQty    Float     @default(0)
+  fcQty   Float     @default(0)
+  fPer    Float     @default(0)
+  fDays   Float     @default(0)
+  tetdt   DateTime? @db.Date
+  tcDate  DateTime? @db.Date
+  tQty    Float     @default(0)
+  tcQty   Float     @default(0)
+  tPer    Float     @default(0)
+  tDays   Float     @default(0)
+}
