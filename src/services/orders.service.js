@@ -88,11 +88,16 @@ async function get(req) {
 
 
 async function getOne(id) {
+    console.log(id, "idddddd")
     const data = await prisma.orders.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            OrderSizeColorWiseDetails: true
         }
     })
+    console.log(data, "datadata")
     data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
     select orders.orderno as orderNo, det.size, det.color, det.qty as qty, coalesce(sum(productionDetails.qty),0) as productionQty, 
     det.qty - coalesce(sum(productionDetails.qty),0) as balanceQty

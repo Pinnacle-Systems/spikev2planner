@@ -40,6 +40,7 @@ async function updateMany(req, res, next) {
 
 async function getOne(req, res, next) {
     try {
+        console.log(req.params.id, "idddddd")
         res.json(await _getOne(req.params.id));
         console.log(res.statusCode);
     } catch (err) {
