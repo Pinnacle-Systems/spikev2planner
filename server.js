@@ -30,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 let corsOptions = {
-  origin: ['http://192.168.1.19:3000', 'http://localhost:3000', 'http://localhost:3001'],
+  origin: ['http://192.168.1.19:3000', 'http://localhost:3000', 'http://localhost:3002'],
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 app.use(cors(corsOptions))
