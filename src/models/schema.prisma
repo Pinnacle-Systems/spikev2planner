@@ -9,26 +9,64 @@ datasource db {
 }
 
 model Orders {
-  id       Int          @id @default(autoincrement())
-  orderNo  String
-  buyer    String?
-  dDate    DateTime     @db.Date
-  style    String?
-  quantity Int?
-  sam      String?
-  lines    OrderLines[]
+  id                        Int                         @id @default(autoincrement())
+  orderNo                   String
+  buyer                     String?
+  dDate                     DateTime                    @db.Date
+  style                     String?
+  quantity                  Int?
+  sam                       String?
+  styleType                 String                      @default("basic")
+  lines                     OrderLines[]
+  OrderSizeColorWiseDetails OrderSizeColorWiseDetails[]
+  PrevOrder                 Orders?                     @relation("Replan", fields: [prevOrdersId], references: [id])
+  prevOrdersId              Int?                        @unique
+  Orders                    Orders?                     @relation("Replan")
+  version                   Int?                        @default(1)
+  createdAt                 DateTime?                   @default(now())
+  updatedAt                 DateTime?                   @updatedAt
+}
+
+model OrderSizeColorWiseDetails {
+  id       Int    @id @default(autoincrement())
+  Order    Orders @relation(fields: [ordersId], references: [id], onDelete: Cascade)
+  ordersId Int
+  size     String
+  color    String
+  qty      Int
+}
+
+model ProductionDetails {
+  id           Int       @id @default(autoincrement())
+  date         DateTime  @default(now())
+  orderNo      String
+  size         String
+  color        String
+  line         String
+  qty          Int
+  deliveryDate DateTime? @db.Date
 }
 
 model OrderLines {
-  id        Int
-  pcs       Int
-  startDate DateTime @db.Date
-  endDate   DateTime @db.Date
-  days      Int
-  Orders    Orders  @relation(fields: [ordersId], references: [id])
-  ordersId  Int
-  Line      Line     @relation(fields: [id], references: [id])
-  @@unique([id, ordersId])
+  id                 Int                  @id @default(autoincrement())
+  Line               Line                 @relation(fields: [lineId], references: [id])
+  lineId             Int
+  Orders             Orders               @relation(fields: [ordersId], references: [id], onDelete: Cascade)
+  ordersId           Int
+  pcs                Int
+  startDate          DateTime             @db.Date
+  endDate            DateTime             @db.Date
+  days               Int
+  efficiency         Int?                 @default(0)
+  capacity           Int?                 @default(0)
+  learningCurveItems LearningCurveItems[]
+}
+
+model LearningCurveItems {
+  id           Int        @id @default(autoincrement())
+  OrderLines   OrderLines @relation(fields: [orderLinesId], references: [id], onDelete: Cascade)
+  orderLinesId Int
+  percentage   Float      @default(0)
 }
 
 model Unit {
@@ -42,6 +80,7 @@ model Line {
   id         Int          @id @default(autoincrement())
   Unit       Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
   unitId     Int
+  styleType  String       @default("basic")
   name       String?
   inCharge   String?
   capacity   Int?
@@ -53,4 +92,21 @@ model Holiday {
   id          Int      @id @default(autoincrement())
   date        DateTime @db.Date
   description String?
+}
+
+model TimeAndAction {
+  id      Int       @id @default(autoincrement())
+  orderNo String
+  fetdt   DateTime? @db.Date
+  fcDate  DateTime? @db.Date
+  fQty    Float     @default(0)
+  fcQty   Float     @default(0)
+  fPer    Float     @default(0)
+  fDays   Float     @default(0)
+  tetdt   DateTime? @db.Date
+  tcDate  DateTime? @db.Date
+  tQty    Float     @default(0)
+  tcQty   Float     @default(0)
+  tPer    Float     @default(0)
+  tDays   Float     @default(0)
 }

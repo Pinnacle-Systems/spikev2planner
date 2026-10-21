@@ -1,10 +1,65 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { getDateArray, getFirstNonHoliday } from '../utils/dateHelper.js';
+import { getLinesFromERP, getPlannedOrdersReport } from '../queries/lines.js';
 
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { month } = req.query
+    const { month, isReport, selectedUnits, startDate, endDate, isGetLinesFromERP, type } = req.query;
+    if (type === 'planned') {
+        const data = await getPlannedOrdersReport();
+        return { statusCode: 0, data }
+    }
+    if (isGetLinesFromERP) {
+        const data = await getLinesFromERP();
+        return { statusCode: 0, data }
+    }
+    if (isReport) {
+        const data = await prisma.line.findMany({
+            where: {
+                unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
+                    in: selectedUnits.map(i => parseInt(i))
+                } : undefined
+            }
+        });
+        let fromDate = new Date(startDate);
+        fromDate.setHours(0, 0, 0, 0);
+        let toDate = new Date(endDate);
+        toDate.setHours(23, 59, 59, 99);
+        let reportData = await prisma.orderLines.findMany({
+            where: {
+                Line: {
+                    unitId: (selectedUnits && (selectedUnits.length > 0)) ? {
+                        in: selectedUnits.map(i => parseInt(i))
+                    } : undefined
+                },
+            },
+            include: {
+                learningCurveItems: true,
+                Line: true,
+                Orders: {
+                    select: {
+                        orderNo: true,
+                        style: true
+                    }
+                }
+            }
+        });
+        let holidays = await prisma.holiday.findMany({});
+        for (let index = 0; index < reportData.length; index++) {
+            const i = reportData[index];
+            let startDateCalculated = (i["startDate"] < new Date(startDate)) ? startDate : i["startDate"];
+            let endDateCalculated = (i["endDate"] > new Date(endDate)) ? endDate : i["endDate"];
+            let dateArr = getDateArray(startDateCalculated, endDateCalculated);
+            startDateCalculated = getFirstNonHoliday(dateArr, holidays);
+            dateArr.sort((a, b) => b - a);
+            endDateCalculated = getFirstNonHoliday(dateArr, holidays);
+            i['startDate'] = startDateCalculated;
+            i['endDate'] = endDateCalculated;
+        }
+        return { statusCode: 0, data, reportData };
+    }
     let date, firstDay, lastDay;
     if (month) {
         date = new Date(month);
@@ -25,7 +80,7 @@ async function get(req) {
                     } : undefined
                 }
             ]
-        }
+        },
     });
     return { statusCode: 0, data };
 }

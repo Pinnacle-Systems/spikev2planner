@@ -2,6 +2,12 @@ import React from 'react'
 import { getCurrentCapacity } from '../../../utils/helper'
 
 const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
+    console.log(line, "lonnn")
+
+    let orderNoSplit = line.name.split("-")
+
+    orderNoSplit = orderNoSplit.slice(1).join("");
+
     return (
         <td id={"line" + line.id}
             className={`onHover h-full`}
@@ -10,9 +16,13 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
             }}
             onMouseOver={onMouseOver}
         >
-            <b className='h-full grid justify-center'>
-                <span className='text-[15px] font-normal'> {index + 1} </span>
-            </b>
+            <div className='h-full grid justify-center items-center'>
+                <span className='text-[12px] font-normal'> {line.name}
+                    <span className='text-[10px] capitalize'>
+                        ({(line?.styleType || '')?.[0]})
+                    </span>
+                </span>
+            </div>
             <div className={`flex flex-col gap-1 text-center p-1 onShow ${isLast ? "-mt-20" : ""}`}>
                 <div className='grid grid-cols-2 border-b items-center'>
                     <b> Name</b>
@@ -30,9 +40,13 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
                     <b> Current capacity</b>
                     <div> {getCurrentCapacity(line.efficiency, line.capacity)} </div>
                 </div>
-                <div className='grid grid-cols-2 items-center'>
+                <div className='grid grid-cols-2 items-center border-b'>
                     <b> Incharge</b>
                     <div> {line.inCharge} </div>
+                </div>
+                <div className='grid grid-cols-2 items-center'>
+                    <b> Style Type</b>
+                    <div className='capitalize'> {line.styleType} </div>
                 </div>
             </div>
         </td>

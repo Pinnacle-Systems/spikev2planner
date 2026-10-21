@@ -1,17 +1,20 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { getCurrentCapacity } from '../../../utils/helper';
 import { DELETE, PLUS } from "../../../utils/icons"
 import axios from 'axios';
 import { LINES_API } from '../../../Constants/Api';
 import { toast } from 'react-toastify';
+import FloatingLabelSelect from '../../../Components/FloatingLabelSelect';
+import { styleTypeOptions } from '../../../utils/selectOptions';
+import DropdownWithSearch from '../../../Components/Dropdown';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 
 const LineDetails = ({ lines, setLines }) => {
-    const handleInputChange = (event, index, field) => {
-        const value = event.target.value;
+    const [erpLines, setErpLines] = useState([]);
+    const handleInputChange = (value, index, field) => {
         const newLines = [...lines];
         newLines[index][field] = value;
         setLines(newLines);
@@ -52,7 +55,18 @@ const LineDetails = ({ lines, setLines }) => {
             toast.error("Server Down", { autoClose: 5000 });
         });
     }
-    
+
+    useEffect(() => {
+        axios.get(BASE_URL + LINES_API, { params: { isGetLinesFromERP: true } })
+            .then(data => {
+                setErpLines(data?.data?.data || []);
+            }).catch(error => {
+                console.log(error);
+                toast.error("Server Down", { autoClose: 5000 });
+            });
+    }, [])
+
+
     return (
         <div className='h-full'>
             <div className='p-1 flex justify-between text-sm'>
@@ -79,11 +93,12 @@ const LineDetails = ({ lines, setLines }) => {
             </div>
             {
                 lines.length !== 0 ?
-                    <div className="mt-1 mx-auto flex gap-2 overflow-auto max-h-full">
+                    <div className="mt-1 mx-auto flex gap-2">
                         <table className="w-full text-sm">
                             <thead className='sticky top-0 bg-gray-100'>
                                 <tr className='text-sm'>
                                     <th className="table-data">Line Name</th>
+                                    <th className="table-data">Style Type</th>
                                     <th className="table-data">Incharge</th>
                                     <th className="table-data">Max Capacity / per day(piece)</th>
                                     <th className="table-data">Efficiency (%)</th>
@@ -95,14 +110,31 @@ const LineDetails = ({ lines, setLines }) => {
                                 {lines.map((row, index) => (
                                     <tr key={index} className="even:bg-gray-100 odd:bg-gray-50">
                                         <td>
-                                            <input
+                                            {/* <input
                                                 type="text"
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.name}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "name")
+                                                    handleInputChange(event.target.value, index, "name")
+                                                }
+                                            /> */}
+                                            <DropdownWithSearch
+                                                value={row.name}
+                                                selection
+                                                options={erpLines.map((i, index) => ({
+                                                    key: index,
+                                                    text: i.linename,
+                                                    value: i.linename,
+                                                }))}
+                                                onChange={(e, { value }) => {
+                                                    console.log(value, 'value')
+                                                    handleInputChange(value, index, "name")
+                                                }
                                                 }
                                             />
+                                        </td>
+                                        <td>
+                                            <FloatingLabelSelect value={row.styleType} setValue={(value) => [handleInputChange(value, index, "styleType")]} options={styleTypeOptions} />
                                         </td>
                                         <td>
                                             <input
@@ -110,7 +142,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.inCharge}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "inCharge")
+                                                    handleInputChange(event.target.value, index, "inCharge")
                                                 }
                                             />
                                         </td>
@@ -121,7 +153,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.capacity}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "capacity")
+                                                    handleInputChange(event.target.value, index, "capacity")
                                                 }
                                             />
                                         </td>
@@ -133,7 +165,7 @@ const LineDetails = ({ lines, setLines }) => {
                                                 className="border rounded px-4 py-2 w-full"
                                                 value={row.efficiency}
                                                 onChange={(event) =>
-                                                    handleInputChange(event, index, "efficiency")
+                                                    handleInputChange(event.target.value, index, "efficiency")
                                                 }
                                             />
                                         </td>
@@ -147,8 +179,8 @@ const LineDetails = ({ lines, setLines }) => {
                                             />
                                         </td>
                                         <td>
-                                            <button tabIndex={-1} type='button' 
-                                            onClick={() => { row.id ?  handleDelete(row.id) : handleDeleteRow(index)}}>{DELETE}</button>
+                                            <button tabIndex={-1} type='button'
+                                                onClick={() => { row.id ? handleDelete(row.id) : handleDeleteRow(index) }}>{DELETE}</button>
                                         </td>
                                     </tr>
                                 ))}

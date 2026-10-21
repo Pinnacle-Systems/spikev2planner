@@ -26,13 +26,13 @@ export const OrderSplitDetail = () => {
                             <th className="text-center ">Line</th>
                             <th className="text-center ">Current Capacity</th>
                             <th className="text-center">Days</th>
-                            <th className="text-center">Max. pcs</th>
+                            {/* <th className="text-center">Max. pcs</th> */}
                             <th className="text-center">Pcs</th>
                             <th className="text-center">Close</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {currentUpdateOrderDetails?.lines.sort(function(a, b){return parseInt(a.id) - parseInt(b.id)}).map((line, index) => (
+                        {currentUpdateOrderDetails?.lines.sort(function (a, b) { return parseInt(a.id) - parseInt(b.id) }).map((line, index) => (
                             <tr key={index} className='border border-black hover:bg-yellow-400 cursor-cell'
                                 onMouseOver={() => { setActiveLineOrder({ orderId: currentOrder.id, lineId: line.id }) }}
                                 onMouseOut={() => { setActiveLineOrder({}) }}
@@ -48,9 +48,9 @@ export const OrderSplitDetail = () => {
                                 <td>
                                     {line?.days}
                                 </td>
-                                <td>
+                                {/* <td>
                                     {parseInt(getCurrentCapacity(getLine(line.id).efficiency, getLine(line.id).capacity)) * parseInt(line?.days)}
-                                </td>
+                                </td> */}
                                 <td>
                                     {line?.pcs}
                                 </td>

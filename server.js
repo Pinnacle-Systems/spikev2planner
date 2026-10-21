@@ -2,16 +2,16 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cors from 'cors';
-import { orders, units, holidays, lines} from './src/routes/index.js';
+import { orders, units, holidays, lines } from './src/routes/index.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express()
-app.use(express.json())
+app.use(express.json({ limit: "50mb" }))
 
-const path = __dirname + '/src/views/';
+const path = __dirname + '/client/build/';
 
 
 app.use(express.static(path));
@@ -30,12 +30,12 @@ app.use((req, res, next) => {
 });
 
 let corsOptions = {
-  origin: ['http://192.168.1.19:3000', 'http://localhost:3000'],
+  origin: ['http://192.168.1.19:3000', 'http://localhost:3000', 'http://localhost:3001'],
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 app.use(cors(corsOptions))
 
-app.get('/', function (req, res) {  
+app.get('/', function (req, res) {
   res.sendFile(path + "index.html");
 });
 

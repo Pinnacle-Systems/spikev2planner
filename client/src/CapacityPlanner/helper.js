@@ -1,4 +1,6 @@
 import moment from "moment";
+import { toast } from "react-toastify";
+import { STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE } from "./constants";
 
 export function adjust(color, amount) {
     return '#' + color.replace(/^#/, '').replace(/../g, color => ('0' + Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
@@ -7,6 +9,9 @@ export function adjust(color, amount) {
 export const isCurrentOrderLineActive = (orderId, lineId, activeLineOrder) => {
     if (Object.keys(activeLineOrder).length === 0) return false
     return ((parseInt(orderId) === parseInt(activeLineOrder?.orderId)) && (parseInt(lineId) === parseInt(activeLineOrder?.lineId)))
+}
+export const isCurrentOrderActive = (orderId, activeLineOrder) => {
+    return (parseInt(orderId) === parseInt(activeLineOrder?.orderId))
 }
 
 export const getTotalPcsInLineOrder = (orders, currentOrder) => {
@@ -37,20 +42,28 @@ export function getBalancePcs(orderQuantity, totalSplitedPcs) {
 }
 
 export const orderAssignment = (orders, setOrders, order, line, pcs, days, startDate, endDate, holidays) => {
+    if (!styleTypeMatchingWarningMessage(line, order)) return
     let orderIndex = findItemIndex(orders, order.id);
     const newOrders = structuredClone(orders);
+    let learningCurveItems = (newOrders[orderIndex]?.["lines"] || []).find(i => i.id == line.id)?.learningCurveItems || [];
+    let currentOrderLine = findItem(newOrders[orderIndex]["lines"], line.id);
     let linesLocal = filterItem(newOrders[orderIndex]["lines"], line.id);
-    if (parseInt(pcs) === parseInt(order.quantity)) {
-        linesLocal = [];
+    if (pcs > 0) {
+        linesLocal.push(
+            {
+                ordersLineId: currentOrderLine?.ordersLineId,
+                Line: line,
+                id: line.id,
+                lineId: line.id,
+                pcs: pcs,
+                startDate,
+                endDate,
+                days: days,
+                learningCurveItems,
+                capacity: line.capacity,
+                efficiency: line.efficiency
+            })
     }
-    linesLocal.push(
-        {
-            id: line.id,
-            pcs: pcs,
-            startDate,
-            endDate,
-            days: days
-        })
     newOrders[orderIndex]["line"] = [];
     newOrders[orderIndex]["lines"] = linesLocal;
     let ordersInCurrentLine = getOrdersInCurrentLine(order.id, line.id, newOrders);
@@ -61,11 +74,8 @@ export const orderAssignment = (orders, setOrders, order, line, pcs, days, start
             let currentOrderCurrentLine = findItem(loopOrder.lines, line.id);
             let startDate = new Date(endDate)
             startDate.setDate(startDate.getDate() + 1);
-            let loopOrderDays = findDays(currentOrderCurrentLine.pcs, line);
-            let loopOrderendDate = getEndDate(startDate, loopOrderDays);
-            loopOrderendDate = endDateLoopFinder(startDate, loopOrderendDate, holidays);
-            console.log(matchingDays, "matching days", getDateFromDateTimeFormat(startDate), "startDate", loopOrder.orderNo, "orderNo")
-            console.log(orders, "orders")
+            let loopOrderDays = findDays(currentOrderCurrentLine.pcs || 0, currentOrderCurrentLine);
+            let loopOrderendDate = findEndDate(startDate, loopOrderDays, holidays);
             orderAssignment(newOrders, setOrders, loopOrder, line, currentOrderCurrentLine.pcs, loopOrderDays, startDate, loopOrderendDate, holidays)
         }
         return matchingDays
@@ -88,6 +98,9 @@ function filterItem(itemArray, itemId) {
 }
 
 export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getYearMonthFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM");
+export const getYearFromDateTimeFormat = (date) => moment.utc(date).format("YYYY");
+export const getDateFromDateTimeFormatToDisplay = (date) => moment.utc(date).format("DD-MM-YYYY");
 
 
 function matchingDatesbetweenOrders(currentOrder, looporder, line) {
@@ -106,7 +119,27 @@ export const getEndDate = (startDate, days) => {
 }
 
 export const findDays = (pcs, line) => {
-    return Math.ceil(pcs / getCurrentCapacity(line.efficiency, line.capacity));
+    const learningCurveItems = line?.learningCurveItems || [];
+    if (learningCurveItems.length === 0) return 0;
+    let days = 0;
+    let allocatablePcs = 0;
+    for (let i = 0; i < learningCurveItems.length; i++) {
+        allocatablePcs += getCurrentCapacity(parseInt(learningCurveItems[i]?.percentage || 0), line.capacity);
+        days++;
+    }
+    days += Math.ceil((pcs - allocatablePcs) / getCurrentCapacity(parseInt(learningCurveItems[learningCurveItems.length - 1]?.percentage), line.capacity));
+    return days
+}
+export const findPcs = (targetDays, line) => {
+    const learningCurveItems = line?.learningCurveItems || [];
+    if (learningCurveItems.length === 0) return 0;
+    let days = 0;
+    let allocatablePcs = 0;
+    for (let i = 0; i < learningCurveItems.length; i++) {
+        allocatablePcs += getCurrentCapacity(parseInt(learningCurveItems[i]?.percentage || 0), line.capacity);
+        days++;
+    }
+    return allocatablePcs
 }
 
 export function getCurrentCapacity(efficiency, capacity) {
@@ -118,7 +151,6 @@ export function endDateLoopFinder(startDate, endDate, holidays) {
     let localStartDate = new Date(startDate);
     let localEndDate = new Date(endDate);
     while (findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays) > nationalDays) {
-        console.log(findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays), localStartDate, localEndDate)
         nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
         localEndDate.setDate(new Date(endDate).getDate() + nationalDays)
     }
@@ -130,12 +162,11 @@ export function findEndDate(startDate, days, holidays) {
     let localEndDate = new Date(startDate);
     localEndDate.setDate(localEndDate.getDate() + (days - 1));
     let nationalDays = findNationalHolidaysBetweenDates(localStartDate, localEndDate, holidays)
-    console.log(nationalDays, localStartDate, localEndDate, days)
-    if(nationalDays === 0){
+    if (nationalDays === 0) {
         return localEndDate
     }
     localEndDate.setDate(localEndDate.getDate() + 1)
-    return findEndDate(localEndDate, nationalDays, holidays); 
+    return findEndDate(localEndDate, nationalDays, holidays);
 }
 
 
@@ -151,6 +182,8 @@ export function findNationalHolidaysBetweenDates(start, end, holidays) {
     return allDates.filter(date => isNationalHoliday(date, holidays)).length
 }
 
+
+
 export function findSundaysBetweenDates(start, end) {
     const allDates = getDateArray(start, end);
     return allDates.filter(date => isSunday(date)).length
@@ -159,11 +192,19 @@ export function findSundaysBetweenDates(start, end) {
 export function isSameDay(d1, d2) {
     return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
 }
+export function isDateBetweenDates(d1, d2, findDate) {
+    let startDate = new Date(d1);
+    let endDate = new Date(d2);
+    let findingDate = new Date(findDate);
+    if (isSameDay(findingDate, startDate) || isSameDay(findingDate, endDate)) return true
+    return (startDate < findingDate) && (findingDate < endDate)
+}
 
 export const getDateArray = function (start, end) {
     let arr = [];
     let dt = new Date(start);
     end = new Date(end);
+    end.setHours(23, 59, 59, 99)
     while (dt <= end) {
         arr.push(new Date(dt));
         dt.setDate(dt.getDate() + 1);
@@ -173,6 +214,11 @@ export const getDateArray = function (start, end) {
 export function findHolidaysBetweenDates(start, end, holidays) {
     const allDates = getDateArray(start, end);
     return allDates.filter(date => isHoliday(date, holidays)).length
+}
+
+export function findWorkingDaysBetweenDates(start, end, holidays) {
+    const allDates = getDateArray(start, end);
+    return allDates.filter(date => !isNationalHoliday(date, holidays))
 }
 
 export function isSunday(date) {
@@ -206,4 +252,12 @@ export function sortWeekDaysIfLastWeek(currentMonthDays) {
         weekArray = [...new Set(weekArray)]
     }
     return weekArray
+}
+
+export function styleTypeMatchingWarningMessage(line, order) {
+    if (line?.styleType !== order?.styleType) {
+        toast.warning(STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE)
+        return false
+    }
+    return true
 }

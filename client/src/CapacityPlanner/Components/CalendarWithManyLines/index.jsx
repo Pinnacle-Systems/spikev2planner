@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react'
-import { flushSync } from 'react-dom';
+import React, { useState, useEffect, useContext } from 'react'
 import { getDateArray, getDateFromDateTimeFormat, weekday, isSameDay, arrayCounter, getMonthYearFromDateTimeFormat } from '../../../utils/helper';
 import OrderItem from '../orderpanel/OrderItem';
 import moment from 'moment';
@@ -7,33 +6,22 @@ import LineItem from '../Line/LineItem';
 import { NATIONAL_HOLIDAY_COLOR, SUNDAY_COLOR } from '../../../Constants/colors';
 
 import { CapacityPlannerContext } from '../../CapacityPlanner';
-import { dateDiffInDays, getCurrentCapacity, isHoliday, isSunday, isNationalHoliday } from './helper';
-import { sortWeekDaysIfLastWeek, getTotalPcsInLineOrder } from '../../helper';
-import { toast } from 'react-toastify';
-
-const MAX_SPEED = 200;
+import { isHoliday, isSunday, isNationalHoliday } from './helper';
+import { sortWeekDaysIfLastWeek, } from '../../helper';
 
 const Calendar = () => {
-    const maxDays = useRef(0);
-    const speedRef = useRef(0);
     const {
         setLineEntryConformation,
-        orders, setOrders,
-        month, setMonth, holidays,
-        currentOrder, setCurrentOrder,
+        orders,
+        month, holidays,
+        setCurrentOrder,
         setCurrentLine,
         setCurrentDate,
         lines,
-        manualSelect, setManualSelect,
-        setPreviousOrders, previousOrders,
+        manualSelect, setPreviousOrders, productionMode,
     } = useContext(CapacityPlannerContext)
 
     const [currentMonthDays, setCurrentMonthDays] = useState([]);
-
-    const [selectedStarted, setSelectedStarted] = useState(false);
-
-    let lastSelectedMonth = localStorage.getItem("lastSelectedMonth");
-    console.log(lastSelectedMonth, "lastSelectedMonth");
 
     useEffect(() => {
         let startDate = new Date();
@@ -44,22 +32,6 @@ const Calendar = () => {
         endDate.setFullYear(currentYear, currentMonth + 1, 0);
         setCurrentMonthDays(getDateArray(startDate, endDate));
     }, [month])
-
-    // useEffect(() => {
-    //     localStorage.getItem("lastSelectedMonth", "lastSelectedmonth")
-    //     if (localStorage.getItem("lastSelectedMonth")) {
-    //         let startDate = new Date();
-    //         let endDate = new Date();
-    //         let localMonth = localStorage.getItem("lastSelectedMonth")
-    //         localStorage.removeItem("lastSelectedMonth");
-    //         const currentYear = new Date(localMonth).getFullYear();
-    //         const currentMonth = new Date(localMonth).getMonth();
-    //         startDate.setFullYear(currentYear, currentMonth, 1);
-    //         endDate.setFullYear(currentYear, currentMonth + 1, 0);
-    //         setCurrentMonthDays(getDateArray(startDate, endDate));
-    //     }
-    // }, [localStorage.getItem("lastSelectedMonth")])
-
 
     async function drop(ev, date, line) {
         ev.preventDefault();
@@ -101,42 +73,6 @@ const Calendar = () => {
         let currentLineObj = order["lines"].find(item => parseInt(item.id) === parseInt(line.id))
         return currentLineObj ? getDateArray(currentLineObj.startDate, currentLineObj.endDate).filter(date => getMonthYearFromDateTimeFormat(date) === currentMonth).length : ""
     }
-    document.addEventListener("wheel", function (event) {
-        if (document.activeElement.type === "number") {
-            document.activeElement.blur();
-        }
-    });
-    let previousEvent, currentEvent;
-    let maxSpeed = 0, previousSpeed = 0, maxPositiveAcceleration = 0, maxNegativeAcceleration = 0;
-
-    document.addEventListener('mousemove', (event) => {
-        currentEvent = event
-    });
-
-    setInterval(function () {
-        let speed = speedRef.current
-        if (currentEvent && previousEvent) {
-            let movementX = Math.abs(currentEvent.pageX - previousEvent.pageX);
-            let movementY = Math.abs(currentEvent.pageY - previousEvent.pageY);
-            let movement = Math.sqrt(movementX * movementX + movementY * movementY);
-            //Dividing by 100 since the setInterval function is called every 100ms
-            speed = 10 * movement;
-            maxSpeed = Math.round(speed > maxSpeed ? (maxSpeed = speed) : maxSpeed);
-
-            let acceleration = 10 * (speed - previousSpeed);
-
-            if (acceleration > 0) {
-                maxPositiveAcceleration = Math.round(acceleration > maxPositiveAcceleration ? (maxPositiveAcceleration = acceleration) : maxPositiveAcceleration);
-            } else {
-                maxNegativeAcceleration = Math.round(acceleration < maxNegativeAcceleration ? (maxNegativeAcceleration = acceleration) : maxNegativeAcceleration);
-            }
-        }
-        previousEvent = currentEvent
-        previousSpeed = speed;
-        speedRef.current = speed;
-
-    }, 100);
-
     const getHolidayAbbreviation = (date) => {
         const holiday = isHoliday(date, holidays);
         return holiday ? holiday?.description.toUpperCase() : (isSunday(date) ? "SUNDAY" : "")
@@ -149,137 +85,10 @@ const Calendar = () => {
         }
         return false
     }
-
-    const getCurrentOrder = (id) => orders.find(order => parseInt(order.id) === id)
-
-    const manualSelectAllowed = (date, lineObj) => {
-        const alreadyOrder = getOrderIfOrderPlacedInCurrentDate(date, lineObj);
-        if (alreadyOrder && (parseInt(alreadyOrder.id) !== parseInt(currentOrder.id))) return false
-        return true
-    }
-
-    function getMaxDays(orders, currentOrder, currentLine) {
-        console.log(orders, "getMaxDays");
-        const balancePcs = getBalanceQuantityMain(orders, currentOrder);
-        const lineCapacity = getCurrentCapacity(currentLine.efficiency, currentLine.capacity);
-        return Math.ceil(balancePcs / lineCapacity);
-    }
-
-    const handleOnMouseDown = async (lineObj, date) => {
-        if (!manualSelectAllowed(date, lineObj)) return
-        setCurrentLine(lineObj);
-        if (!manualSelect) return
-        if (isNationalHoliday(date, holidays)) return
-        setSelectedStarted(true);
-        const line = lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
-        const currentOrderIndex = orders.findIndex(order => order.id === parseInt(currentOrder.id));
-        const newOrders = structuredClone(orders)
-        const linesFromOrders = [...newOrders[currentOrderIndex]["lines"]]
-        const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
-        const endDate = new Date(date)
-
-
-        let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(date, endDate, holidays);
-
-        // balance is found omitting the current line allocated quantity
-        newOrders[currentOrderIndex]["lines"] = linesLocal;
-        const balancePcs = getBalanceQuantityMain(newOrders, currentOrder)
-
-        maxDays.current = getMaxDays(newOrders, currentOrder, lineObj)
-        console.log(speedRef.current, "speed");
-
-        if (parseInt(balancePcs) === 0 && (linesFromOrders.length === linesLocal.length)) {
-            // toast.error("No Balance Qty ", { position: "top-center" });
-            return
-        }
-
-        if (parseInt(balancePcs) < parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity))) {
-            pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * (parseInt(dateDiffInDays(date, endDate, holidays)) - 1) + parseInt(balancePcs);
-        }
-
-        linesLocal.push({ id: line.id, pcs, startDate: date, endDate: endDate, days: dateDiffInDays(date, endDate, holidays) })
-        newOrders[currentOrderIndex]["lines"] = linesLocal;
-        setOrders(newOrders);
-    }
-
-    const handleOnnMouseOver = (lineObj, date) => {
-        if (!manualSelectAllowed(date, lineObj)) return
-        if (manualSelect && selectedStarted) {
-            if (isNationalHoliday(date, holidays)) return
-            const currentOrderInOrders = getCurrentOrder(currentOrder.id)
-            const line = currentOrderInOrders.lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
-            if (!line) return
-            const currentOrderIndex = orders.findIndex(order => order.id === parseInt(currentOrder.id));
-            const newOrders = structuredClone(orders)
-            const linesFromOrders = [...newOrders[currentOrderIndex]["lines"]]
-            const linesLocal = linesFromOrders.filter(line => parseInt(line.id) !== parseInt(lineObj.id))
-            const endDate = new Date(date)
-            let pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * dateDiffInDays(line.startDate, endDate, holidays);
-
-            const balancePcs = getBalanceQuantityMain(orders, currentOrder);
-
-            if (parseInt(balancePcs) <= 0 && (linesFromOrders.length === linesLocal.length)) {
-                // toast.error("No Balance Qty ", { position: "top-center" });
-                return
-            }
-            console.log(speedRef.current, "speed");
-
-            if (speedRef.current > MAX_SPEED) {
-                toast.info("Don't do so fast ...! ", { position: "top-left" });
-                return
-            }
-
-            if (parseInt(balancePcs) < parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity))) {
-                pcs = getCurrentCapacity(lineObj.efficiency, lineObj.capacity) * (parseInt(dateDiffInDays(line.startDate, endDate, holidays)) - 1) + parseInt(balancePcs);
-            }
-            const days = parseInt(dateDiffInDays(line.startDate, endDate, holidays));
-            if (maxDays.current < days) return
-
-            linesLocal.push({ id: lineObj.id, pcs, startDate: line.startDate, endDate: endDate, days: dateDiffInDays(line.startDate, endDate, holidays) })
-            newOrders[currentOrderIndex]["lines"] = linesLocal;
-            if (validateAllocatedQuantity(orders, currentOrder)) {
-                flushSync(() => {
-                    setOrders(newOrders);
-                })
-            } else {
-                // toast.error("No Balance Qty ", { position: "top-center" });
-            }
-        }
-    }
-
-    const handleOnMouseUp = (line, date) => {
-        setSelectedStarted(false);
-    }
-
-    function getBalanceQuantityMain(orders, currentOrder) {
-        const totalAllocatedPcs = getTotalPcsInLineOrder(orders, currentOrder);
-        return parseInt(currentOrder.quantity) - parseInt(totalAllocatedPcs)
-    }
-
-
-    const validateAllocatedQuantity = (orders, currentOrder) => {
-        const balancePcs = getBalanceQuantityMain(orders, currentOrder);
-        if (parseInt(balancePcs) <= 0) {
-            return false
-        }
-        return true
-    }
-
-
-    const handleSaveManualSelect = () => {
-        if (parseInt(currentOrder.quantity) <= parseInt(getTotalPcsInLineOrder(orders, currentOrder))) setManualSelect(false)
-        else toast.warning("You Should Allocate All Quantity Of Current Order ", { position: "top-center" });
-    }
-
-    const handleCancelManualSelect = () => {
-        setOrders(previousOrders);
-        setManualSelect(false);
-    }
-
     return (
         <div className='relative w-full overflow-y-auto overflow-x-hidden select-none p-2' style={{ height: "90%", fontSize: "12px" }}>
             <table className={`relative table-fixed w-full p-2`}>
-                <thead className='sticky z-10 top-0 bg-white'>
+                <thead className='sticky z-40 top-0 bg-gray-200'>
                     <tr>
                         {manualSelect ? <th></th> : ""}
                         <th className='w-16'>
@@ -313,22 +122,11 @@ const Calendar = () => {
                             </th>
                         )}
                     </tr>
-                    <tr className={`${manualSelect ? "" : "hidden"}`}>
-                        <th colSpan={currentMonthDays.length} >
-                            <div className='flex items-center justify-between'>
-                                <button className='bg-red-900 text-white p-1 rounded' onClick={handleCancelManualSelect}>Cancel</button>
-                                <div> Select Dates </div>
-                                <button className='bg-blue-900 text-white p-1 rounded'
-                                    onClick={handleSaveManualSelect}
-                                >Done</button>
-                            </div>
-                        </th>
-                    </tr>
                 </thead>
                 <tbody>
                     {lines.map((line, index) =>
                         <tr key={index} className='h-10'>
-                            <LineItem index={index} onMouseOver={() => { if (selectedStarted) setMonth(moment.utc(month).subtract(1, "M")) }} line={line} isLast={index >= (lines.length / 2)} />
+                            <LineItem index={index} line={line} isLast={index >= (lines.length / 2)} />
                             {currentMonthDays.map((date, index) =>
                                 <td key={index} id={line.id + "/" + getDateFromDateTimeFormat(date)}
                                     className={`
@@ -337,17 +135,10 @@ const Calendar = () => {
                                     }
                                     onDragOver={isNationalHoliday(date, holidays) ? undefined : (e) => onDragOver(e)}
                                     onDragLeave={(e) => { onDragLeave(e, date, line) }}
-                                    onMouseDown={() => handleOnMouseDown(line, date)}
-                                    onMouseOver={() => handleOnnMouseOver(line, date)}
-                                    onMouseUp={() => { handleOnMouseUp(line, date) }}
                                     onDrop={(e) => { drop(e, date, line) }}
-                                    // style={{
-                                    //     backgroundColor:
-                                    //         (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : getOrderIfOrderPlacedInCurrentDate(date, line)?.color)
-                                    // }}
                                     style={{
                                         backgroundColor:
-                                            (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : undefined)
+                                            (getBackgroundColor(date, holidays) ? getBackgroundColor(date, holidays) : undefined),
                                     }}
                                 >
                                     <div className='onShow-holiday'>
@@ -361,10 +152,8 @@ const Calendar = () => {
                                                     ((getDateFromDateTimeFormat(getOrderIfOrderPlacedInCurrentDate(date, line).lines.find(l => parseInt(l.id) === parseInt(line.id)).startDate) === getDateFromDateTimeFormat(date))
                                                         ||
                                                         (new Date(date).getDate() === 1)) ?
-                                                        // <>
-                                                        // {
-                                                        //     manualSelect ? "" :
                                                         <OrderItem
+                                                            key={productionMode}
                                                             date={date}
                                                             width={`${orderDaysInCurrentMonth(date, line, getOrderIfOrderPlacedInCurrentDate(date, line)) * 110}%`}
                                                             tooltip={orderDaysInCurrentMonth(date, line, getOrderIfOrderPlacedInCurrentDate(date, line)) >= 10 ? null : (new Date(date).getDate() > 25 ? "left" : "right")}
@@ -372,8 +161,7 @@ const Calendar = () => {
                                                             line={line}
                                                             holidays={holidays}
                                                         />
-                                                        // }
-                                                        // </>
+
                                                         :
                                                         ""
                                                 }
@@ -383,8 +171,6 @@ const Calendar = () => {
                                     }
                                 </td>
                             )}
-                            <td onMouseOver={() => { if (selectedStarted) setMonth(moment.utc(month).add(1, "M")) }}>
-                            </td>
                         </tr>
                     )}
                 </tbody>

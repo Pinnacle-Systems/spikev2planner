@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback, createContext } from 'react'
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, createContext, useRef } from 'react'
 import { getRandomColor } from '../utils/helper';
 import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';
@@ -7,7 +6,6 @@ import SelectionPanel from './Components/SelectionPanel/SelectionPanel';
 import axios from 'axios';
 import { ORDERS_API, HOLIDAYS_API, UNITS_API } from '../Constants/Api';
 import { toast } from 'react-toastify';
-import Modal from '../Components/Modal';
 import DeliveryDateWarning from './Components/DeliveryDate/DeliveryDateWarning';
 import IncludeNationalHolidays from './Components/DeliveryDate/IncludeNationalHolidays';
 import LineDataConformationForm from './Components/LineDataCoformationForm';
@@ -19,24 +17,52 @@ import loadingIcon from "../assets/icons8-loading-16.png"
 import addOrders from "../assets/pngwing.com (7).png"
 import holidaysIcon from "../assets/pngwing.com (8).png"
 import splitUpIcon from "../assets/pngwing.com (9).png"
+import { CLIENT_HOLIDAY_URL, CLIENT_ORDERS_URL, CLIENT_UNIT_URL } from '../Constants/clientAppUrls';
+import { LearningCurveInputGridStandalone } from './Components/LineDataCoformationForm/LearningCurveInputGrid';
+import OrderProductionDetails from './Components/orderpanel/OrderProductionDetails';
+import OrderLineDetailOptions from './Components/orderpanel/OrderLineDetailOptions';
+import ProductionPlanningReport from './Components/Report/Report';
+import ProductionDetails from './Components/orderpanel/ProductionDetails';
+import Modal from '../Components/Modal';
+import ViewPlanDetails from './Components/LineDataCoformationForm/ViewPlanDetails';
+import ReduceEndDate from './Components/LineDataCoformationForm/ReduceEndDate';
+import useNavigationBlocker from '../CustomHooks/useNavigationBlocker';
 
 export const CapacityPlannerContext = createContext();
-
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const CapacityPlanner = () => {
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [previousOrders, setPreviousOrders] = useState([]);
+
+    const prevOrders = useRef([]);
 
     const [openModalDeliveryWarning, setOpenModalDeliveryWarning] = useState(false);
     const [openIncludeHolidayModal, setOpenIncludeHolidayModal] = useState(false);
     // const [openHolidaysSelectionForm, setOpenHolidaysSelectionForm] = useState(false);
     const [lineEntryConformation, setLineEntryConformation] = useState(false);
+    const [viewPlanDetails, setViewPlanDetails] = useState(false);
+    const [reduceEndDate, setReduceEndDate] = useState(false);
+    const [learningCurvePopup, setLearningCurvePopup] = useState(false);
+
     const [manualSelect, setManualSelect] = useState(false);
     const [openOrderDetail, setOpenOrderDetail] = useState(false);
 
+    const [isOrderProductionDetails, setIsOrderProductionDetails] = useState(false);
+
+    const [isOrderLineDetailOptions, setIsOrderLineDetailOptions] = useState(false);
+
     const [activeLineOrder, setActiveLineOrder] = useState({});
+
+    const [findOrder, setFindOrder] = useState({});
+
+    const [scrollLine, setScrollLine] = useState('');
+
+    const [openProductionPlanningReport, setOpenProductionPlanningReport] = useState(false);
+
+    const [productionDetails, setProductionDetails] = useState(false);
+
 
     const [split, setSplit] = useState(false);
     const [currentOrder, setCurrentOrder] = useState({});
@@ -49,7 +75,28 @@ const CapacityPlanner = () => {
     const [selectedUnit, setSelectedUnit] = useState("");
     const [holidays, setHolidays] = useState([]);
 
+    const [productionMode, setProductionMode] = useState(false);
+
+    const [isModified, setIsModified] = useState(false);
+
+
     const [lines, setLines] = useState([]);
+
+    const [units, setUnits] = useState([]);
+
+
+    const retrieveUnits = useCallback(() => {
+        axios({
+            method: 'get',
+            url: BASE_URL + UNITS_API,
+        }).then((result) => {
+            setUnits(result.data.data)
+        }, (error) => {
+            toast.error("Server Down", { autoClose: 5000 });
+        });
+    }, []);
+    useEffect(retrieveUnits, [retrieveUnits]);
+
 
     const retrieveLines = useCallback(() => {
         if (!selectedUnit) return
@@ -63,6 +110,8 @@ const CapacityPlanner = () => {
         });
     }, [selectedUnit]);
     useEffect(retrieveLines, [retrieveLines]);
+
+
 
     const getHolidays = useCallback(() => {
         axios({
@@ -88,31 +137,41 @@ const CapacityPlanner = () => {
     useEffect(getHolidays, [getHolidays])
 
     const retrieveData = useCallback(() => {
+        setLoading(true);
         axios({
             method: 'get',
             url: BASE_URL + ORDERS_API,
         }).then((result) => {
             setOrders(result.data.data.map(order => {
                 order["color"] = getRandomColor();
+                order['lines'] = order.lines.map(i => {
+                    return { ...i, id: i.lineId, }
+                });
                 return order
             }))
+            prevOrders.current = (result?.data?.data || []).map(order => {
+                order['lines'] = order.lines.map(i => {
+                    return { ...i, id: i.lineId, }
+                });
+                return order
+            });
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
-        });
+        }).finally(() => { setLoading(false) });
     }, []);
 
     useEffect(retrieveData, [retrieveData]);
     useEffect(toasterTrigger, []);
-    const navigate = useNavigate()
-    useEffect(() => {
-        if (manualSelect) return
-        setLoading(true);
-        const timer = setTimeout(() => {
-            setLoading(false);
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, [orders, manualSelect]);
 
+    useEffect(() => {
+        if (!scrollLine) return
+        let lineElement = document.getElementById(`line${scrollLine?.lineId}`);
+        if (!lineElement) return
+        lineElement.scrollIntoView();
+        setScrollLine(null)
+    }, [scrollLine, selectedUnit, lines])
+
+    const [navigate] = useNavigationBlocker({ hasUnsavedChanges: isModified, setHasUnsavedChanges: setIsModified });
     return (
         <CapacityPlannerContext.Provider
             value={{
@@ -125,59 +184,87 @@ const CapacityPlanner = () => {
                 activeLineOrder, setActiveLineOrder,
                 loading, setLoading,
                 previousOrders, setPreviousOrders,
-                currentDraggedLine, setCurrentDraggedLine
+                currentDraggedLine, setCurrentDraggedLine,
+                productionMode, setProductionMode,
+                learningCurvePopup, setLearningCurvePopup,
+                isOrderProductionDetails, setIsOrderProductionDetails,
+                isOrderLineDetailOptions, setIsOrderLineDetailOptions,
+                setFindOrder, findOrder,
+                openProductionPlanningReport, setOpenProductionPlanningReport,
+                units, setUnits,
+                scrollLine, setScrollLine,
+                productionDetails, setProductionDetails,
+                viewPlanDetails, setViewPlanDetails,
+                reduceEndDate, setReduceEndDate,
+                prevOrders,
+                isModified, setIsModified
             }}>
-            <Modal isOpen={openModalDeliveryWarning} onClose={() => setOpenModalDeliveryWarning(false)}>
+            <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
             </Modal>
-            <Modal isOpen={openIncludeHolidayModal} onClose={() => setOpenIncludeHolidayModal(false)}>
+            <Modal isOpen={openIncludeHolidayModal} closeIcon onClose={() => setOpenIncludeHolidayModal(false)}>
                 <IncludeNationalHolidays />
             </Modal>
-            <Modal isOpen={lineEntryConformation} onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
+            <Modal isOpen={lineEntryConformation} closeIcon onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
                 <LineDataConformationForm />
             </Modal>
-            <Modal isOpen={openOrderDetail} onClose={() => { setOpenOrderDetail(false); }}>
+            <Modal isOpen={viewPlanDetails} closeIcon onClose={() => { setViewPlanDetails(false); setSplit(false); }}>
+                <ViewPlanDetails />
+            </Modal>
+            <Modal isOpen={reduceEndDate} closeIcon onClose={() => { setReduceEndDate(false); setSplit(false); }}>
+                <ReduceEndDate />
+            </Modal>
+            <Modal isOpen={learningCurvePopup} closeIcon >
+                <LearningCurveInputGridStandalone />
+            </Modal>
+            <Modal isOpen={openOrderDetail} closeIcon onClose={() => { setOpenOrderDetail(false); }}>
                 <OrderLineDetails />
+            </Modal>
+            <Modal isOpen={isOrderProductionDetails} closeIcon onClose={() => { setIsOrderProductionDetails(false); }}>
+                <OrderProductionDetails />
+            </Modal>
+            <Modal isOpen={isOrderLineDetailOptions} closeIcon onClose={() => { setIsOrderLineDetailOptions(false); }}>
+                <OrderLineDetailOptions />
+            </Modal>
+            <Modal widthClass={'w-[90%] h-[80%]'} closeIcon isOpen={openProductionPlanningReport} onClose={() => { setOpenProductionPlanningReport(false); }}>
+                <ProductionPlanningReport />
+            </Modal>
+            <Modal widthClass={''} closeIcon isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
+                <ProductionDetails />
             </Modal>
             <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
-                    Processing...
+                    Loading...
                 </button>
             </Modal>
-            <div className=''>
-                <div className='w-1/6 h-full float-left'>
+            <div className='relative'>
+                <div className='w-[25%] h-full float-left'>
                     <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("orders")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
                             <img src={addOrders} width={20} alt="" />
                             <span>
                                 Orders
                             </span>
                         </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("holidayForm")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_HOLIDAY_URL)}>
                             <img src={holidaysIcon} width={20} alt="" />
                             <span>
                                 Holidays
                             </span>
                         </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate("unitForm")}>
+                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_UNIT_URL)}>
                             <img src={splitUpIcon} width={20} alt="" />
                             <span>
                                 Units
                             </span>
                         </button>
                     </div>
-                    {manualSelect ?
-                        <OrderSplitDetail />
-                        :
-                        <>
-                            <ReportPanel />
-                            <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
-                        </>
-                    }
+                    <ReportPanel />
+                    <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
                 </div>
-                <div className='w-5/6 float-right overflow-auto h-screen'>
-                    <SelectionPanel month={month} setMonth={setMonth} setSelectedUnit={setSelectedUnit} />
+                <div className='w-[75%] float-right overflow-auto h-screen'>
+                    <SelectionPanel />
                     <Calendar />
                 </div>
             </div>

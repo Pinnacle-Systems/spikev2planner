@@ -1,8 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const Modal = ({ isOpen, onClose=null, children, widthClass }) => {
+const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
+
+  useEffect(() => {
+    const escFunction = (event) => {
+      if (event.key === "Escape") {
+        onClose()
+        //Do whatever when esc is pressed
+      }
+    };
+    document.addEventListener("keydown", escFunction, false);
+
+    return () => {
+      document.removeEventListener("keydown", escFunction, false);
+    };
+  }, [onClose]);
+
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-gray-800 bg-opacity-50">
       <div className={`relative bg-white rounded-lg ${widthClass}`}>

@@ -1,13 +1,22 @@
 import { Prisma } from '@prisma/client'
 
-import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update,updateMany as _updateMany, remove as _remove } from '../services/orders.service.js';
+import { get as _get, getOne as _getOne, getSearch as _getSearch, create as _create, update as _update, updateMany as _updateMany, remove as _remove, excelImport as _excelImport } from '../services/orders.service.js';
 
 async function get(req, res, next) {
     try {
         res.json(await _get(req));
         console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
     }
 }
 
@@ -15,13 +24,23 @@ async function updateMany(req, res, next) {
     try {
         res.json(await _updateMany(req));
         console.log(res.statusCode);
-    } catch (err) {
-        console.error(`Error `, err.message);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
     }
 }
 
 async function getOne(req, res, next) {
     try {
+        console.log(req.params.id, "idddddd")
         res.json(await _getOne(req.params.id));
         console.log(res.statusCode);
     } catch (err) {
@@ -51,6 +70,26 @@ async function create(req, res, next) {
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
                 console.log(res.statusCode)
             }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
+        }
+    }
+}
+
+export async function excelImport(req, res, next) {
+    try {
+        res.json(await _excelImport(req));
+        console.log(res.statusCode);
+    } catch (error) {
+        console.error(`Error`, error.message);
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                res.statusCode = 200;
+                res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
+                console.log(res.statusCode)
+            }
+        } else {
+            res.json({ statusCode: 1, message: "Upload correct format excel...!!!" })
         }
     }
 }
@@ -67,6 +106,8 @@ async function update(req, res, next) {
                 res.json({ statusCode: 1, message: `${error.meta.target.split("_")[1].toUpperCase()} Already exists` })
                 console.log(res.statusCode)
             }
+        } else {
+            res.json({ statusCode: 1, message: (error?.message)?.match(/message: "(.*?)"/)?.[1] || error?.message })
         }
     }
 }
@@ -83,7 +124,7 @@ async function remove(req, res, next) {
         }
         else if (error.code === "P2003") {
             res.statusCode = 200;
-            res.json({statusCode: 1, message: "Child record Exists"})
+            res.json({ statusCode: 1, message: "Child record Exists" })
         }
         console.log(`Error`, error.message);
     }

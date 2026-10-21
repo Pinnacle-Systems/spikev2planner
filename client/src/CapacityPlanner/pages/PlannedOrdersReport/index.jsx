@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import axios from "axios";
 import { ORDERS_API } from "../../../Constants/Api";
 import moment from 'moment';
+import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -13,7 +14,7 @@ const PlannedOrdersReport = () => {
         axios({
             method: 'get',
             url: BASE_URL + ORDERS_API,
-            params: {lines: true}
+            params: { lines: true }
         }).then((result) => {
             setOrders(result.data.data)
         }, (error) => {
@@ -24,9 +25,20 @@ const PlannedOrdersReport = () => {
     return (
         <div className='p-5'>
             <h1 className='text-center font-bold text-2xl'>Planned Orders Report</h1>
+            <div className='flex justify-end'>
+                <ReactHTMLTableToExcel
+                    id="test-table-xls-button"
+                    className="download-table-xls-button text-white bg-blue-400 p-2 text-xs rounded-xl"
+                    table="plannedOrders"
+                    filename="tablexls"
+                    sheet="tablexls"
+                    buttonText="Excel"
+                >
+                </ReactHTMLTableToExcel>
+            </div>
             <div className='flex justify-center text-center'>
-                <table className='w-full'>
-                <thead className="table-header">
+                <table id='plannedOrders' className='w-full'>
+                    <thead className="table-header">
                         <tr>
                             <th>
                                 Plan Date

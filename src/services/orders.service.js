@@ -1,12 +1,24 @@
 import { PrismaClient } from '@prisma/client'
 import { NoRecordFound } from '../configs/Responses.js';
+import { read, utils } from "xlsx";
+import { getOrdersFromErp, importOrders, importProduction, replanOrder } from '../queries/orders.js';
+import { fetchProductionDataFromErp, fetchRawMaterialDataFromErp } from '../queries/production.js';
+import { getDateFromDateTimeFormat } from '../utils/dateHelper.js';
+import { groupByPropertyToArr, groupByPropertyToObj } from '../utils/helper.js';
 
 const prisma = new PrismaClient()
 
 async function get(req) {
-    const { lines } = req.query;
-    // console.log("lines", typeof (JSON.parse(lines)));
-    const data = await prisma.orders.findMany({
+    const { lines, isGetOrdersFromERP, startDate, endDate, isGetProductionDataFromErp } = req.query;
+    if (isGetOrdersFromERP) {
+        if (!startDate || !endDate) return { statusCode: 1, message: "Start Date and End Date Mandatory...!!!" }
+        await getOrdersFromErp(startDate, endDate)
+    }
+    if (isGetProductionDataFromErp) {
+        await fetchRawMaterialDataFromErp()
+        await fetchProductionDataFromErp()
+    }
+    let data = await prisma.orders.findMany({
         where: {
             lines: lines ?
                 (JSON.parse(lines)
@@ -16,36 +28,85 @@ async function get(req) {
                     { none: {} })
                 :
                 undefined
-        }
-        ,
+        },
         include: {
-            // lines: true
+            Orders: { select: { id: true } },
+            PrevOrder: {
+                select: {
+                    id: true
+                }
+            },
             lines: {
                 include: {
+                    learningCurveItems: true,
                     Line: {
                         select: {
                             name: true,
+                            unitId: true,
+                            capacity: true,
                             Unit: {
                                 select: {
                                     name: true
                                 }
                             }
                         }
-                    }
+                    },
                 }
             }
         }
     });
-    return { statusCode: 0, data };
+    const sizeColorWiseDetails = await prisma.$queryRaw`
+    select * from ProductionDetails
+    `
+    const sizeColorMap = groupByPropertyToArr(sizeColorWiseDetails, 'orderNo');
+    const timeAndActionDetails = await prisma.$queryRaw`
+    select * from timeAndAction;
+    `
+    const timeAndActionMap = groupByPropertyToObj(timeAndActionDetails, 'orderNo');
+    const out = [];
+    for (let index = 0; index < data.length; index++) {
+        const i = data[index];
+        const productionDetailsDateWise = await prisma.$queryRaw`
+        select DATE_FORMAT(date,'%d-%m-%Y') as date,orderNo,line, sum(qty) as qty 
+        from ProductionDetails
+        where orderNo = ${i.orderNo} and date > ${i.createdAt}
+        group by date, orderNo, line
+        `;
+        let newItem = { ...i };
+        newItem['lines'] = newItem['lines'].map(i => ({ ...i, ordersLineId: i.id }))
+        let orderDetails = sizeColorMap.get(i.orderNo);
+        newItem['lineWiseProductionData'] = orderDetails;
+        newItem['productionDetailsDateWise'] = productionDetailsDateWise;
+        newItem["productionQty"] = productionDetailsDateWise.reduce((a, c) => a + parseFloat(c.qty), 0);
+        newItem["balanceQty"] = (newItem.quantity - newItem.productionQty)
+        newItem["isReplanned"] = i.Orders ? true : false;
+        newItem["timeAndAction"] = timeAndActionMap.get(i.orderNo);
+        out.push(newItem);
+    }
+    return { statusCode: 0, data: out };
 }
 
 
 async function getOne(id) {
+    console.log(id, "idddddd")
     const data = await prisma.orders.findUnique({
         where: {
             id: parseInt(id)
+        },
+        include: {
+            OrderSizeColorWiseDetails: true
         }
     })
+    console.log(data, "datadata")
+    data["OrderSizeColorWiseDetails"] = await prisma.$queryRaw`
+    select orders.orderno as orderNo, det.size, det.color, det.qty as qty, coalesce(sum(productionDetails.qty),0) as productionQty, 
+    det.qty - coalesce(sum(productionDetails.qty),0) as balanceQty
+from OrderSizeColorWiseDetails det
+join orders on orders.id = det.ordersId
+left join productionDetails on productionDetails.orderno = orders.orderNo and productionDetails.size = det.size and productionDetails.color = det.color
+where orders.id = ${id}
+group by orders.orderno, det.size, det.color,det.qty
+    `
     if (!data) return NoRecordFound("orders");
     return { statusCode: 0, data };
 }
@@ -100,29 +161,50 @@ async function getSearch(req) {
 
 
 async function create(body) {
-    const { orderNo, buyer, dDate, style, quantity, sam } = await body
+    const { orderNo, buyer, dDate, style, quantity, sam, styleType } = await body
     const data = await prisma.orders.create({
         data: {
-            orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam
+            orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam,
+            styleType
         },
     });
     return { statusCode: 0, data };
 }
 
+export async function excelImport(req) {
+    const { importType } = req.body;
+    let file = new Uint8Array(req.file.buffer)
+    let workbook = read(file, { type: "array" });
+    var sheet_name_list = workbook.SheetNames;
+    const importedData = utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+    if (importType === "order") {
+        await importOrders(importedData)
+        return { statusCode: 0 }
+    }
+    if (importType === "production") {
+        await importProduction(importedData)
+        return { statusCode: 0 }
+    }
+}
+
 async function update(id, body) {
-    const { orderNo, buyer, dDate, style, quantity, sam } = await body
+    const { orderNo, buyer, dDate, style, quantity, sam, styleType, isReplanOrder } = await body
     const dataFound = await prisma.orders.findUnique({
         where: {
             id: parseInt(id)
-        },
+        }
     })
     if (!dataFound) return NoRecordFound("orders");
+    if (isReplanOrder) {
+        const data = await replanOrder(id)
+        return { statusCode: 0, data }
+    }
     const data = await prisma.orders.update({
         where: {
             id: parseInt(id),
         },
         data: {
-            orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam,
+            orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam, styleType
         },
     })
     return { statusCode: 0, data };
@@ -130,49 +212,58 @@ async function update(id, body) {
 
 async function updateMany(req) {
     const { orders } = await req.body
-    orders.forEach(async (order) => {
-        const data = await prisma.orders.update({
-            where: {
-                id: parseInt(order.id),
-            },
-            data: {
-                lines: {
-                    // connectOrCreate: {
-                    //     data:
-                    //         order.lines.map(line => {
-                    //             return { id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: parseInt(line.days) }
-
-                    //         })
-                    // }
-                    deleteMany: {},
-                    // connectOrCreate:{},
-                    createMany: {
-                        data:
-                            order.lines.map(line => {
-                                return { id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: parseInt(line.days) }
-
-                            })
-                    }
+    await prisma.$transaction(async (tx) => {
+        for (let index = 0; index < orders.length; index++) {
+            const order = orders[index];
+            const data = await tx.orders.findUnique({
+                where: {
+                    id: parseInt(order.id),
                 },
+                include: {
+                    Orders: { select: { id: true } }
+                }
+            })
+            if (data.Orders) {
+                let orderLines = order.lines.filter(i => i.id);
+                for (let index = 0; index < orderLines.length; index++) {
+                    const orderLine = orderLines[index];
+                    const oldOrderLine = await tx.orderLines.findUnique({ where: { id: parseInt(orderLine.ordersLineId) } });
+                    if (oldOrderLine.pcs !== parseInt(orderLine.pcs)) continue;
+                    if (getDateFromDateTimeFormat(oldOrderLine.startDate) !== getDateFromDateTimeFormat(new Date(orderLine.startDate))) continue;
+                    await tx.orderLines.update({
+                        where: {
+                            id: parseInt(orderLine.ordersLineId)
+                        },
+                        data: {
+                            endDate: new Date(orderLine.endDate)
+                        }
+                    })
+                }
+            } else {
+                await tx.orders.update({
+                    where: {
+                        id: parseInt(order.id),
+                    },
+                    data: {
+                        lines: {
+                            deleteMany: {},
+                            create: order.lines.map(line => {
+                                return {
+                                    lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
+                                    endDate: new Date(line.endDate), days: parseInt(line.days),
+                                    efficiency: parseFloat(line.efficiency || 0),
+                                    capacity: parseFloat(line.capacity || 0),
+                                    learningCurveItems: {
+                                        create: (line?.learningCurveItems || []).map(orderLine => ({ percentage: parseFloat(orderLine.percentage || 0) }))
+                                    }
+                                }
+                            }),
+                        },
+                    }
+                })
             }
-        })
+        }
     })
-
-    // const dataFound = await prisma.orders.findUnique({
-    //     where: {
-    //         id: parseInt(id)
-    //     },
-    // })
-    // if (!dataFound) return NoRecordFound("orders");
-    // const data = await prisma.orders.update({
-    //     where: {
-    //         id: parseInt(id),
-    //     },
-    //     data: {
-    //         orderNo, buyer, dDate: dDate ? new Date(dDate) : undefined, style, quantity: quantity ? parseInt(quantity) : undefined, sam, 
-    //         lines : lines.map(line => {return {id: line.id, pcs: parseInt(line.pcs), startDate: new Date(line.startDate), endDate: new Date(line.endDate), days: new Date(line.days)}})
-    //     },
-    // })
     return { statusCode: 0, data: "Updated Successfull" };
 };
 

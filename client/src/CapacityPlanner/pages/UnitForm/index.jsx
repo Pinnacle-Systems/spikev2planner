@@ -85,7 +85,7 @@ const UnitForm = () => {
         <div className="flex h-full w-full">
           <form className="mx-auto p-1 w-full h-full" onSubmit={handleSubmit}>
             <div className="flex">
-              <header className="text-xl w-full text-gray-700 text-center font-bold" style={{ height: "5%" }}>
+              <header className="text-xl w-full text-gray-700 text-center font-bold">
                 Unit Details Form
               </header>
               <button
@@ -100,8 +100,7 @@ const UnitForm = () => {
               <FloatingLabelInput label={"Unit Name"} autoFocus={true} value={name} setValue={setName} />
               <FloatingLabelInput label={"Unit Location"} value={location} setValue={setLocation} />
             </div>
-
-            <div className='border' style={{ height: "70%" }}>
+            <div className='border'>
               <LineDetails lines={lines} setLines={setLines} />
             </div>
           </form>
