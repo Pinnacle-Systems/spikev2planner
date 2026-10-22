@@ -1,0 +1,161 @@
+import React from "react";
+import { useSelector } from "react-redux";
+import {
+
+  NewButton,
+  SaveButton,
+  EditButton,
+  DeleteButton,
+  CloseButton,
+  PrintButtonOnly,
+  SearchButton,
+  OpenProjectButton,
+  ViewButtton,
+
+} from "../../../Buttons";
+import { toast } from "react-toastify";
+import secureLocalStorage from "react-secure-storage";
+import { useGetPagePermissionsByIdQuery } from "../../../redux/services/PageMasterService";
+
+
+const FormHeader = ({
+  setNavigateProjectId = null,
+  quotesData = null,
+  projectOpen = null,
+  model,
+  saveData = null,
+  setReadOnly = null,
+  deleteData = null,
+  onClose = null,
+  onNew = null,
+  childRecord = 0,
+  onPrint = null,
+  openReport = null,
+  viewReport = null,
+  childRecordValidationActions = ["edit", "delete"],
+}) => {
+
+  const openTabs = useSelector((state) => state.openTabs);
+
+  const activeTab = openTabs.tabs.find(tab => tab.active);
+
+  // const currentPageId = activeTab.id
+  const currentPageId = activeTab.name
+
+  const userRoleId = secureLocalStorage.getItem(
+    sessionStorage.getItem("sessionId") + "userRoleId"
+  );
+  const {
+    data: 
+    currentPagePermissions,
+    isLoading,
+    isFetching,
+  } = useGetPagePermissionsByIdQuery({ currentPageId, userRoleId }, { skip: !(currentPageId && userRoleId) });
+
+
+  const IsSuperAdmin = () => {
+    return JSON.parse(
+      secureLocalStorage.getItem(
+        sessionStorage.getItem("sessionId") + "superAdmin"
+      )
+    );
+  };
+
+  const IsDefaultAdmin = () => {
+    return JSON.parse(
+      secureLocalStorage.getItem(
+        sessionStorage.getItem("sessionId") + "defaultAdmin"
+      )
+    );
+  };
+
+
+  const isCurrentFinYearActive = () => {
+    return Boolean(
+      secureLocalStorage.getItem(
+        sessionStorage.getItem("sessionId") + "currentFinYearActive"
+      )
+    );
+  };
+
+  const hasPermission = (callback, type) => {
+    if (childRecordValidationActions.includes(type) && childRecord !== 0) {
+      toast.error("Child Record Exists", { position: "top-center" });
+      return;
+    }
+    if (IsSuperAdmin()) {
+      callback();
+    } else {
+      if (isCurrentFinYearActive()) {
+        if (IsDefaultAdmin()) {
+          callback();
+        } else if (currentPagePermissions.data[type]) {
+          callback();
+        } else {
+          toast.info(`No Permission to ${type}...!`, {
+            position: "top-center",
+          });
+        }
+      } else {
+        toast.info(" Past Fin Year Only can view!", { position: "top-center" });
+      }
+    }
+  };
+  return (
+    <>
+      {/* {isLoading || isFetching ? (
+        <div></div>
+      ) : ( */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-4 py-2 border-b border-gray-300 bg-white shadow-sm">
+
+          {model ? (
+            <div className="text-xl font-semibold text-center md:text-left text-gray-800">
+              {model}
+            </div>
+          ) : (
+            <div></div>
+          )}
+
+          <div className="flex flex-wrap gap-2 justify-center md:justify-end">
+            {viewReport && <ViewButtton onClick={viewReport} />}
+
+            {projectOpen && (
+              <OpenProjectButton
+                setNavigateProjectId={setNavigateProjectId}
+                quotesData={quotesData}
+                onClick={() => projectOpen()}
+              />
+            )}
+
+            {onNew && <NewButton onClick={() => hasPermission(onNew, "create")} />}
+
+            {setReadOnly && (
+              <EditButton
+                onClick={() => {
+                  hasPermission(setReadOnly, "edit");
+                  toast.info("You Can Edit The Datas...!", { position: "top-center" });
+                }}
+              />
+            )}
+
+            {saveData && <SaveButton onClick={saveData} />}
+
+              <DeleteButton
+                onClick={() => hasPermission(deleteData, "delete")}
+              />
+            
+
+            {openReport && <SearchButton onClick={openReport} />}
+
+            {onPrint && <PrintButtonOnly onClick={onPrint} />}
+
+            {onClose && <CloseButton onClick={onClose} />}
+          </div>
+        </div>
+      {/* )} */}
+    </>
+
+  );
+};
+
+export default FormHeader;

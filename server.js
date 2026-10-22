@@ -2,7 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cors from 'cors';
-import { orders, units, holidays, lines, users, finYear } from './src/routes/index.js';
+import { orders, units, holidays, lines, users, finYear, pages, pageGroup, companies, branches, roles } from './src/routes/index.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +40,12 @@ app.get('/', function (req, res) {
 });
 
 app.use("/users", users);
+app.use("/pages", pages);
+app.use("/pageGroup", pageGroup);
+app.use("/companies", companies);
+app.use("/branches", branches);
+app.use("/roles", roles);
+
 
 
 app.use("/orders", orders);

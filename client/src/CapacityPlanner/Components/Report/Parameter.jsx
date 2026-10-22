@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { REFRESH_ICON } from '../../../inputs';
+import { REFRESH_ICON } from '../../../Inputs';
 import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 import { getDateFromDateTimeFormat } from '../../helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';

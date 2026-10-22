@@ -7,6 +7,7 @@ import CapacityPlanner from './CapacityPlanner/CapacityPlanner';
 import { OrderForm, UnitForm, HolidayCalendar, UnPlannedOrdersReport, Login } from './CapacityPlanner/pages';
 import { CLIENT_HOLIDAY_URL, CLIENT_HOME_URL, CLIENT_ORDERS_URL, CLIENT_PLANNED_ORDERS_URL, CLIENT_UNIT_URL, CLIENT_UNPLANNED_ORDERS_URL, PRODUCT_ADMIN_HOME_PATH } from './Constants/clientAppUrls';
 import ProductionReport from './CapacityPlanner/pages/ProductionReport';
+import Home from './CapacityPlanner/pages/Home';
 
 
 function App() {
@@ -14,7 +15,7 @@ function App() {
     <HashRouter>
       <Routes>
         <Route path={"/"} element={<Login />} />
-        {/* <Route path={PRODUCT_ADMIN_HOME_PATH} element={<Home />} /> */}
+        <Route path={PRODUCT_ADMIN_HOME_PATH} element={<Home />} />
         <Route path={CLIENT_HOME_URL} element={<CapacityPlanner />} />
         <Route path={CLIENT_ORDERS_URL} element={<OrderForm />} />
         <Route path={CLIENT_UNIT_URL} element={<UnitForm />} />

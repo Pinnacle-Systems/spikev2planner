@@ -173,3 +173,10 @@ export function generateSessionId(length = 8) {
 export function getYearShortCode(fromDate, toDate) {
   return `${new Date(fromDate).getFullYear().toString().slice(2)}-${new Date(toDate).getFullYear().toString().slice(2)}`
 }
+
+export function findFromList(id, list, property) {
+  if (!list) return ""
+  let data = list?.find(i => parseInt(i.id) === parseInt(id))
+  if (!data) return ""
+  return data[property]
+}

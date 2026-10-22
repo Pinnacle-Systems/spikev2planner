@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { DELETE, PLUS } from '../../../inputs'
+import { DELETE, PLUS } from '../../../Inputs'
 import { CapacityPlannerContext } from '../../CapacityPlanner'
 
 

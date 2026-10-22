@@ -36,16 +36,15 @@ async function login(req) {
                             page: true
                         }
                     },
-                    // company: {
-                    //     include: {
-                    //         Subscription: {
-                    //             orderBy: {
-                    //                 id: 'desc'
-                    //             }
-                    //         }
-                    //     }
-                    // },
-                    company: true
+                    company: {
+                        include: {
+                            Subscription: {
+                                orderBy: {
+                                    id: 'desc'
+                                }
+                            }
+                        }
+                    },
                 }
             }
         }
@@ -64,6 +63,7 @@ async function login(req) {
         "RANDOM-TOKEN",
         { expiresIn: "24h" }
     );
+    console.log(data?.role?.company, "data")
     return { statusCode: 0, message: "Login Successfull", token, userInfo: data };
 }
 

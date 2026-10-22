@@ -112,8 +112,8 @@ model TimeAndAction {
 }
 
 model Company {
-  id            Int      @id @default(autoincrement())
-  companyId     String   @unique @default(uuid())
+  id            Int            @id @default(autoincrement())
+  companyId     String         @unique @default(uuid())
   name          String
   code          String?
   gstNo         String?
@@ -127,6 +127,8 @@ model Company {
   ifscCode      String?
   branch        Branch[]
   Role          Role[]
+  finYear       FinYear[]
+  Subscription  Subscription[]
 }
 
 model Branch {
@@ -151,6 +153,25 @@ model Branch {
   gstNo          String?
   panNo          String?
   logo           String?
+}
+
+model FinYear {
+  id        Int      @id @default(autoincrement())
+  from      DateTime
+  to        DateTime
+  Company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+  active    Boolean  @default(true)
+}
+
+model Subscription {
+  id        Int      @id @default(autoincrement())
+  Company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId Int
+  validFrom DateTime
+  expireAt  DateTime
+  code      String
+  maxUsers  Int
 }
 
 model User {

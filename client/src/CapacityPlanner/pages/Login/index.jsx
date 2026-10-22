@@ -58,7 +58,7 @@ const Login = () => {
                     if (result?.status === 200) {
                         if (result?.data?.statusCode === 0) {
                             // sessionStorage?.setIttem("sessionId", generateSessionId());
-                            if (!result.data.userInfo.roleId) {
+                            if (1 == 2) {
                                 secureLocalStorage.setItem(
                                     sessionStorage.getItem("sessionId") + "userId",
                                     result.data.userInfo.id

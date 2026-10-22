@@ -1,0 +1,3913 @@
+
+import React, { useEffect, useRef, useState, forwardRef, useCallback, useImperativeHandle } from "react";
+import { createPortal } from "react-dom";
+import { MultiSelect } from "react-multi-select-component";
+import { findFromList } from "../utils/helper";
+import "./index.css";
+import { FormControl, MenuItem, TextField } from "@mui/material";
+import { push } from "../redux/features/opentabs";
+import { useDispatch } from "react-redux";
+import { FaChevronLeft, FaChevronRight, FaEdit, FaInfoCircle, FaPlus, FaSearch, FaTrash, FaStepBackward, FaStepForward } from "react-icons/fa";
+import secureLocalStorage from "react-secure-storage";
+import { useDeletePartyMutation, useGetPartyQuery } from "../redux/services/PartyMasterService";
+import { useModal } from "../Basic/Global/context/ModalContext";
+import useOutsideClick from "../CustomHooks/handleOutsideClick";
+import Select, { components } from "react-select";
+import { usePermissionForUsers } from "../Basic/Components/HasPermission";
+import Swal from "sweetalert2";
+import { exportFileToCsv } from "../utils/excelHelper";
+import { FaFileExcel } from "react-icons/fa";
+
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faTrashCan, faEye, faEyeSlash, faImages, faCartPlus, faGlobeAsia, faHouseMedicalFlag,
+  faUserDoctor, faExternalLink, faHandHoldingMedical, faPlusCircle,
+  faAmbulance, faPrescriptionBottleMedical, faCheck, faClose, faCaretDown, faFileExcel, faAngleDoubleRight, faRefresh
+} from "@fortawesome/free-solid-svg-icons";
+import Modal from "../Components/Modal";
+
+
+export const DELETE = <span className='text-red-600'> <FontAwesomeIcon icon={faTrashCan} /> </span>
+export const VIEW = <span className='text-blue-600'> <FontAwesomeIcon icon={faEye} /> </span>
+export const UNVIEW = <span className='text-blue-600'> <FontAwesomeIcon icon={faEyeSlash} /> </span>
+export const IMAGE_ICON = <span> <FontAwesomeIcon icon={faImages} /> </span>
+export const EMPTY_ICON = <span> <FontAwesomeIcon icon={faCartPlus} /> </span>
+export const GLOBE_ICON = <span> <FontAwesomeIcon icon={faGlobeAsia} /> </span>
+export const MEDICAL_USERS_ICON = <FontAwesomeIcon icon={faHouseMedicalFlag} />
+export const DOCTOR_ICON = <FontAwesomeIcon icon={faUserDoctor} />
+export const PATIENT_ICON = <FontAwesomeIcon icon={faHandHoldingMedical} />
+export const WEB_LINK = <FontAwesomeIcon icon={faExternalLink} />
+export const PLUS = <FontAwesomeIcon icon={faPlusCircle} />
+export const EMERGENCY_ICON = <FontAwesomeIcon icon={faAmbulance} />
+export const PRESCRIPTION_ICON = <FontAwesomeIcon icon={faPrescriptionBottleMedical} />
+export const EMPTY_PROFILE_IMAGE = ({ height, width }) => <img style={{ height, width }} src="data:image/png;base64,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" alt="profile" />
+export const TICK_ICON = <FontAwesomeIcon icon={faCheck} />
+export const CLOSE_ICON = <FontAwesomeIcon icon={faClose} />
+
+export const CARET_DOWN_ICON = <FontAwesomeIcon icon={faCaretDown} />
+export const EXCEL_ICON = <FontAwesomeIcon icon={faFileExcel} />
+
+export const DOUBLE_NEXT_ICON = <FontAwesomeIcon icon={faAngleDoubleRight} />
+
+export const SUBSCRIPTION_ICON = <img alt="subscriptionIcon" src="data:image/png;base64,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" />
+export const REFRESH_ICON = <FontAwesomeIcon icon={faRefresh} />
+
+
+export const handleOnChange = (event, setValue) => {
+  const inputValue = event.target.value;
+  const inputSelectionStart = event.target.selectionStart;
+  const inputSelectionEnd = event.target.selectionEnd;
+
+  const upperCaseValue = inputValue.toUpperCase();
+
+  const valueBeforeCursor = upperCaseValue.slice(0, inputSelectionStart);
+  const valueAfterCursor = upperCaseValue.slice(inputSelectionEnd);
+
+  setValue(
+    valueBeforeCursor +
+    inputValue.slice(inputSelectionStart, inputSelectionEnd) +
+    valueAfterCursor
+  );
+
+  // Set the cursor position to the end of the input value
+  setTimeout(() => {
+    event.target.setSelectionRange(
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+    );
+  });
+};
+export const FancyCheckBox = ({ label, value, onChange, readOnly }) => {
+  return (
+    <label
+      style={{ fontSize: 11 }}
+      className={`flex items-center gap-2 p-3 border rounded-lg cursor-pointer w-full text-xs font-medium text-gray-700 ${readOnly ? "bg-gray-100 cursor-not-allowed" : "hover:bg-gray-50"
+        }`}
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        disabled={readOnly}
+        className="accent-blue-600"
+      />
+      <span className="break-words text-xs text-wrap w-full">{label}</span>
+    </label>
+  );
+};
+export const handleOnChangeforpassword = (event, setValue) => {
+  const inputValue = event.target.value;
+  const inputSelectionStart = event.target.selectionStart;
+  const inputSelectionEnd = event.target.selectionEnd;
+
+  const LowerCaseValue = inputValue.toLowerCase();
+
+  const valueBeforeCursor = LowerCaseValue.slice(0, inputSelectionStart);
+  const valueAfterCursor = LowerCaseValue.slice(inputSelectionEnd);
+
+  setValue(
+    valueBeforeCursor +
+    inputValue.slice(inputSelectionStart, inputSelectionEnd) +
+    valueAfterCursor
+  );
+
+  // Set the cursor position to the end of the input value
+  setTimeout(() => {
+    event.target.setSelectionRange(
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length,
+      valueBeforeCursor.length +
+      inputValue.slice(inputSelectionStart, inputSelectionEnd).length
+    );
+  });
+};
+
+
+export const MultiSelectDropdown = ({
+  name,
+  selected,
+  label,
+  setSelected,
+  options,
+  readOnly = false,
+  tabIndex = null,
+  className = "",
+  required,
+  disabled
+}) => {
+  console.log(options, "options");
+  console.log(selected, "selected");
+  const customSelectStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "16px",
+      height: "16px",
+      padding: "13px 4px",
+      fontSize: "12px",
+      borderRadius: "8px",
+      fontFamily: "'Segoe UI'",
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      marginTop: "-8px",
+      fontFamily: "'Segoe UI'",
+    }),
+    input: (base) => ({
+      ...base,
+      margin: 0,
+      padding: 0,
+      fontFamily: "'Segoe UI'",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+    }),
+    placeholder: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+    }),
+    menu: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+      maxHeight: 150,
+      overflowY: "auto",
+    }),
+    option: (base) => ({
+      ...base,
+      fontFamily: "'Segoe UI'",
+      fontSize: "12px",
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      display: "none",
+      height: "28px",
+      marginTop: "-12px",
+    }),
+    menuList: (base) => ({
+      ...base,
+      maxHeight: 150,
+      overflowY: "auto",
+    }),
+  };
+
+  return (
+    <div
+      className={`block text-xs font-bold text-gray-600 mb-1   ${className}`}
+    >
+      <span className="mb-3">
+        {required ? <RequiredLabel name={label ? label : name} /> : name}
+      </span>
+      <div>
+        {/* <MultiSelect
+          options={options}
+          value={selected}
+          onChange={readOnly ? () => { } : setSelected}
+          labelledBy="Select"
+          hasSelectAll={false}
+          disabled={disabled}
+
+          styles={customSelectStyles}
+        /> */}
+        <MultiSelect
+          options={options}
+          value={selected}
+          onChange={readOnly ? () => { } : setSelected}
+          labelledBy="Select"
+          hasSelectAll={false}
+          disabled={disabled}
+          className="w-full"       // container width
+          overrideStrings={{
+            selectSomeItems: "Select",
+          }}
+          // ItemRenderer={ItemRenderer}
+          // valueRenderer={ValueRenderer}
+          // Custom styling using override
+          styles={{
+            multiselectContainer: {
+              width: "100%",
+            },
+            searchBox: {
+              border: "1px solid #d1d5db",
+              borderRadius: "8px",
+              padding: "6px 12px",
+              fontSize: "12px",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+            },
+            optionListContainer: {
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              fontSize: "12px",
+            },
+            chips: {
+              backgroundColor: "#e5e7eb",
+              color: "#1f2937",
+              borderRadius: "6px",
+              fontSize: "10px",
+              padding: "2px 6px",
+            },
+          }}
+        />
+      </div>
+
+
+
+
+    </div>
+  );
+};
+
+const Option = (props) => {
+  return (
+    <components.Option {...props}>
+      <input
+        type="checkbox"
+        checked={props.isSelected}
+        onChange={() => null}
+        style={{ marginRight: 8 }}
+      />
+      {props.label}
+    </components.Option>
+  );
+};
+
+const ValueContainer = ({ children, ...props }) => {
+  const { getValue } = props;
+  const selected = getValue();
+
+  const MAX_DISPLAY = 5;
+
+  let displayText = "";
+
+  if (selected.length > 0) {
+    const labels = selected.slice(0, MAX_DISPLAY).map((item) => item.label);
+
+    if (selected.length > MAX_DISPLAY) {
+      displayText = `${labels.join(", ")} +${selected.length - MAX_DISPLAY
+        } more`;
+    } else {
+      displayText = labels.join(", ");
+    }
+  }
+
+  return (
+    <components.ValueContainer {...props}>
+      <div
+        style={{
+          fontSize: "13px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+      >
+        {displayText}
+      </div>
+      {children[1]}
+    </components.ValueContainer>
+  );
+};
+export const MultiSelectDropdownNew = ({
+  name,
+  selected,
+  label,
+  setSelected,
+  options,
+  readOnly = false,
+  tabIndex = null,
+  className = "",
+  required,
+  disabled,
+  labelHidden = false,
+}) => {
+
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+    }),
+
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused
+        ? "#f3f4f6"
+        : "#ffffff",
+      color: "#111827",
+      fontSize: "11px",
+      paddingTop: "4px",
+      paddingBottom: "4px",
+    }),
+
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 important
+    }),
+
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 9999,   // 🔥 for modals
+    }),
+
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      height: "28px",
+    }),
+
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
+
+    multiValue: (base) => ({
+      ...base,
+      padding: "0 4px",
+    }),
+
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
+  return (
+    <div className={`block text-xs font-bold text-gray-600 mb-1 ${className} `}>
+      {!labelHidden && (
+        <span className="mb-3">
+          {required ? <RequiredLabel name={label ? label : name} /> : (label || name)}
+        </span>
+      )}
+
+      <div className="mt-1 ">
+        <Select
+          isMulti
+          options={options}
+          value={selected}
+          onChange={setSelected}
+          components={{ Option, ValueContainer }}
+          closeMenuOnSelect={false}
+          hideSelectedOptions={false}
+          placeholder=""
+          maxMenuHeight={200}
+          styles={customStyles}
+          menuPortalTarget={document.body}
+        />
+      </div>
+    </div>
+  );
+};
+
+export const TextInput = ({
+  name,
+  label,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+  max
+}) => {
+  console.log(max, "max")
+  return (
+    <div className={`mb-2 ${width}`}>
+      {name && (
+        <label className="mb-1 block text-[12px] font-bold text-gray-600">
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
+        </label>
+      )}
+      <input
+        type={type === "pan_no" || type === "aadhar" || type === "gst_no" ? "text" : type}
+        value={value}
+        onChange={(e) => {
+          if (type === "pan_no") {
+            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            let formatted = "";
+            for (let i = 0; i < Math.min(raw.length, 10); i++) {
+              if (i < 5) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 9) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              }
+            }
+            setValue(formatted);
+          } else if (type === "gst_no") {
+            const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+            let formatted = "";
+            for (let i = 0; i < Math.min(raw.length, 15); i++) {
+              if (i < 2) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 7) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i < 11) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 11) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 12) {
+                if (/[0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else if (i === 13) {
+                if (/[A-Z]/.test(raw[i])) formatted += raw[i];
+                else break;
+              } else {
+                if (/[A-Z0-9]/.test(raw[i])) formatted += raw[i];
+                else break;
+              }
+            }
+            setValue(formatted);
+          } else if (type === "aadhar") {
+            const digits = e.target.value.replace(/\D/g, "").slice(0, 12);
+            setValue(digits);
+          } else if (type === "number") {
+            setValue(e.target.value);
+          } else {
+            handleOnChange(e, setValue);
+          }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === " ") {
+            e.preventDefault();
+          }
+          if (type === "aadhar" && !/[\d]/.test(e.key) && !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
+            e.preventDefault();
+          }
+        }}
+        onBlur={onBlur}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        max={max ? String(max) : undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm 
+                  ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${className}`
+        }
+      />
+      {/* ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"} */}
+    </div>
+  );
+};
+
+
+
+export const PasswordTextInput = ({
+  name,
+  type,
+  value,
+  setValue,
+  readOnly,
+  className,
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width,
+}) => {
+  return (
+    <>
+      <div className="group input-group  text-sm">
+        <label
+          htmlFor="title"
+          className="input-label group-hover:text-blue-600  font-weight: 100 "
+        >
+          <span className="flex items-center gap-2  font-weight: 100">
+            {required ? <RequiredLabel name={name} /> : `${name}`}
+          </span>
+        </label>
+        <TextField
+          id={name}
+          variant="standard"
+          name={`${name}`}
+          className={`input-base field-text p-0.5 rounded border border-gray-500 font-weight: 100 `}
+          // placeholder={`${name}`}
+
+          sx={{
+            "& .MuiInputBase-input": { fontSize: "12px" },
+            "& .MuiInputBase-input.Mui-disabled": {
+              color: "#333",
+              WebkitTextFillColor: "#333",
+            },
+          }}
+          onBlur={onBlur}
+          tabIndex={tabIndex ? tabIndex : undefined}
+          type={type}
+          // disabled={readOnly}
+          required={required}
+          value={value}
+          onChange={(e) => {
+            type === "number"
+              ? setValue(e.target.value)
+              : handleOnChangeforpassword(e, setValue);
+          }}
+          readOnly={readOnly}
+        />
+      </div>
+    </>
+  );
+};
+
+export const LongTextInput = ({
+  name,
+  type,
+  value,
+  setValue,
+  className,
+  readOnly,
+  required = false,
+  disabled = false,
+  tabIndex = null,
+}) => {
+  return (
+    <div className="input-group grid-cols-1 md:grid-cols-2 items-center md:my-0.5 md:px-1 data gap-1">
+      <label className="block text-xs font-bold text-gray-600 mb-1">
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        cla
+        type={type}
+        disabled={disabled}
+        required={required}
+        className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm"
+        value={value}
+        onChange={(e) => {
+          type === "number"
+            ? setValue(e.target.value)
+            : handleOnChange(e, setValue);
+        }}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+};
+
+
+export const TextAreaNew = forwardRef(({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  disabled = false,
+  rows = 2,
+  cols = 30,
+  tabIndex = null,
+  label = null,
+  inputClass = "",
+  onBlur = null,
+  onKeyDown = null,
+}, ref) => {
+
+  return (
+    <div className="w-full">
+      {name && (
+        <label className="mb-1 block text-[12px] font-bold text-gray-600">
+          {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
+        </label>
+      )}
+
+      <textarea
+        ref={ref}
+        id={name}
+        name={name}
+        rows={rows}
+        cols={cols}
+        disabled={disabled}
+        required={required}
+        readOnly={readOnly}
+        value={value}
+        onChange={(e) => handleOnChange(e, setValue)}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        placeholder={name}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-y
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${inputClass}`}
+      />
+    </div>
+  );
+});
+
+export const DisabledInput = ({
+  name,
+  type,
+  value,
+  className = "",
+  textClassName = "",
+  tabIndex = null,
+}) => {
+  return (
+    <div
+      className={`grid-cols-1 md:grid-cols-3 items-center md:my-0.5 md:px-1  font-size:11.5px ${className}`}
+    >
+      <label
+        className={`md:text-start flex ${className} input-label group-hover:text-blue-600 `}
+      >
+        {name}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        className={`input-field ${textClassName}  p-0.5 focus:outline-none md:col-span-1 border-b border-b-gray-500 group-hover:text-blue-600  text-xs  w-32`}
+        value={value}
+        disabled
+      />
+    </div>
+  );
+};
+
+export const SpecialInput = ({
+  name,
+  type,
+  value,
+  className = "",
+  textClassName = "",
+  tabIndex = null,
+}) => {
+  return (
+    <div
+      className={`flex flex-col  md:my-0.5 md:px-1  font-size:16.5px ${className}  gap-4 border-b border-b-gray-500 w-32 `}
+    >
+      <label
+        className={`md:text-start flex ${className}  group-hover:text-blue-600  w-32`}
+      >
+        {name}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        className={` ${textClassName}   focus:outline-none md:col-span-1  group-hover:text-blue-600  text-xs  w-32`}
+        value={value}
+      />
+    </div>
+  );
+};
+
+export const FloatingLabelInput = ({
+  label,
+  type = "text",
+  required = false,
+  value,
+  setValue,
+  autoFocus = false,
+  disabled = false,
+}) => {
+  const [focus, setFocus] = useState(autoFocus);
+  return (
+    <div className="static flex flex-col p-6">
+      <label
+        className={
+          focus || value
+            ? "z-0 absolute -translate-y-6 duration-300 "
+            : "absolute mx-1 duration-300 text-gray-400"
+        }
+      >
+        {label}
+      </label>
+      <input
+        disabled={disabled}
+        id={label}
+        type={type}
+        className="z-10 transparent border-2 rounded"
+        required={required}
+        value={value}
+        onFocus={(e) => setFocus(true)}
+        onBlur={(e) => setFocus(false)}
+        onChange={(e) => {
+          setValue(e.target.value);
+        }}
+        autoFocus={autoFocus}
+      />
+    </div>
+  );
+};
+
+export const LongDisabledInput = ({
+  name,
+  type,
+  value,
+  className,
+  tabIndex = null,
+}) => {
+  return (
+    <div
+      className={` grid-flow-col  items-center md:my-0.5 md:px-1 data ${className}`}
+    >
+      <label className={`md:text-start flex ${className} `}>{name}</label>
+      <input
+        type={type}
+        className={`h-6 border border-gray-500 rounded`}
+        value={value}
+        disabled
+      />
+    </div>
+  );
+};
+
+export const TextArea = forwardRef(({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  disabled = false,
+  rows = 3,
+  cols = 30,
+  tabIndex = null,
+  label = null,
+  inputClass = "",
+  onBlur = null,
+  onKeyDown
+}, ref) => {
+  return (
+    <div className="mb-1 w-full">
+      {name && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ?? name} /> : (label ?? name)}
+        </label>
+      )}
+
+      <textarea
+        ref={ref}
+        id={name}
+        name={name}
+        rows={rows}
+        cols={cols}
+        tabIndex={tabIndex ?? undefined}
+        disabled={disabled}
+        required={required}
+        readOnly={readOnly}
+        value={value}
+        onChange={(e) => handleOnChange(e, setValue)}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        placeholder={name}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm resize-none
+          ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"}
+          ${inputClass}`}
+      ></textarea>
+    </div>
+  );
+});
+
+
+// export const DropdownInput = ({
+//   name,
+//   beforeChange = () => { },
+//   onBlur = null,
+//   options,
+//   value,
+//   setValue,
+//   defaultValue,
+//   className = "",
+//   readOnly = false,
+//   required = false,
+//   disabled = false,
+//   clear = false,
+//   tabIndex = null,
+//   autoFocus = false,
+//   width = "full",
+//   country
+// }) => {
+//   const handleOnChange = (e) => {
+//     setValue(e.target.value);
+//   };
+
+//   const isDisabled = readOnly || disabled;
+//   console.log(options, "options in dropdown", value);
+
+//   return (
+//     <div className={`mb-2 ${width}`}>
+//       {name && (
+//         <label className="block text-xs font-bold text-slate-700 mb-1">
+//           {required ? <RequiredLabel name={name} /> : name}
+//         </label>
+//       )}
+//       <select
+//         onBlur={onBlur}
+//         autoFocus={autoFocus}
+//         tabIndex={tabIndex ?? undefined}
+//         defaultValue={defaultValue}
+//         required={required}
+//         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+//           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+//           transition-all duration-150 shadow-sm
+
+//           ${className}`}
+//         value={value}
+//         onChange={(e) => {
+//           beforeChange();
+//           handleOnChange(e);
+//         }}
+//         disabled={isDisabled}
+//       >
+//         <option value="" hidden={!clear} className="text-gray-800">
+//           Select {name || "option"}
+//         </option>
+//         {options?.map((option, index) => (
+//           <option
+//             key={index}
+//             value={option.value}
+//             className="text-xs py-1 text-gray-800"
+//           >
+//             {option.show}
+//           </option>
+//         ))}
+//       </select>
+//     </div>
+//   );
+// };
+
+
+export const DropdownInput = forwardRef(({
+  name,
+  beforeChange = () => { },
+  onBlur = null,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className = "",
+  readOnly = false,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+  autoFocus = false,
+  width = "full",
+  country,
+  openOnFocus = false,   // new prop
+}, ref) => {
+
+
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+
+  const isDisabled = readOnly || disabled;
+
+  useEffect(() => {
+    if (ref?.current && openOnFocus) {
+      ref.current.focus();
+
+    }
+  }, [openOnFocus]);
+
+
+  return (
+    <div className={` ${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? <RequiredLabel name={name} /> : name}
+        </label>
+      )}
+      <select
+        ref={ref}
+        onBlur={onBlur}
+        autoFocus={autoFocus}
+        tabIndex={tabIndex ?? undefined}
+        defaultValue={defaultValue}
+        required={required}
+        // readOnly={readOnly}
+        disabled={isDisabled}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm ${isDisabled ? "bg-gray-100" : ""
+          } 
+          ${className}`}
+        value={value}
+        onChange={(e) => {
+          beforeChange();
+          handleOnChange(e);
+        }}
+        onFocus={(e) => {
+          if (openOnFocus) {
+            e.target.click();
+          }
+        }}
+      >
+        <option value="" hidden={!clear} className="text-gray-800">
+          Select
+        </option>
+        {options?.map((option, index) => (
+          <option
+            key={index}
+            value={option.value}
+            className="text-xs py-1 text-gray-800"
+          >
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+});
+
+export const DropdownInputSearch = ({
+  name,
+  options,
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  placeholder = "Select",
+}) => {
+  const customStyles = {
+    control: (base) => ({
+      ...base,
+      minHeight: "30px",
+      height: "28px",
+      borderRadius: "6px",
+      fontSize: "13px",
+      borderColor: "#d1d5db",
+      padding: "0",
+      backgroundColor: readOnly || disabled ? "#f3f4f6" : "#ffffff",
+    }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#f3f4f6" : "#ffffff",
+      color: "#111827",
+      fontSize: "11px",
+      paddingTop: "4px",
+      paddingBottom: "4px",
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      padding: "0 6px",
+      height: "28px",
+    }),
+    input: (base) => ({
+      ...base,
+      margin: "0",
+      padding: "0",
+    }),
+    singleValue: (base) => ({
+      ...base,
+      fontSize: "11px",
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: "28px",
+    }),
+  };
+
+  const selectedOption = options?.find((opt) => String(opt.value) === String(value)) || null;
+
+  return (
+    <div className={`block text-xs font-bold text-gray-600 mb-1 ${className}`}>
+      <span className="mb-3">
+        {required ? <RequiredLabel name={name} /> : name}
+      </span>
+      <div className="mt-1">
+        <Select
+          options={options}
+          value={selectedOption}
+          onChange={(opt) => setValue(opt ? opt.value : "")}
+          getOptionLabel={(opt) => opt.show}
+          placeholder={placeholder}
+          isClearable
+          isSearchable
+          filterOption={(option, rawInput) => {
+            if (!rawInput) return true;
+            const words = rawInput.toLowerCase().split(/\s+/).filter(Boolean);
+            const label = (option.label || option.data?.show || "").toLowerCase();
+            return words.every(word => label.includes(word));
+          }}
+          styles={customStyles}
+          menuPortalTarget={typeof document !== "undefined" ? document.body : null}
+          isDisabled={readOnly || disabled}
+        />
+      </div>
+    </div>
+  );
+};
+
+
+
+export const DropdownInputForm = ({
+  name,
+  beforeChange = () => { },
+  onBlur = null,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className,
+  readOnly,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+  autoFocus = false,
+  width = "32",
+}) => {
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+
+  return (
+    <div className="input-group items-center md:my-1 md:px-1 data ">
+      <label className={`md:text-start flex  text-xs ${className}`}>
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <select
+        onBlur={onBlur}
+        autoFocus={autoFocus}
+        tabIndex={tabIndex ? tabIndex : undefined}
+        defaultValue={defaultValue}
+        id="dd"
+        required={required}
+        name="name"
+        className={` md:col-span-2 col-span-1 px-3  focus:outline-none focus:ring-2 focus:ring-blue-400 border border-gray-300 w-${width}`}
+        value={value}
+        onChange={(e) => {
+          beforeChange();
+          handleOnChange(e);
+        }}
+        disabled={readOnly}
+      >
+        <option value="" hidden={!clear}>
+          Select
+        </option>
+        {options?.map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export const LongDropdownInput = ({
+  name,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className,
+  readOnly,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+}) => {
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+  return (
+    <div className=" grid-cols-12 items-center md:my-1 md:px-1 data">
+      <label className={`text-start col-span-2 `}>
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <select
+        tabIndex={tabIndex || undefined}
+        defaultValue={defaultValue}
+        id="dd"
+        required={required}
+        name="name"
+        className={`border border-gray-500 h-6 rounded ${className} col-span-10`}
+        value={value}
+        onChange={handleOnChange}
+        disabled={readOnly || disabled}
+      >
+        <option value="">Select</option>
+        {(Array.isArray(options) ? options : []).map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export const RadioButton = ({
+  label,
+  value,
+  onChange,
+  readOnly,
+  className,
+  tabIndex = null,
+}) => {
+  return (
+    <div className={`flex items-center gap-1 ${className}`}>
+      <input
+        type="radio"
+        tabIndex={tabIndex ? tabIndex : undefined}
+        checked={value}
+        onChange={onChange}
+      />
+      <label>{label}</label>
+    </div>
+  );
+};
+
+export const DropdownInputWithoutLabel = ({
+  options,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  disabled = false,
+  tabIndex = null,
+}) => {
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+  return (
+    <div className=" grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data">
+      <select
+        tabIndex={tabIndex ? tabIndex : undefined}
+        required={required}
+        name="name"
+        className="input-field md:col-span-2 border col-span-1 rounded"
+        value={value}
+        onChange={(e) => {
+          handleOnChange(e);
+        }}
+        disabled={readOnly}
+      >
+        <option value="" hidden>
+          Select
+        </option>
+        {options.map((option, index) => (
+          <option key={index} value={option.value}>
+            {option.show}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+export const CurrencyInput = ({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  disabled = false,
+  tabIndex = null,
+}) => {
+  const handleOnChange = (e) => {
+    setValue(e.target.value);
+  };
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 items-center md:my-1 md:px-1 data">
+      <label htmlFor="id" className="md:text-start flex">
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type="number"
+        disabled={disabled}
+        required={required}
+        className=" focus:outline-none md:col-span-2  rounded"
+        min="1"
+        step="any"
+        id="id"
+        value={value}
+        onChange={(e) => {
+          handleOnChange(e);
+        }}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+};
+
+const RequiredLabel = ({ name }) => (
+  <p>
+    {`${name}`}
+    <span className="text-red-500">*</span>{" "}
+  </p>
+);
+
+export const DateInput = ({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  type = "date",
+  disabled = false,
+  tabIndex = null,
+  inputClass = "",
+  inputHead = null,
+}) => {
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <label
+        htmlFor={name}
+        className={`text-[12px] font-bold text-gray-600 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+          }`}
+      >
+        {inputHead ?? name}
+      </label>
+
+      <div className="relative">
+        <input
+          id={name}
+          name={name}
+          type={type}
+          tabIndex={tabIndex}
+          disabled={disabled}
+          required={required}
+          readOnly={readOnly}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className={`
+            w-full px-2 py-1 text-[12px] 
+            border border-gray-300 rounded-md
+            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
+            transition-all duration-200
+            text-gray-700
+            ${readOnly ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+            ${inputClass}
+          `}
+        />
+      </div>
+    </div>
+  );
+};
+
+
+export const DateInputNew = forwardRef(({
+  name,
+  value,
+  setValue,
+  readOnly,
+  required = false,
+  type = "",
+  disabled = false,
+  tabIndex = null,
+  inputClass,
+  inputHead,
+  className,
+  nextRef
+}, ref) => {
+  const today = new Date().toISOString().split("T")[0];
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+
+
+
+  const handleFocus = () => {
+    // Only attempt to show picker if browser supports it
+    if (type === "date" && ref?.current?.showPicker) {
+      ref.current.showPicker();
+    }
+  };
+
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     console.log("Enter pressed!");
+  //     ref?.current?.showPicker();
+  //   }
+  // };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      if (!pickerOpen) {
+        // First Enter → open the date picker
+        ref.current?.showPicker();
+        setPickerOpen(true);
+      } else {
+        // Second Enter → remove focus (close picker)
+        ref.current?.blur(); // removes focus
+        setPickerOpen(false);
+      }
+    }
+  };
+  return (
+    <div className="grid-cols-1 md:grid-cols-3 items-center md:px-1">
+      {name && (
+        <label className={` block text-[12px] font-bold text-slate-700 ${required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ""
+          }`}>
+          {name}
+        </label>
+      )}
+      <input
+        ref={ref}
+        tabIndex={tabIndex ?? undefined}
+        type={type}
+        disabled={disabled}
+        required={required}
+        min={type === "date" ? today : undefined}
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} ${className}`}
+        id="id"
+        value={value}
+        onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+
+        onChange={(e) => {
+          setValue(e.target.value)
+
+          nextRef?.current?.focus()
+        }}
+        readOnly={readOnly}
+
+
+      />
+    </div>
+  );
+});
+
+
+export const LongDateInput = ({
+  name,
+  value,
+  setValue,
+  readOnly,
+  className,
+  required = false,
+  type = "date",
+  disabled = false,
+  tabIndex = null,
+}) => {
+
+
+
+  return (
+    <div className=" grid-flow-col item-center justify-center gap-12 w-56 items-center md:px-1 data">
+      <label htmlFor="id" className="md:text-start flex">
+        {required ? <RequiredLabel name={name} /> : `${name}`}
+      </label>
+      <input
+        tabIndex={tabIndex ? tabIndex : undefined}
+        type={type}
+        disabled={disabled}
+        required={required}
+        className={`${className} focus:outline-none border border-gray-500 form-border-color rounded h-6`}
+        id="id"
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value);
+        }}
+        readOnly={readOnly}
+      />
+    </div>
+  );
+};
+
+export const CheckBox = ({
+  name,
+  value,
+  setValue,
+  readOnly = false,
+  className,
+  required = false,
+  disabled = false,
+  tabIndex = null,
+}) => {
+  const handleOnChange = (e) => {
+    setValue(!value);
+  };
+
+  return (
+    <div className="items-center md:my-1 md:px-1 data text-xs ">
+      <label
+        htmlFor="id"
+        className={`md:text-start items-center ${className}  text-xs`}
+      >
+        <input
+          tabIndex={tabIndex ? tabIndex : undefined}
+          type="checkbox"
+          required={required}
+          className="mx-2 py-2"
+          checked={value}
+          onChange={(e) => {
+            handleOnChange(e);
+          }}
+          disabled={readOnly}
+        />
+        {name}
+      </label>
+    </div>
+  );
+};
+
+export const validateEmail = (data) => {
+  // return validator.isEmail(data);
+  return true
+
+};
+
+export const validateMobile = (data) => {
+  let regMobile = /^[6-9]\d{9}$/;
+  return regMobile.test(data);
+};
+
+export const validatePan = (data) => {
+  let regpan = /^([a-zA-Z]){5}([0-9]){4}([a-zA-Z]){1}?$/;
+  return regpan.test(data);
+};
+
+export const validatePincode = (data) => {
+  return data.toString().length === 6;
+};
+
+// export const DropdownWithSearch = ({
+//   className,
+//   options,
+//   value,
+//   setValue,
+//   readOnly,
+//   disabled,
+//   required = false,
+
+//   labelField,
+//   label,
+// }) => {
+//   console.log(options, "options");
+
+//   const dispatch = useDispatch();
+
+
+//   const [currentIndex, setCurrentIndex] = useState("");
+//   useEffect(() => setCurrentIndex(new Date()), []);
+//   useEffect(() => {
+//     const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
+//     dropDownElement.addEventListener("keydown", function (ev) {
+//       var focusableElementsString = '[tabindex="0"]';
+//       let ol = dropDownElement.querySelectorAll(focusableElementsString);
+//       if (ev.key === "ArrowDown") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       } else if (ev.key === "ArrowUp") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = ol[i - 1];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       }
+//     });
+
+//     return () => {
+//       dropDownElement.removeEventListener("keydown", () => { });
+//     };
+//   }, [currentIndex]);
+
+//   return (
+//     <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
+//       {label && (
+//         <label className="block text-xs font-bold text-slate-700 mb-1">
+//           {required ? <RequiredLabel name={label} /> : `${label}`}
+
+//         </label>
+//       )}
+//       <select
+//         // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+//         className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+//           focus:border-indigo-300 focus:outline-none transition-all duration-200
+//           hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+//           } ${className}`}
+
+//         disabled={readOnly}
+//         readOnly={readOnly}
+//         value={value || ""}
+//         onChange={(e) => {
+//           setValue(e.target.value)
+//         }}
+//       >
+//         {/* {!value && <option value="">Select {optionName}</option>} */}
+
+//         <option value={""}>Select</option>
+//         {(options || []).map((option) => (
+//           <option key={option.id} value={option.id} classname>
+//             {option[labelField]}
+//           </option>
+//         ))}
+//       </select>
+//     </div>
+//   );
+// };
+
+
+export const DropdownWithSearch = forwardRef(({
+  className,
+  options,
+  value,
+  setValue,
+  readOnly,
+  disabled,
+  required = false,
+  labelField,
+  label,
+  nextRef = null,
+  classNameForOptions  // 👈 next input ref
+}, ref) => {
+
+  // 👈 next input ref
+  console.log(classNameForOptions, "classNameForOptions")
+
+  const [currentIndex, setCurrentIndex] = useState("");
+  useEffect(() => setCurrentIndex(Date.now()), []);
+
+  useEffect(() => {
+    const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
+    if (!dropDownElement) return;
+
+    const handleKeyDown = (ev) => {
+      if (ev.key === "Enter" || ev.key === "Tab") {
+        if (nextRef?.current) {
+          nextRef.current.focus();
+          ev.preventDefault();
+        }
+      }
+    };
+
+    dropDownElement.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      dropDownElement.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [currentIndex, nextRef]);
+
+  return (
+    <div id={`dropdown${currentIndex}`} className={``}>
+      {label && (
+        <label className="mb-1 block text-[12px] font-bold text-slate-700">
+          {required ? <RequiredLabel name={label} /> : `${label}`}
+        </label>
+      )}
+      <select
+        ref={ref}
+        className={`w-full px-2 py-1.5 text-xs border border-slate-300 rounded-md 
+    focus:border-indigo-300 focus:outline-none transition-all duration-200
+    hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""} 
+    ${className}`}
+        disabled={disabled}
+        readOnly={readOnly}
+        value={value || ""}
+        onChange={(e) => setValue(e.target.value)}
+      >
+        <option value="">Select</option>
+        {(options || []).map((option) => (
+          <option
+            key={option.id}
+            value={option.id}
+          >
+            <span></span>   {option[labelField]}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+});
+
+
+export const DropdownWithSearchNew = ({
+  className,
+  options,
+  value,
+  setValue,
+  readOnly,
+  disabled,
+  required = false,
+  optionValue,
+  labelField,
+  label,
+}) => {
+  console.log(options, "options");
+
+  const dispatch = useDispatch();
+
+
+  const [currentIndex, setCurrentIndex] = useState("");
+  useEffect(() => setCurrentIndex(new Date()), []);
+  useEffect(() => {
+    const dropDownElement = document.getElementById(`dropdown${currentIndex}`);
+    dropDownElement.addEventListener("keydown", function (ev) {
+      var focusableElementsString = '[tabindex="0"]';
+      let ol = dropDownElement.querySelectorAll(focusableElementsString);
+      if (ev.key === "ArrowDown") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      } else if (ev.key === "ArrowUp") {
+        for (let i = 0; i < ol.length; i++) {
+          if (ol[i] === ev.target) {
+            let o = ol[i - 1];
+            o.focus();
+            break;
+          }
+        }
+        ev.preventDefault();
+      }
+    });
+
+    return () => {
+      dropDownElement.removeEventListener("keydown", () => { });
+    };
+  }, [currentIndex]);
+
+  return (
+    <div id={`dropdown${currentIndex}`} className={`${className} mb-2`}>
+      {label && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? <RequiredLabel name={label} /> : `${label}`}
+
+        </label>
+      )}
+      <select
+        // className="border border-gray-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+          } ${className}`}
+
+        disabled={disabled}
+        readOnly={readOnly}
+        value={value || ""}
+        onChange={(e) => {
+          setValue(e.target.value)
+        }}
+      >
+        {/* {!value && <option value="">Select {optionName}</option>} */}
+
+        <option value={""}>Select</option>
+        {(options || []).map((option) => (
+          <option key={option[optionValue]} value={option[optionValue]} classname>
+            {option[labelField]}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// export const Modal = ({ isOpen, onClose = null, children, widthClass }) => {
+//   if (!isOpen) return null;
+
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center  justify-center overflow-auto bg-gray-800 bg-opacity-50 mb-5">
+//       <div className={`relative bg-white rounded-lg ${widthClass}`}>
+//         {onClose ? (
+//           <button
+//             className="absolute top-0 hover:bg-red-400 right-0 m-4 text-gray-600 hover:text-gray-800 focus:outline-none mb-5"
+//             onClick={onClose}
+//           >
+//             <svg
+//               className="h-6 w-6 fill-current "
+//               viewBox="0 0 20 20"
+//               xmlns="http://www.w3.org/2000/svg"
+//             >
+//               <title>Close</title>
+//               <path
+//                 d="M14.348 5.652a.999.999 0 00-1.414 0L10 8.586l-2.93-2.93a.999.999 0 10-1.414 1.414L8.586 10l-2.93 2.93a.999.999 0 101.414 1.414L10 11.414l2.93 2.93a.999.999 0 101.414-1.414L11.414 10l2.93-2.93a.999.999 0 000-1.414z"
+//                 fillRule="evenodd"
+//               />
+//             </svg>
+//           </button>
+//         ) : (
+//           ""
+//         )}
+//         {children}
+//       </div>
+//     </div>
+//   );
+// };
+
+export const ToggleButton = forwardRef(({
+  name,
+  value,
+  setActive,
+  required,
+  readOnly,
+  disabled = false,
+  onKeyDown,
+}, ref) => {
+  const [isToggled, setIsToggled] = useState(false);
+  const labelRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      labelRef.current?.focus();
+    }
+  }));
+
+  useEffect(() => {
+    if (value) {
+      setIsToggled(true);
+    } else {
+      setIsToggled(false);
+    }
+  }, [value, isToggled]);
+
+
+
+  return (
+    <div>
+      <div className="">
+        {name && (
+          <label className={`block  font-bold text-slate-700 mb-1 text-xs`}>
+            {required ? <RequiredLabel name={name} /> : `${name}`}
+          </label>
+        )}
+
+        <div className="flex items-center mt-1">
+          <label className="relative inline-flex items-center cursor-pointer"
+            ref={labelRef}
+            tabIndex={0}
+
+            onKeyDown={(e) => {
+              // Handle Space or Enter to toggle
+              if ((e.key === ' ' || e.key === 'Enter') && !readOnly && !disabled) {
+                e.preventDefault();
+                setIsToggled(!isToggled);
+                setActive(!value);
+              }
+              // ✅ Call parent's onKeyDown if provided
+              if (onKeyDown) {
+                onKeyDown(e);
+              }
+            }}
+          >
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={isToggled}
+              onChange={() => {
+                if (!readOnly) {
+                  setIsToggled(!isToggled);
+                  setActive(!value);
+                }
+              }}
+              disabled={disabled}
+              required
+              tabIndex={-1}
+
+            />
+            <div className="w-12 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 peer transition duration-300"></div>
+            <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full peer-checked:translate-x-6 transition-transform duration-300 shadow-sm"></div>
+          </label>
+
+          <span className="ml-2 block text-xs font-bold text-gray-600">
+            {value ? "Active" : "Inactive"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+
+const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+export function isValidPAN(pan) {
+  return panRegex.test(pan.toUpperCase());
+}
+
+
+
+export const ReusableTable = ({
+  columns,
+  data,
+  onView,
+  onEdit,
+  onDelete,
+  emptyStateMessage = 'No data available',
+  rowActions = true,
+  itemsPerPage = 15,
+  width,
+  childRecordLabel = "",
+  heightClass = "h-[calc(100%-0.75rem)]",
+  printData,
+  enableSearch,
+  enableExcel
+}) => {
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [columnFilters, setColumnFilters] = useState({});
+  const [currentItemsPerPage, setCurrentItemsPerPage] = useState(itemsPerPage === 15 ? 16 : itemsPerPage);
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  const filteredData = data?.filter(item => {
+    const matchesColumns = Object.keys(columnFilters).every(colHeader => {
+      const filterVal = columnFilters[colHeader];
+      if (!filterVal) return true;
+
+      const column = columns.find(c => c.header === colHeader);
+      if (!column) return true;
+
+      const value = column.accessor(item);
+      return String(value || "").toLowerCase().includes(filterVal.toLowerCase());
+    });
+
+    if (!matchesColumns) return false;
+
+    if (statusFilter === 'Active') return item.active === true || item.active === 'Y' || item.active === 'Yes';
+    if (statusFilter === 'Inactive') return item.active === false || item.active === 'N' || item.active === 'No' || !item.active;
+
+    return true;
+  }) || [];
+
+  const totalPages = Math?.ceil(filteredData?.length / currentItemsPerPage);
+  const indexOfLastItem = currentPage * currentItemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - currentItemsPerPage;
+  const currentItems = filteredData?.slice(indexOfFirstItem, indexOfLastItem);
+  const [hoveredDeleteId, setHoveredDeleteId] = useState(null);
+
+
+  const { hasPermission } = usePermissionForUsers()
+
+  // console.log(hasPermission, "permission")
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const Pagination = () => {
+    return (
+      <div className="h-10 shrink-0 flex w-full flex-col items-center justify-between border-t border-gray-200 bg-white p-2 sm:flex-row">
+        <div className="mb-2 text-sm text-gray-600 sm:mb-0 flex items-center gap-2">
+          <span>Showing {filteredData?.length ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, filteredData?.length || 0)} of {filteredData?.length || 0} entries</span>
+          <select
+            value={currentItemsPerPage}
+            onChange={(e) => {
+              setCurrentItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border border-gray-300 rounded px-1 py-0.5 text-sm outline-none focus:border-indigo-500 cursor-pointer"
+          >
+            <option value={16}>16</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={500}>500</option>
+
+          </select>
+          {enableExcel && (
+            <button
+              onClick={() => {
+                const excelData = (filteredData || []).map((item) => {
+                  const rowData = {};
+                  columns.forEach((col) => {
+                    if (col.header) {
+                      let val = "";
+                      if (typeof col.exportAccessor === "function") {
+                        val = col.exportAccessor(item);
+                      } else if (typeof col.accessor === "function") {
+                        val = col.accessor(item);
+                        if (React.isValidElement(val)) {
+                          if (col.header.toLowerCase() === "status") {
+                            val = item.active ? "Active" : "Inactive";
+                          } else {
+                            val = "";
+                          }
+                        } else if (Array.isArray(val)) {
+                          val = val.join(", ");
+                        } else if (val && typeof val === "object") {
+                          val = "";
+                        }
+                      }
+                      rowData[col.header] = val;
+                    }
+                  });
+                  return rowData;
+                });
+                exportFileToCsv("Export", excelData, "Master_Export", "Pinnacle");
+              }}
+              className="ml-2 px-2 py-0.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition flex items-center gap-1"
+            >
+              <FaFileExcel />
+              Export
+            </button>
+          )}
+
+        </div>
+        <div className="flex gap-1">
+          <button
+            onClick={() => handlePageChange(1)}
+            disabled={currentPage === 1}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="First Page"
+          >
+            <FaStepBackward size={12} className="inline" />
+          </button>
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Previous Page"
+          >
+            <FaChevronLeft className="inline" />
+          </button>
+
+          {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+
+            return (
+              <button
+                key={pageNum}
+                onClick={() => handlePageChange(pageNum)}
+                className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === pageNum
+                  ? 'bg-indigo-800 text-white'
+                  : 'bg-white text-gray-600 hover:bg-gray-100'
+                  }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <span className="px-2 py-1">...</span>
+          )}
+
+          {totalPages > 5 && currentPage < totalPages - 2 && (
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                ? 'bg-indigo-800 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-100'
+                }`}
+            >
+              {totalPages}
+            </button>
+          )}
+
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Next Page"
+          >
+            <FaChevronRight className="inline" />
+          </button>
+          <button
+            onClick={() => handlePageChange(totalPages)}
+            disabled={currentPage === totalPages}
+            className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-white text-gray-600 hover:bg-gray-100'
+              }`}
+            title="Last Page"
+          >
+            <FaStepForward size={12} className="inline" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+
+
+  return (
+    <>
+      <div className={`flex min-h-0 flex-col overflow-hidden bg-[#F1F1F0] ${heightClass}`}>
+        <div className="min-h-0 flex-1 overflow-auto">
+          <table className="table-auto">
+            <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
+
+              <tr>
+                {columns?.map((column, index) => (
+                  <th
+                    key={index}
+                    className={` font-medium text-gray-900 py-2 text-[12px] px-8 text-center uppercase  ${column.header !== "" ? "border-r border-white/50" : ""
+                      } `}
+                  >
+                    {column.header}
+                  </th>
+                ))}
+
+                {rowActions && (
+                  <th className="px-4 py-2 text-center text-[12px] font-medium justify-end">
+                    ACTIONS
+                  </th>
+                )}
+              </tr>
+              {(enableSearch || columns?.some(c => c.header === "Status")) && (
+                <tr>
+                  {columns?.map((column, index) => (
+                    <th key={`search-${index}`} className={`px-2 py-1 ${column.header !== "" ? "border-r border-white/50" : ""}`}>
+                      {column.header === "Status" ? (
+                        <select
+                          className="w-full text-[12px] font-normal px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500 bg-white"
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                          <option value="All">All</option>
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      ) : column.enableSearch && (
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          className="w-full text-[12px] font-normal uppercase px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500"
+                          value={columnFilters[column.header] || ""}
+                          onChange={(e) => {
+                            e.preventDefault()
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [column.header]: e.target.value,
+                            }))
+                          }}
+                        />
+                      )}
+                    </th>
+                  ))}
+                  {rowActions && <th></th>}
+                </tr>
+              )}
+
+
+
+
+
+            </thead>
+            <tbody>
+              {currentItems?.length === 0 ? (
+                <tr>
+                  <td colSpan={columns?.length + (rowActions ? 1 : 0)} className="px-4 py-4 text-center text-gray-500">
+                    {emptyStateMessage}
+                  </td>
+                </tr>
+              ) : (
+                currentItems?.map((item, index) => {
+
+                  const hasChildRecords = childRecordCount(item?._count) > 0
+
+
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-gray-50 transition-colors border-b   border-gray-200 text-[12px] ${index % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
+                    >
+
+                      {columns?.map((column, colIndex) => (
+                        <td
+                          key={colIndex}
+                          className={` ${column.className ? column.className : ""} ${column.header !== "" ? 'border-r border-white/50' : ''} h-7 px-1.5`}
+                        >
+                          {column.accessor(item, indexOfFirstItem + index)}
+                        </td>
+                      ))}
+                      {rowActions && (
+                        <td className=" w-[30px] border-gray-200 gap-1 px-2   h-8 justify-end">
+                          <div className="flex">
+                            {onView && (
+                              <button
+                                className="text-blue-600  flex items-center   px-1  bg-blue-50 rounded"
+                                onClick={() => hasPermission(() => onView(item.id), "read")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                </svg>
+                              </button>
+                            )}
+                            {onEdit && (
+                              <button
+                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                onClick={() => hasPermission(() => onEdit(item.id), "edit")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                              </button>
+                            )}
+                            <div className="relative inline-block"
+                              onMouseEnter={() =>
+                                setHoveredDeleteId(item.id)
+                              }
+                              onMouseLeave={() => setHoveredDeleteId(null)}
+                            >
+                              {onDelete && (
+                                <button
+                                  className="text-red-800 flex items-center gap-1 px-1 bg-red-50 rounded disabled:opacity-50"
+                                  onClick={() =>
+                                    hasPermission(() => onDelete(item.id), "delete", item?._count)
+                                  }
+                                  disabled={hasChildRecords}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-4 w-4"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+                              {console.log(childRecordCount(item?._count > 0), "childRecord")}
+                              {hasChildRecords &&
+                                hoveredDeleteId === item.id && (
+                                  <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-[12px] rounded shadow-lg w-64 z-50">
+                                    Cannot delete. Child records exist.
+                                    {/* <span className="font-semibold">
+                                        {item?.referencedIn ? "in " + item?.referencedIn : ""}
+                                      </span>
+                                      . Please Remove them First.
+                                      <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-1">
+                                        <div className="border-4 border-transparent border-r-gray-900"></div>
+                                      </div> */}
+                                  </div>
+                                )}
+
+                            </div>
+                            {printData && (
+                              <button
+                                className="text-green-600 gap-1 px-1   bg-green-50 rounded"
+                                onClick={() => hasPermission(() => printData(item.id), "edit")}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                                  <rect x="6" y="14" width="12" height="8"></rect>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  )
+
+                }
+
+
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="shrink-0 bg-white">
+          <Pagination />
+        </div>
+      </div>
+
+    </>
+
+
+
+
+
+  );
+};
+
+
+
+// export function ReusableSearchableInput({
+//   label,
+//   placeholder,
+//   onDeleteItem,
+//   optionList,
+//   component,
+//   setSearchTerm,
+//   searchTerm,
+//   readOnly,
+//   ref,
+//   nextRef
+
+// }) {
+//   const companyId = secureLocalStorage.getItem(
+//     sessionStorage.getItem("sessionId") + "userCompanyId"
+//   );
+//   const branchId = secureLocalStorage.getItem(
+//     sessionStorage.getItem("sessionId") + "currentBranchId"
+//   );
+//   const userId = secureLocalStorage.getItem(
+//     sessionStorage.getItem("sessionId") + "userId"
+//   ); const {
+//     data: partyList,
+//     isLoading: isPartyLoading,
+//     isFetching: isPartyFetching,
+//   } = useGetPartyQuery({params: {companyId, userId} });
+//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+//   const [tooltipVisible, setTooltipVisible] = useState(false);
+//   const [editingItem, setEditingItem] = useState("");
+//   const containerRef = useRef(null);
+//   const modal = useModal();
+//   const [openModel, setOpenModel] = useState(false)
+//   const {openAddModal} = modal || { };
+//   const [search, setSearch] = useState("");
+//   const [filteredPages, setFilteredPages] = useState([]);
+
+//   const [isListShow, setIsListShow] = useState(false);
+//   const inputRef = useOutsideClick(() => {
+//     setIsListShow(false);
+//   });
+
+//   console.log(optionList, "optionList")
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (containerRef.current && !containerRef.current.contains(event.target)) {
+//         setIsDropdownOpen(false);
+//       }
+//     };
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => document.removeEventListener('mousedown', handleClickOutside);
+//   }, []);
+
+
+
+//   const handleEdit = (id, e) => {
+//     e.stopPropagation();
+//     setEditingItem(id);
+//     setIsDropdownOpen(false);
+//     setOpenModel(true)
+//   };
+
+//   const handleDelete = (itemId, e) => {
+//     onDeleteItem(itemId);
+//   };
+
+
+//   useEffect(() => {
+//     if (!partyList) return;
+//     if (!search) {
+//       setFilteredPages(partyList?.data);
+//     }
+//     setFilteredPages(
+//       partyList?.data?.filter((page) =>
+//         page?.code?.toLowerCase().includes(search.toLowerCase())
+//       )
+//     );
+//   }, [search, partyList, isPartyFetching, isPartyLoading]);
+
+
+//   useEffect(() => {
+//     let pageSearchComponent = document.getElementById("pageSearch");
+//     if (!pageSearchComponent) return;
+//     pageSearchComponent.addEventListener("keydown", function (ev) {
+//       var focusableElementsString = '[tabindex="0"]';
+//       let ol = document.querySelectorAll(focusableElementsString);
+//       if (ev.key === "ArrowDown") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       } else if (ev.key === "ArrowUp") {
+//         for (let i = 0; i < ol.length; i++) {
+//           if (ol[i] === ev.target) {
+//             let o = ol[i - 1];
+//             o.focus();
+//             break;
+//           }
+//         }
+//         ev.preventDefault();
+//       }
+//     });
+//     return () => {
+//       pageSearchComponent.removeEventListener("keydown", () => { });
+//     };
+//   }, []);
+
+//   return (
+//     <>
+//       <Modal
+//         isOpen={openModel}
+//         onClose={() => setOpenModel(false)}
+//         widthClass={"w-[10%] h-[10%]"}
+//       >
+//         <DynamicRenderer componentName={component} editingItem={editingItem} onCloseForm={() => setOpenModel(false)} />
+//       </Modal>
+
+
+//       <div className="relative text-sm w-full" id="pageSearch" ref={ref}>
+//         <label className="block text-xs font-bold text-slate-700 mb-1">{label}</label>
+
+//         <div className="flex gap-2">
+//           <div className="relative flex-grow">
+//             <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+//             {isListShow ? (
+//               <input
+//                 className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+//               focus:border-indigo-300 focus:outline-none transition-all duration-200
+//               hover:border-slate-400 text-gray-800"
+//                 placeholder={placeholder}
+//                 value={search}
+//                 onChange={(e) => {
+//                   // setSearchTerm(e.target.value);
+//                   setIsDropdownOpen(true);
+//                   setSearch(e.target.value)
+//                 }}
+//                 onFocus={() => {
+//                   setIsDropdownOpen(true)
+//                   setIsListShow(true);
+//                 }}
+//                 disabled={readOnly}
+//                 tabIndex={0}
+//                 ref={ref}
+
+//               />
+//             ) :
+//               (
+
+//                 <input
+//                   className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+//                   focus:border-indigo-300 focus:outline-none transition-all duration-200
+//                   hover:border-slate-400 text-gray-800"
+//                   ref={ref}
+//                   placeholder={placeholder}
+//                   value={findFromList(searchTerm, optionList, "code")}
+//                   onChange={(e) => {
+//                     //  setSearchTerm(e.target.value);
+//                     setIsDropdownOpen(true);
+//                     if (e.key === "Enter") {
+//                       e.preventDefault();
+//                       nextRef.current.focus();
+//                       if (nextRef?.current) {
+//                         console.log("Focusing next input ref:", nextRef.current);
+//                         nextRef.current.focus();
+//                       }
+//                     }
+//                   }}
+//                   onFocus={() => {
+//                     setIsDropdownOpen(true)
+//                     setIsListShow(true);
+//                   }}
+//                   disabled={readOnly}
+//                   tabIndex={0}
+
+//                 />
+//               )
+
+//             }
+
+
+//           </div>
+
+//           <div className="relative">
+//             <button
+//               className="h-full px-3 py-1.5 border border-green-500 rounded-md
+//               hover:bg-green-500 text-green-600 hover:text-white transition-colors flex items-center justify-center"
+//               disabled={readOnly}
+//               onClick={() => {
+//                 // openAddModal();
+//                 // setIsDropdownOpen(false);
+//                 setEditingItem("new");
+//                 setOpenModel(true)
+//               }}
+//               onMouseEnter={() => setTooltipVisible(true)}
+//               onMouseLeave={() => setTooltipVisible(false)}
+//               aria-label="Add supplier"
+
+//             >
+//               <FaPlus className="text-sm" />
+//             </button>
+//             {tooltipVisible && (
+//               <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+//                 <div className="flex items-start">
+//                   <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+//                   <span>Click to add a new supplier</span>
+//                 </div>
+//                 <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {isDropdownOpen && (
+//           <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
+//             {optionList?.length > 0 ? (
+//               filteredPages?.map((item) => (
+//                 <div
+//                   key={item.id}
+//                   tabIndex={0}
+//                   className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
+//                   onClick={() => { setSearchTerm(item.id); setIsDropdownOpen(false); setSearch(""); setIsListShow(false) }}
+//                   onKeyDown={(e) => {
+//                     if (e.key === "Enter") {
+//                       setSearchTerm(item.id);
+//                       setSearch("");
+//                       setIsListShow(false);
+//                       setIsDropdownOpen(false);
+
+//                     }
+//                   }}
+//                 >
+//                   <div>
+//                     <div className="font-medium">{item.code}</div>
+
+//                   </div>
+//                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+//                     <button
+//                       className="text-indigo-600 hover:text-indigo-800 p-1"
+//                       onClick={(e) => handleEdit(item?.id, e)}
+//                       title="Edit supplier"
+//                     >
+//                       <FaEdit className="text-sm" />
+//                     </button>
+//                     <button
+//                       className="text-red-600 hover:text-red-800 p-1"
+//                       onClick={(e) => handleDelete(item?.id)}
+//                       title="Delete supplier"
+//                     >
+//                       <FaTrash className="text-sm" />
+//                     </button>
+//                   </div>
+//                 </div>
+//               ))
+//             ) : (
+//               <button
+//                 type="button"
+//                 className="w-full px-3 py-2 text-left text-indigo-600 hover:bg-slate-50 flex items-center gap-2"
+//                 onClick={() => {
+//                   setEditingItem(null);
+//                   setIsDropdownOpen(false);
+//                   openAddModal();
+//                 }}
+//               >
+//                 {/* <FaPlus className="text-xs" />
+//                 Create "{searchTerm}" */}
+//               </button>
+//             )}
+//           </div>
+//         )}
+//       </div>
+//     </>
+
+
+//   );
+// }
+
+
+
+export const ReusableSearchableInput = forwardRef(
+  (
+    {
+      label,
+      placeholder,
+      onDeleteItem,
+      component,
+      setSearchTerm,
+      searchTerm,
+      readOnly,
+      nextRef,
+      required,
+      show,
+      name,
+      disabled,
+      optionList
+    },
+    ref
+  ) => {
+
+    console.log(optionList?.filter(item => item.id == searchTerm), "optionList", searchTerm)
+
+    const companyId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    );
+
+    const userId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userId"
+    );
+
+    const {
+      data: partyList,
+      isLoading: isPartyLoading,
+      isFetching: isPartyFetching,
+    } = useGetPartyQuery({ params: { companyId, userId, isAddressCombined: true, } });
+
+    // Ensure we have a list to resolve names from, prioritizing passed options but falling back to the full party list
+    const effectiveOptionList = partyList?.data || [];
+
+    console.log(effectiveOptionList?.filter(item => item.id == searchTerm), "effectiveOptionList", searchTerm);
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [tooltipVisible, setTooltipVisible] = useState(false);
+    const [editingItem, setEditingItem] = useState("");
+    const containerRef = useRef(null);
+    const modal = useModal();
+    const [openModel, setOpenModel] = useState(false);
+    const { openAddModal } = modal || {};
+    const [search, setSearch] = useState("");
+    const [filteredPages, setFilteredPages] = useState([]);
+    const [isListShow, setIsListShow] = useState(false);
+
+    const inputRef = useOutsideClick(() => {
+      setIsListShow(false);
+    });
+
+    // close dropdown if click outside
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (containerRef.current && !containerRef.current.contains(event.target)) {
+          setIsDropdownOpen(false);
+          setIsListShow(false)
+
+        }
+        console.log(event, "eventevent")
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleEdit = (id, e) => {
+      e.stopPropagation();
+      setEditingItem(id);
+      setIsDropdownOpen(false);
+      setOpenModel(true);
+    };
+
+    const handleDelete = (itemId, e) => {
+      onDeleteItem(itemId);
+    };
+
+    useEffect(() => {
+      if (!partyList) return;
+      if (!search) {
+        setFilteredPages(partyList?.data);
+      }
+      setFilteredPages(
+        partyList?.data?.filter((page) => {
+          return (
+            page?.name?.toLowerCase().includes(search.toLowerCase()) &&
+            page[show]
+          );
+        })
+      );
+    }, [search, partyList, isPartyFetching, isPartyLoading]);
+
+    // Arrow navigation
+    useEffect(() => {
+      let pageSearchComponent = document.getElementById("pageSearch");
+      if (!pageSearchComponent) return;
+      const keyHandler = (ev) => {
+        var focusableElementsString = '[tabindex="0"]';
+        let ol = document.querySelectorAll(focusableElementsString);
+        if (ev.key === "ArrowDown") {
+          for (let i = 0; i < ol.length; i++) {
+            if (ol[i] === ev.target) {
+              let o = i < ol.length - 1 ? ol[i + 1] : ol[0];
+              o.focus();
+              break;
+            }
+          }
+          ev.preventDefault();
+        } else if (ev.key === "ArrowUp") {
+          for (let i = 0; i < ol.length; i++) {
+            if (ol[i] === ev.target) {
+              let o = ol[i - 1];
+              o.focus();
+              break;
+            }
+          }
+          ev.preventDefault();
+        }
+      };
+      pageSearchComponent.addEventListener("keydown", keyHandler);
+      return () => {
+        pageSearchComponent.removeEventListener("keydown", keyHandler);
+      };
+    }, [isDropdownOpen]);
+
+
+    console.log(filteredPages, "filteredPages")
+
+
+    return (
+      <>
+        <Modal
+          isOpen={openModel}
+          onClose={() => setOpenModel(false)}
+          widthClass={"w-[90%] h-[98%] "}
+        >
+          <DynamicRenderer
+            componentName={component}
+            editingItem={editingItem}
+            onCloseForm={() => setOpenModel(false)}
+            show={show}
+          // childId={childId}
+          />
+        </Modal>
+
+        <div className="relative text-sm w-full" id="pageSearch" ref={containerRef}>
+          {/* <label className="block text-xs font-bold text-slate-700 mb-1">
+            {label}
+          </label> */}
+          {label && (
+            <label className="m block text-[12px] font-bold text-gray-600">
+              {required ? <RequiredLabel name={label ? label : name} /> : label}
+            </label>
+          )}
+
+          <div className="flex gap-2">
+            <div className="relative flex-grow">
+              <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+              {isListShow ? (
+                <input
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+              focus:border-indigo-300 focus:outline-none transition-all duration-200
+              hover:border-slate-400 text-gray-800"
+                  placeholder={placeholder}
+                  value={search}
+                  onChange={(e) => {
+                    setIsDropdownOpen(true);
+                    setSearchTerm(e.target.value)
+                  }}
+                  onFocus={(e) => {
+                    // setSearchTerm(e.target.value)
+
+                    setIsDropdownOpen(true);
+                    setIsListShow(true);
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                  ref={ref}
+                />
+              ) : (
+                <input
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border border-slate-300 rounded-md 
+                  focus:border-indigo-300 focus:outline-none transition-all duration-200
+                  hover:border-slate-400 text-gray-800"
+                  ref={ref}
+                  placeholder={placeholder}
+                  value={findFromList(searchTerm, effectiveOptionList, "name")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (nextRef?.current) {
+                        nextRef.current.focus();
+                      }
+                    }
+                  }}
+                  onFocus={() => {
+                    setIsDropdownOpen(true);
+                    setIsListShow(true);
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                />
+              )}
+            </div>
+
+            <div className="relative">
+              <button
+                className="h-full px-3 py-1.5 border border-green-500 rounded-md
+              hover:bg-green-500 text-green-600 hover:text-white transition-colors flex items-center justify-center"
+                disabled={disabled || readOnly}
+                onClick={() => {
+                  setEditingItem("new");
+                  setOpenModel(true);
+                }}
+                onMouseEnter={() => setTooltipVisible(true)}
+                onMouseLeave={() => setTooltipVisible(false)}
+                aria-label="Add supplier"
+              >
+                <FaPlus className="text-sm" />
+              </button>
+              {tooltipVisible && (
+                <div className="absolute  z-10 top-full right-0 mt-1 w-48 bg-indigo-800 text-white text-xs rounded p-2 shadow-lg">
+                  <div className="flex items-start">
+                    <FaInfoCircle className="flex-shrink-0 mt-0.5 mr-1" />
+                    <span>Click to add a new supplier</span>
+                  </div>
+                  <div className="absolute -top-1 right-3 w-2.5 h-2.5 bg-indigo-800 transform rotate-45"></div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {isDropdownOpen && (
+            <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
+              {partyList?.data?.length > 0 ? (
+                filteredPages?.map((item) => (
+                  <div
+                    key={item.id}
+                    tabIndex={0}
+                    className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
+                    onClick={() => {
+                      setSearchTerm(item.id);
+                      setIsDropdownOpen(false);
+                      setSearch("");
+                      setIsListShow(false);
+                      if (nextRef?.current) {
+                        nextRef?.current?.focus();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSearchTerm(item.id);
+                        setSearch("");
+                        setIsListShow(false);
+                        setIsDropdownOpen(false);
+                        if (nextRef?.current) {
+                          e.preventDefault();
+                          nextRef?.current?.focus();
+                        }
+
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                    </div>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        className="text-indigo-600 hover:text-indigo-800 p-1"
+                        onClick={(e) => handleEdit(item?.id, e)}
+                        title="Edit supplier"
+                      >
+                        <FaEdit className="text-sm" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-800 p-1"
+                        onClick={(e) => handleDelete(item?.id)}
+                        title="Delete supplier"
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-indigo-600 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setIsDropdownOpen(false);
+                    openAddModal();
+                  }}
+                >
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+);
+
+
+export const TextInputNew = ({
+  name,
+  label,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+  max,
+  handleChange
+}) => {
+  console.log(max, "max")
+  return (
+    <div className={`mb-2 ${width}`}>
+      {name && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
+        </label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+
+          handleChange ? handleOnChange(e, setValue) : setValue(e.target.value)
+        }
+
+        onBlur={onBlur}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        max={max ? String(max) : undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm
+         
+          ${className}`
+        }
+      />
+      {/* ${readOnly || disabled
+            ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+            : "bg-white hover:border-gray-400"} */}
+    </div>
+  );
+};
+
+export const TextInputNew1 = forwardRef(({
+  name,
+  label,
+  type = "text",
+  value,
+  setValue,
+  readOnly = false,
+  className = "",
+  required = false,
+  disabled = false,
+  tabIndex = null,
+  onBlur = null,
+  width = "full",
+  max,
+  handleChange,
+  onKeyDown,
+  labelHidden = false,
+}, ref) => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const allFocusable = Array.from(
+        document.querySelectorAll(
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+      const idx = allFocusable.indexOf(e.target);
+      if (idx >= 0 && allFocusable[idx + 1]) allFocusable[idx + 1].focus();
+    }
+    if (onKeyDown) onKeyDown(e);
+  };
+  return (
+    <div className={`mb ${width}`}>
+      {(name && !labelHidden) && (
+        <label className="block text-xs font-bold text-gray-600 mb-1">
+          {required ? <RequiredLabel name={label ? label : name} /> : name}
+        </label>
+      )}
+      <input
+        ref={ref}  // ✅ ref attached here
+        type={type}
+        value={value}
+        onChange={(e) => {
+          const val = e.target.value.toUpperCase();
+          setValue(val);
+          if (handleChange) handleChange(val);
+        }}
+        onBlur={onBlur}
+        onKeyDown={handleKeyDown}
+        placeholder={name}
+        readOnly={readOnly}
+        disabled={disabled}
+        tabIndex={tabIndex ?? undefined}
+        maxLength={max ? Number(max) : undefined}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+            ${className}`}
+      />
+    </div>
+  );
+});
+
+export function childRecordCount(count) {
+  if (!count) return false
+  return Object.values(count).some(v => v > 0);
+
+}
+
+export function childRecordCountTotal(count) {
+  if (!count) return 0;
+
+  return Object.values(count).reduce((sum, v) => sum + (v || 0), 0);
+}
+
+
+export const DropdownInputNew = forwardRef(({
+  name,
+  beforeChange = () => { },
+  onBlur = null,
+  options,
+  value,
+  setValue,
+  defaultValue,
+  className = "",
+  readOnly = false,
+  required = false,
+  disabled = false,
+  clear = false,
+  tabIndex = null,
+  autoFocus = false,
+  width = "full",
+  country,
+  openOnFocus = false,
+  show,
+  searchable = false,
+  addNewLabel = "+ Add New",
+  childComponent = null,
+  addNewModalWidth = "w-[40%] h-[45%]",
+  widthClass,
+  nextRef = null,
+}, ref) => {
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showAddNew, setShowAddNew] = useState(false);
+  const [editingOption, setEditingOption] = useState(null);
+  const [deletingOption, setDeletingOption] = useState(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const containerRef = useRef(null);
+  const buttonRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
+  const listRef = useRef(null);
+  const isMouseDownRef = useRef(false);
+
+  const isDisabled = readOnly || disabled;
+  // Use custom dropdown when addNewComponent is provided (native select can't host clickable options)
+  const useCustomDropdown = searchable || !!childComponent;
+
+  // Only provide imperative handle for custom dropdown
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (useCustomDropdown) {
+        buttonRef.current?.focus();
+      }
+    }
+  }), [useCustomDropdown]);
+
+  const handleAddNewSuccess = (newValue) => {
+    beforeChange();
+    setValue(newValue);
+    setShowAddNew(false);
+    setIsOpen(false);
+    setSearch("");
+    if (onBlur) onBlur();
+  };
+
+  const handleDeleteSuccess = () => {
+    if (deletingOption && String(deletingOption.value) === String(value)) {
+      beforeChange();
+      setValue("");
+      if (onBlur) onBlur();
+    }
+    setDeletingOption(null);
+  };
+
+  const updateDropdownPos = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 280; // approx max height (search + list max-h-48 + padding)
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+      setDropdownPos({
+        top: openUpward ? undefined : rect.bottom,
+        bottom: openUpward ? window.innerHeight - rect.top : undefined,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, []);
+
+  // Close on outside click (searchable mode)
+  useEffect(() => {
+    if (!useCustomDropdown) return;
+    const handleClickOutside = (e) => {
+      if (
+        containerRef.current && !containerRef.current.contains(e.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target)
+      ) {
+        setIsOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [useCustomDropdown]);
+
+  // Focus search input when dropdown opens; reset highlight
+  useEffect(() => {
+    if (isOpen && searchRef.current) {
+      searchRef.current.focus();
+    }
+    if (!isOpen) setHighlightedIndex(-1);
+  }, [isOpen]);
+
+  // Reset highlight when search changes
+  useEffect(() => {
+    setHighlightedIndex(-1);
+  }, [search]);
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && listRef.current) {
+      const item = listRef.current.children[highlightedIndex];
+      if (item) item.scrollIntoView({ block: "nearest" });
+    }
+  }, [highlightedIndex]);
+
+  // Reposition dropdown on resize or scroll while open
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleReposition = () => updateDropdownPos();
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+    return () => {
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [isOpen, updateDropdownPos]);
+
+  useEffect(() => {
+    if (ref?.current && openOnFocus) {
+      ref.current.focus();
+    }
+  }, [openOnFocus]);
+
+  // Native select (non-searchable, no addNewComponent)
+  if (!useCustomDropdown) {
+    const handleOnChange = (e) => {
+      setValue(e.target.value);
+    };
+    return (
+      <div className={` ${width}`}>
+        {name && (
+          <label className="block text-xs font-bold text-slate-700 mb-1">
+            {required ? <RequiredLabel name={name} /> : name}
+          </label>
+        )}
+        <select
+          ref={ref}
+          onBlur={onBlur}
+          autoFocus={autoFocus}
+          tabIndex={tabIndex ?? undefined}
+          defaultValue={defaultValue}
+          required={required}
+          className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg
+            focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+            transition-all duration-150 shadow-sm ${readOnly || disabled ? "bg-slate-100" : ""}
+            ${className}`}
+          value={value}
+          onChange={(e) => {
+            beforeChange();
+            handleOnChange(e);
+          }}
+          onFocus={(e) => {
+            if (openOnFocus) {
+              e.target.click();
+            }
+          }}
+          disabled={isDisabled}
+        >
+          <option value="" hidden={!clear} className="text-gray-800">
+            Select
+          </option>
+          {options?.map((option, index) => (
+            <option
+              key={index}
+              value={option.value}
+              className="text-xs py-1 text-gray-800"
+            >
+              {option.show}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  // Custom dropdown (searchable or has addNewComponent)
+  const selectedLabel = options?.find((o) => String(o.value) === String(value))?.show || "";
+  const filtered = (options || []).filter((o) =>
+    String(o.show).toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (optionValue, fromKeyboard = false) => {
+    beforeChange();
+    setValue(optionValue);
+    setIsOpen(false);
+    setSearch("");
+    if (onBlur) onBlur();
+    if (fromKeyboard) {
+      setTimeout(() => {
+        if (nextRef?.current) {
+          nextRef.current.focus();
+        } else {
+          // Fallback: move focus to the next focusable input/select after this dropdown button
+          if (!buttonRef.current) return;
+          const allFocusable = Array.from(
+            document.querySelectorAll(
+              'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled])'
+            )
+          ).filter(el => el.offsetParent !== null);
+          const nextInput = allFocusable.find(
+            el => buttonRef.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+          );
+          if (nextInput) nextInput.focus();
+        }
+      }, 0);
+    }
+  };
+
+  return (
+    <div className={`mb-1 ${width}`} ref={containerRef}>
+      {name && (
+        <label className="block text-xs font-bold text-slate-700 mb-1">
+          {required ? <RequiredLabel name={name} /> : name}
+        </label>
+      )}
+      <button
+        ref={buttonRef}
+        type="button"
+        autoFocus={autoFocus}
+        disabled={isDisabled}
+        tabIndex={tabIndex ?? undefined}
+        onMouseDown={() => { isMouseDownRef.current = true; }}
+        onFocus={() => {
+          if (!isDisabled && !isMouseDownRef.current) {
+            // Keyboard / Tab navigation — open immediately
+            updateDropdownPos();
+            setIsOpen(true);
+          }
+          isMouseDownRef.current = false;
+        }}
+        onKeyDown={(e) => {
+          if (isDisabled) return;
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!isOpen) {
+              updateDropdownPos();
+              setIsOpen(true);
+            }
+            // Focus the search input; ArrowDown/Up on it will then navigate options
+            setTimeout(() => searchRef.current?.focus(), 0);
+          } else if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            updateDropdownPos();
+            setIsOpen((o) => !o);
+          } else if (e.key === "Escape") {
+            setIsOpen(false);
+            setSearch("");
+          }
+        }}
+        onClick={() => {
+          if (!isDisabled) {
+            isMouseDownRef.current = false;
+            updateDropdownPos();
+            setIsOpen((o) => !o);
+          }
+        }}
+        className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-left
+          focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+          transition-all duration-150 shadow-sm flex justify-between items-center
+          ${isDisabled ? "bg-slate-100 cursor-not-allowed" : "bg-white cursor-pointer"}
+          ${className}`}
+      >
+        <span className={selectedLabel ? "text-gray-800" : "text-gray-400"}>
+          {selectedLabel || "Select"}
+        </span>
+        <svg className={`w-3 h-3 text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={{ position: "fixed", top: dropdownPos.top, bottom: dropdownPos.bottom, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+          className="bg-white border border-gray-300 rounded-lg shadow-lg"
+        >
+          <div className="p-1.5 border-b border-gray-200">
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search..."
+              className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.min(i + 1, filtered.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setHighlightedIndex((i) => Math.max(i - 1, 0));
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
+                    handleSelect(filtered[highlightedIndex].value, true);
+                  }
+                } else if (e.key === "Escape") {
+                  setIsOpen(false);
+                  setSearch("");
+                  buttonRef.current?.focus();
+                }
+              }}
+            />
+          </div>
+          <ul ref={listRef} className="max-h-48 overflow-y-auto py-1">
+            {childComponent && !isDisabled && (
+              <li
+                onClick={() => { setIsOpen(false); setSearch(""); setShowAddNew(true); }}
+                className="px-3 py-1.5 text-xs text-blue-600 font-semibold hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+              >
+                {addNewLabel}
+              </li>
+            )}
+            {clear && (
+              <li
+                onClick={() => handleSelect("")}
+                className="px-3 py-1.5 text-xs text-gray-400 hover:bg-blue-50 cursor-pointer"
+              >
+                Select
+              </li>
+            )}
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-xs text-gray-400 text-center">No results</li>
+            ) : (
+              filtered.map((option, index) => (
+                <li
+                  key={index}
+                  onMouseEnter={() => setHighlightedIndex(index)}
+                  className={`group px-3 py-1.5 text-xs cursor-pointer flex justify-between items-center
+                    ${index === highlightedIndex ? "bg-blue-50" : ""}
+                    ${String(option.value) === String(value) ? "bg-blue-100 font-semibold text-blue-700" : "text-gray-800"}`}
+                >
+                  <span onClick={() => handleSelect(option.value)} className="flex-1 truncate">{option.show}</span>
+                  {(childComponent || childComponent) && !isDisabled && (
+                    <span className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {childComponent && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setIsOpen(false); setSearch(""); setEditingOption(option); }}
+                          className="p-0.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded"
+                        >
+                          <FaEdit size={10} />
+                        </button>
+                      )}
+                      {childComponent && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            console.log(option, "option")
+                            if (childRecordCount(option?._count)) {
+                              Swal.fire({
+                                title: `Child Record Exists`,
+                                icon: "warning",
+                              });
+                              return;
+                            }
+                            e.stopPropagation(); setIsOpen(false); setSearch(""); setDeletingOption(option)
+                          }}
+                          className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        >
+                          <FaTrash size={10} />
+                        </button>
+                      )}
+                    </span>
+                  )}
+                </li>
+              ))
+            )}
+          </ul>
+        </div>,
+        document.body
+      )}
+      {showAddNew && childComponent && (() => {
+        const AddNew = childComponent;
+        return (
+          <Modal isOpen={showAddNew} onClose={() => setShowAddNew(false)} widthClass={addNewModalWidth}>
+            <AddNew onSuccess={handleAddNewSuccess} onClose={() => setShowAddNew(false)} />
+          </Modal>
+        );
+      })()}
+      {editingOption && childComponent && (() => {
+        const EditComp = childComponent;
+        return (
+          <Modal isOpen={!!editingOption} onClose={() => setEditingOption(null)} widthClass={addNewModalWidth}>
+            <EditComp
+              editId={editingOption.value}
+              onSuccess={() => setEditingOption(null)}
+              onClose={() => setEditingOption(null)}
+            />
+          </Modal>
+        );
+      })()}
+      {deletingOption && childComponent && (() => {
+        const DeleteComp = childComponent;
+        return (
+          <Modal isOpen={!!deletingOption} onClose={() => setDeletingOption(null)} widthClass={addNewModalWidth}>
+            <DeleteComp
+              deleteId={deletingOption.value}
+              deleteLabel={deletingOption.show}
+              onSuccess={handleDeleteSuccess}
+              onClose={() => setDeletingOption(null)}
+            />
+          </Modal>
+        );
+      })()}
+    </div>
+  );
+});
+
+
+
+
+
+export const PriceInputWithTax = forwardRef(({
+  name,
+  value,
+  setValue,
+  taxType,
+  setTaxType,
+  required = false,
+  disabled = false,
+}, ref) => {
+
+  return (
+    <div className="mb w-full">
+      <label className="block text-xs font-bold text-gray-600 mb-1">
+        {name}
+      </label>
+
+      <div className="flex">
+        {/* Price Input */}
+        <input
+          ref={ref}
+          type="number"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          disabled={disabled}
+          className="w-full px-3 py-1.5 text-xs border border-gray-300 
+          rounded-l-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+          placeholder="Enter Price"
+        />
+
+        {/* Dropdown */}
+        <select
+          value={taxType}
+          onChange={(e) => setTaxType(e.target.value)}
+          disabled={disabled}
+          className="px-2 text-xs border border-l-0 border-gray-300 
+          rounded-r-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="withTax">With Tax</option>
+          <option value="withoutTax">Without Tax</option>
+        </select>
+      </div>
+    </div>
+  );
+});
+
+
+
+export const ReusableSearchableInputNewCustomerwithBranches = forwardRef(
+  (
+    {
+      label,
+      placeholder,
+      onDeleteItem,
+      component,
+      setSearchTerm,
+      searchTerm,
+      readOnly,
+      required,
+      name,
+      disabled,
+      show,
+      id,
+      isShow = true,
+      isInwardRetuenParties = false,
+      isBillable = false,
+      supplierId,
+      isRetunBillable,
+      paymentFlow,
+      isB2B = false,
+      nextRef
+    },
+    ref
+  ) => {
+    /* ---------------------------------- DATA ---------------------------------- */
+
+    const companyId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    );
+    const userId = secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userId"
+    );
+
+    const { data: partyList } = useGetPartyQuery({
+      params: { companyId, userId, isAddressCombined: true, isInwardRetuenParties, isBillable, isRetunBillable, paymentFlow },
+    });
+    const [removeData] = useDeletePartyMutation();
+
+
+
+    /* ---------------------------------- STATE --------------------------------- */
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [tooltipVisible, setTooltipVisible] = useState(false);
+    const [editingItem, setEditingItem] = useState(null);
+    const [openModel, setOpenModel] = useState(false);
+    const [childId, setChildId] = useState('')
+
+    const focusNext = (currentTarget) => {
+      const allFocusable = Array.from(
+        document.querySelectorAll(
+          'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled]), textarea:not([disabled]):not([readonly]), button:not([disabled])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+      const idx = allFocusable.indexOf(currentTarget);
+      if (idx >= 0 && allFocusable[idx + 1]) allFocusable[idx + 1].focus();
+    };
+
+    const [search, setSearch] = useState("");           // 🔹 search text
+    const [filteredPages, setFilteredPages] = useState([]);
+    const [isListShow, setIsListShow] = useState(false);
+
+    const containerRef = useRef(null);
+    const modal = useModal();
+    const { openAddModal } = modal || {};
+
+
+
+    console.log(partyList, "partyList")
+
+
+
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (containerRef.current && !containerRef.current.contains(event.target)) {
+          setIsDropdownOpen(false);
+          setIsListShow(false)
+
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    /* ---------------------------- FILTER PARTIES ---------------------------- */
+
+    useEffect(() => {
+      if (!partyList?.data) return;
+
+      let filtered = partyList?.data?.filter((item) => {
+        const matchesShow = show && show !== "both" ? Boolean(item[show]) : true;
+        const matchesFlowOrB2B =
+          paymentFlow === "Payout"
+            ? true
+            : isB2B
+              ? Boolean(item?.isB2B || !item?.isB2C)
+              : true;
+
+        return matchesShow && matchesFlowOrB2B;
+      });
+
+      if (search.trim()) {
+        filtered = filtered.filter((item) =>
+          item?.name?.toLowerCase().includes(search.toLowerCase())
+        );
+      }
+
+      setFilteredPages(filtered);
+    }, [search, partyList, id, supplierId, isRetunBillable, isBillable, paymentFlow, show, isB2B]);
+
+
+    console.log(filteredPages, "filterPages")
+
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const handler = (e) => {
+        if (!isDropdownOpen) return;
+
+        const focusableItems = Array.from(
+          container.querySelectorAll('input, [tabindex="0"]')
+        ).filter((item) => item.offsetParent !== null);
+
+        const currentIndex = focusableItems.indexOf(document.activeElement);
+
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % focusableItems.length;
+          focusableItems[nextIndex]?.focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          const prevIndex = (currentIndex - 1 + focusableItems.length) % focusableItems.length;
+          focusableItems[prevIndex]?.focus();
+        }
+      };
+
+      container.addEventListener("keydown", handler);
+      return () => container.removeEventListener("keydown", handler);
+    }, [isDropdownOpen, filteredPages]);
+
+
+    /* ---------------------------------- HANDLERS ------------------------------ */
+
+    const handleEdit = (id, e, isChildid) => {
+      e.stopPropagation();
+      setEditingItem(id);
+      setIsDropdownOpen(false);
+      setIsListShow(false);
+      setOpenModel(true);
+      // setChildId(isChildid)
+
+    };
+
+    const handleDelete = async (id, item) => {
+      // 1. Validation Check
+      if (childRecordCount(item?._count)) {
+        return Swal.fire({
+          icon: 'error',
+          text: 'Child Record Exists',
+        });
+      }
+
+      try {
+        // 2. Execute Delete (Assuming removeData is an RTK Query mutation)
+        const deldata = await removeData(id).unwrap();
+
+        // 3. Handle Business Logic Errors from API
+        if (deldata?.statusCode === 1) {
+          return Swal.fire({
+            icon: 'error',
+            text: deldata?.message || 'Action failed',
+          });
+        }
+
+
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted Successfully',
+          showConfirmButton: false,
+          timer: 2000
+        });
+
+
+      } catch (error) {
+        // 6. Handle Network or Server Errors
+        Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error?.data?.message || error?.message || 'Something went wrong!',
+        });
+      }
+    };
+
+    /* ---------------------------------- JSX ---------------------------------- */
+
+    return (
+      <>
+        {/* ----------------------------- MODAL ----------------------------- */}
+        <Modal
+          isOpen={openModel}
+          onClose={() => {
+            setOpenModel(false)
+            setTimeout(() => focusNext(containerRef.current?.querySelector('button')), 100);
+          }}
+          widthClass="w-[90%] h-[99%]"
+        >
+          <DynamicRenderer
+            componentName={component}
+            editingItem={editingItem}
+            childId={childId}
+            onCloseForm={() => {
+              setOpenModel(false)
+              setTimeout(() => focusNext(containerRef.current?.querySelector('button')), 100);
+            }}
+            show={show}
+          />
+        </Modal>
+
+        {/* ----------------------------- INPUT ----------------------------- */}
+        <div
+          className="relative text-sm w-full overflow-visible"
+          id="pageSearch"
+          ref={containerRef}
+        >
+          {label && (
+            <label className=" block text-[12px] font-bold text-gray-600">
+              {required ? <RequiredLabel name={label || name} /> : label}
+            </label>
+          )}
+
+          <div className="flex gap-2">
+            <div className="relative flex-grow">
+              <FaSearch className="absolute left-3 top-3 text-slate-400 text-xs" />
+
+              {isListShow ? (
+                /* ---------------- SEARCH INPUT ---------------- */
+                <input
+                  ref={ref}
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border rounded-md"
+                  placeholder={placeholder}
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setIsDropdownOpen(true);
+                  }}
+                  onFocus={() => {
+                    setIsListShow(true);
+                    setIsDropdownOpen(true);
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                />
+              ) : (
+                /* ---------------- SELECTED VALUE ---------------- */
+                <input
+                  ref={ref}
+                  className="w-full pl-8 pr-2 py-1.5 text-xs border rounded-md"
+                  placeholder={placeholder}
+                  value={findFromList(
+                    searchTerm,
+                    partyList?.data,
+                    "name"
+                  )}
+                  onFocus={() => {
+                    setIsListShow(true);
+                    setIsDropdownOpen(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      focusNext(e.target);
+                    }
+                  }}
+                  disabled={disabled || readOnly}
+                  tabIndex={0}
+                />
+              )}
+            </div>
+
+            {isShow && (
+              <>
+                <div className="relative">
+                  <button
+                    className="h-full px-3 py-1.5 border border-green-500 rounded-md
+                hover:bg-green-500 text-green-600 hover:text-white"
+                    disabled={disabled || readOnly}
+                    onKeyDown={(e) => {
+                      if (e.ctrlKey && e.key === "Enter") {
+                        setEditingItem("new");
+                        setOpenModel(true);
+                      }
+                      if (e.key === "Enter") {
+                        setTooltipVisible(false)
+                        e.target.blur()
+                        focusNext(e.target);
+                      }
+                    }}
+                    onClick={() => {
+                      setEditingItem("new");
+                      setOpenModel(true);
+                    }}
+
+                    onFocus={() => setTooltipVisible(true)}
+                    onMouseEnter={() => setTooltipVisible(true)}
+                    onMouseLeave={() => setTooltipVisible(false)}
+                  >
+                    <FaPlus />
+                  </button>
+
+                  {tooltipVisible && (
+                    <div className="absolute z-20 top-full right-0 mt-1 w-64 bg-indigo-800 text-white text-xs rounded p-2"
+
+                    >
+                      <FaInfoCircle className="inline mr-1" />
+                      Click Ctrl + Enter to add new {show == "isClient" ? "Customer" : "Supplier"}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+          </div>
+
+
+          {isDropdownOpen && (
+            <div className="border border-slate-200 rounded-md shadow-md bg-white mt-1 max-h-40 overflow-y-auto z-20 absolute w-full">
+              {filteredPages?.length > 0 ? (
+                filteredPages?.filter(i => i.active == true)?.map((item) => (
+                  <div
+                    key={item.id}
+                    tabIndex={0}
+                    className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer transition-colors flex justify-between items-center group"
+                    onClick={() => {
+                      setSearchTerm(item.id);
+                      setIsDropdownOpen(false);
+                      setSearch("");
+                      setIsListShow(false);
+                      if (nextRef?.current) {
+                        nextRef?.current?.focus();
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setSearchTerm(item.id);
+                        setSearch("");
+                        setIsListShow(false);
+                        setIsDropdownOpen(false);
+                        focusNext(containerRef.current?.querySelector('input') || e.target);
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="font-medium">{item.name}</div>
+                    </div>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        className="text-indigo-600 hover:text-indigo-800 p-1"
+                        // onClick={(e) => handleEdit(item?.parentId ? item?.parentId : item?.id, e, item?.parentId ? item.id : null)}
+                        onClick={(e) => handleEdit(item.id, e)}
+                        title={`Edit ${show == "isClient" ? "Customer" : "Supplier"}`}
+                      >
+                        <FaEdit className="text-sm" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-800 p-1"
+                        onClick={(e) => handleDelete(item?.id, item)}
+                        title={`Delete ${show == "isClient" ? "Customer" : "Supplier"}`}
+                      >
+                        <FaTrash className="text-sm" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <button
+                  type="button"
+                  className="w-full px-3 py-2 text-left text-indigo-600 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => {
+                    setEditingItem(null);
+                    setIsDropdownOpen(false);
+                    openAddModal();
+                  }}
+                >
+                </button>
+              )}
+            </div>
+          )}
+        </div >
+      </>
+    );
+  }
+);
+
+
+
+
+export function useMemoryLogger(intervalMs = 30000) {
+  useEffect(() => {
+    if (!performance.memory) {
+      console.warn('performance.memory unavailable (Chrome/Edge only)');
+      return;
+    }
+    const log = () => {
+      const m = performance.memory;
+      console.log(
+        new Date().toISOString(),
+        'used', (m.usedJSHeapSize / 1048576).toFixed(1),
+        'total', (m.totalJSHeapSize / 1048576).toFixed(1),
+        'limit', (m.jsHeapSizeLimit / 1048576).toFixed(1)
+      );
+    };
+    log();
+    const id = setInterval(log, intervalMs);
+    return () => clearInterval(id);   // cleanup — this matters
+  }, [intervalMs]);
+}
+
+
+
+
+
+const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, editingItem, show, childId }) => {
+
+  const COMPONENTS = {
+
+  };
+
+  const ComponentToRender = COMPONENTS[componentName];
+
+  return ComponentToRender ? <ComponentToRender /> : <div>Not found</div>;
+};
