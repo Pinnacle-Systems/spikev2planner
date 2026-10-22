@@ -97,6 +97,7 @@ const CapacityPlanner = () => {
     }, []);
     useEffect(retrieveUnits, [retrieveUnits]);
 
+    console.log(units, "result for units api")
 
     const retrieveLines = useCallback(() => {
         if (!selectedUnit) return

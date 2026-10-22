@@ -2,7 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import cors from 'cors';
-import { orders, units, holidays, lines } from './src/routes/index.js';
+import { orders, units, holidays, lines, users, finYear } from './src/routes/index.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,10 +39,15 @@ app.get('/', function (req, res) {
   res.sendFile(path + "index.html");
 });
 
+app.use("/users", users);
+
+
 app.use("/orders", orders);
 app.use("/units", units);
 app.use("/holidays", holidays);
 app.use("/lines", lines);
+app.use("/finYear", finYear);
+
 
 BigInt.prototype['toJSON'] = function () {
   return parseInt(this.toString());

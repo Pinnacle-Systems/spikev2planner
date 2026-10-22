@@ -57,3 +57,23 @@ export function groupByPropertyToObj(arr, property) {
     return map
   }, new Map());
 }
+
+export function generateSubscriptionCode(length = 6) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
+
+export function findDateInRange(fromDate, toDate, checkDate) {
+  if ((fromDate <= checkDate) && (checkDate <= toDate)) {
+    return true
+  }
+  return false;
+}

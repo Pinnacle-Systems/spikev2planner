@@ -23,6 +23,7 @@ const UnitForm = () => {
     setLines(data.line);
   }, [])
 
+  console.log(id, "id", lines)
   const handleSubmit = (event) => {
     event.preventDefault();
     axios({
@@ -30,7 +31,7 @@ const UnitForm = () => {
       url: id ? `${BASE_URL}${UNITS_API}/${id}` : BASE_URL + UNITS_API,
       data: { name, location, lines: lines.filter(line => line.name) }
     }).then((result) => {
-      console.log("result", result.data.response);
+      console.log("result for unit data", result.data.response);
       if (result.status === 200 || result.status === 304) {
         if (result.data.statusCode === 0) {
           window.location.reload();

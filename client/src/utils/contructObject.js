@@ -1,0 +1,70 @@
+import { getYearShortCode } from "./helper"
+
+export const dropDownListObject = (data, showKey, valueKey) => {
+    const outputData = [];
+    if (!Array.isArray(data)) return outputData;
+    for (let i of data) {
+        outputData.push({ show: i[showKey], value: i[valueKey], _count: i?._count });
+    }
+    return outputData;
+}
+
+
+export const dropDownFinYear = (data) => {
+    const outputData = [];
+    for (let i of data) {
+        outputData.push({ show: getYearShortCode(i["from"], i["to"]), value: i["id"] })
+    }
+    return outputData
+}
+
+export const dropDownListMergedObject = (data) => {
+    let Data = data ? data : []
+
+    console.log(data, "datatata")
+    const outputData = []
+    for (let i of Data) {
+        outputData.push({ show: i?.name + " / " + i?.state?.name, value: i["id"] })
+    }
+    return outputData
+}
+
+export const multiSelectOption = (data, label, value) => {
+    console.log(data, "data");
+
+    const outputData = []
+    for (let i of data) {
+        outputData.push({ label: i[label], value: i[value] })
+    }
+    return outputData
+}
+
+export const multiSelectOptionSelectedApiData = (data) => {
+    const outputData = []
+    for (let i of data) {
+        outputData.push({ id: i["value"] })
+    }
+    return outputData
+}
+
+
+
+export const dropDownListMergedObjectStateCity = (data) => {
+    let Data = data ? data : []
+
+    console.log(data, "datatata")
+    const outputData = []
+    for (let i of Data) {
+        outputData.push({ show: i?.name + " / " + i?.country?.name, value: i["id"] })
+    }
+    return outputData
+}
+
+
+export const dropDownFinYearNew = (data) => {
+    const outputData = [];
+    for (let i of data) {
+        outputData.push({ show: getYearShortCode(i["from"], i["to"]), value: getYearShortCode(i["from"], i["to"]) })
+    }
+    return outputData
+}

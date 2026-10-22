@@ -101,6 +101,7 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, location, lines } = await body
+    console.log(lines, "lines", id)
     const dataFound = await prisma.unit.findUnique({
         where: {
             id: parseInt(id)

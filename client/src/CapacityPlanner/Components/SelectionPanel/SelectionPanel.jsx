@@ -20,6 +20,7 @@ const SelectionPanel = () => {
     } = useContext(CapacityPlannerContext);
 
 
+    console.log(units, "units")
 
 
     const storeOrderData = useCallback(() => {
@@ -64,7 +65,7 @@ const SelectionPanel = () => {
                         sessionStorage.setItem("selectedUnit", e.target.value);
                     }}
                     name="unit" id="unit" className='rounded border select-none text-center p-1 focus:outline-none focus:shadow-outline text-sm'>
-                    <option value="" hidden>Select</option>
+                    {/* <option value="" hidden>Select</option> */}
                     {units.map(unit => <option key={unit.id} value={unit.id}>{unit.name}</option>)}
                 </select>
             </div>

@@ -8,6 +8,8 @@ import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 
+console.log(BASE_URL, "BASE_URL")
+
 const UnPlannedOrdersReport = () => {
     const [orders, setOrders] = useState([]);
     const retrieveData = useCallback(() => {
