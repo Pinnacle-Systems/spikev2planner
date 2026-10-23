@@ -2,7 +2,7 @@ import React from "react";
 import moment from "moment/moment";
 import { EMPTY_ICON } from '../../../icons';
 import { formExpenses } from "../../../utils/DropdownData";
-import ReactHTMLTableToExcel from 'react-html-table-to-excel';
+// import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 import Loader from "../Loader";
 
 const ACTIVE = (
@@ -82,7 +82,7 @@ export default function FormReport({
               {
                 needExcelReport ?
                   <>
-                    <span className="w-1/2">
+                    {/* <span className="w-1/2">
                       <ReactHTMLTableToExcel
                         id="test-table-xls-button"
                         className="download-table-xls-button text-white bg-blue-400 p-2 text-xs rounded-xl"
@@ -93,7 +93,7 @@ export default function FormReport({
 
                       >
                       </ReactHTMLTableToExcel>
-                    </span>
+                    </span> */}
 
 
                     <table id="itemTable" className="table-auto text-center">
