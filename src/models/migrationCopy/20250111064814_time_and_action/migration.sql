@@ -1,0 +1,19 @@
+-- CreateTable
+CREATE TABLE `TimeAndAction` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `orderNo` VARCHAR(191) NOT NULL,
+    `fetdt` DATE NOT NULL,
+    `fcDate` DATE NOT NULL,
+    `fQty` DOUBLE NOT NULL DEFAULT 0,
+    `fcQty` DOUBLE NOT NULL DEFAULT 0,
+    `fPer` DOUBLE NOT NULL DEFAULT 0,
+    `fDays` DOUBLE NOT NULL DEFAULT 0,
+    `tetdt` DATE NOT NULL,
+    `tcDate` DATE NOT NULL,
+    `tQty` DOUBLE NOT NULL DEFAULT 0,
+    `tcQty` DOUBLE NOT NULL DEFAULT 0,
+    `tPer` DOUBLE NOT NULL DEFAULT 0,
+    `tDays` DOUBLE NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

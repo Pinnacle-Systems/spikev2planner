@@ -7,7 +7,17 @@ import { EMPTY_ALERT_COLOR, GREEN_ALERT_COLOR, ORANGE_ALERT_COLOR, RED_ALERT_COL
 import { getTotalPcsProductionShouldBeCompletedByYesterday } from '../../../utils/helper';
 import { BAN_ICON, VIEW, LOCK_ICON } from '../../../utils/icons';
 
-const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays, line = null, fromOrderList }) => {
+const OrderItem = ({
+    order,
+    index = 0,
+    tooltip = null,
+    width = "100%",
+    holidays,
+    line = null,
+    fromOrderList,
+    startsBefore = false,
+    endsAfter = false
+}) => {
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, productionMode, setCurrentDate,
         setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine, setProductionDetails,
     } = useContext(CapacityPlannerContext)
@@ -133,7 +143,8 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                 width: width,
                                 fontSize: "10px",
                             }}
-                            className={` mix-blend-multiply py-2 relative z-20 text-center rounded-full text-xs
+                            className={` mix-blend-multiply py-2 relative z-20 text-center text-xs
+                            ${(startsBefore && endsAfter) ? 'rounded-none' : startsBefore ? 'rounded-r-full rounded-l-none border-l-2 border-slate-700/40' : endsAfter ? 'rounded-l-full rounded-r-none border-r-2 border-slate-700/40' : 'rounded-full'}
                             ${manualSelect ? "pointer-events-none" : ""}
                             ${(order.isReplanned) ? "cursor-pointer" : "grabbable"}
                             select-none 
@@ -188,15 +199,21 @@ const OrderItem = ({ order, index = 0, tooltip = null, width = "100%", holidays,
                                     <div> {totalLineWiseProductionQty} </div>
                                 </div>
                             </div>
-                            <strong className='text-xs font-bold relative z-20'>
-                                <span>
+                            <strong className='text-xs font-bold relative z-20 flex items-center justify-center gap-1 px-1 overflow-hidden'>
+                                {startsBefore && (
+                                    <span className="text-[10px] text-slate-900 font-black shrink-0" title="Started before this view">◀</span>
+                                )}
+                                <span className="truncate">
                                     {orderNoSplit}-{order.style}
                                 </span>
-                                <span className="text-red-500">
+                                <span className="text-red-500 shrink-0">
                                     {order.isReplanned ?
                                         <> {LOCK_ICON}  </>
                                         : <></>}
                                 </span>
+                                {endsAfter && (
+                                    <span className="text-[10px] text-slate-900 font-black shrink-0" title="Continues past this view">▶</span>
+                                )}
                             </strong>
                         </div>
                         :

@@ -1,7 +1,26 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const getInitialTabs = () => {
+  try {
+    const saved = localStorage.getItem("openTabs");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const hasHome = parsed.some((t) => t.name.toUpperCase() === "HOME");
+        if (!hasHome) {
+          return [{ name: "Home", active: parsed.every((t) => !t.active) }, ...parsed];
+        }
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error("Error reading openTabs from localStorage", e);
+  }
+  return [{ name: "Home", active: true }];
+};
+
 const initialState = {
-  tabs: [],
+  tabs: getInitialTabs(),
 };
 
 export const openTabs = createSlice({
@@ -9,41 +28,14 @@ export const openTabs = createSlice({
   initialState,
   reducers: {
     push: (state, action) => {
-
       const existingIndex = state.tabs.findIndex(
-
-
         (item) => item.name === action.payload.name
-
       );
-      console.log(existingIndex, "existingIndex")
-      console.log(action, "actionaction")
 
       state.tabs = state.tabs.map((tab) => {
         return { ...tab, active: false };
       });
-      // if (existingIndex >= 0) {
-      //   state.tabs[existingIndex] = {
-      //     ...state.tabs[existingIndex],
-      //     active: true,
-      //     id: action.payload.id,
-      //     projectId: action.payload.projectId,
-      //     projectForm: action.payload.projectForm,
-      //     transactionType: action.payload.transactionType,
-      //     data: action.payload.data,
-      //   };
-      // } else {
-      //   state.tabs.push({
-      //     id: action.payload.id,
-      //     name: action.payload.name,
-      //     active: true,
-      //     projectId: action.payload.projectId,
-      //     projectForm: action.payload.projectForm,
-      //     transactionType: action.payload.transactionType,
-      //     data: action.payload.data,
-      //   });
-      // }   
-      /////       change this for user Permissions editing mode 
+
       if (existingIndex >= 0) {
         state.tabs[existingIndex] = {
           ...state.tabs[existingIndex],
@@ -59,6 +51,9 @@ export const openTabs = createSlice({
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
     remove: (state, action) => {
+      if (action.payload.name?.toUpperCase() === "HOME") {
+        return;
+      }
       const existingIndex = state.tabs.findIndex(
         (item) => item.name === action.payload.name
       );
@@ -81,13 +76,27 @@ export const openTabs = createSlice({
         }
       }
       state.tabs = state.tabs.filter(tab => tab.name !== action.payload.name);
+      if (!state.tabs.some(tab => tab.name.toUpperCase() === "HOME")) {
+        state.tabs.unshift({ name: "Home", active: state.tabs.length === 0 });
+      }
+      localStorage.setItem("openTabs", JSON.stringify(state.tabs));
+    },
+    clearAll: (state) => {
+      const homeTab = state.tabs.find(
+        (tab) => tab.name?.toUpperCase() === "HOME"
+      );
+      if (homeTab) {
+        state.tabs = [{ ...homeTab, active: true }];
+      } else {
+        state.tabs = [{ name: "Home", active: true }];
+      }
       localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { push, remove } = openTabs.actions;
+export const { push, remove, clearAll } = openTabs.actions;
 
 export default openTabs.reducer;
 

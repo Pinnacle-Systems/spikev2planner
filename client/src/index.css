@@ -19,6 +19,19 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,600;1,400;1,600&display=swap");
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
 html,
 body,
 
@@ -621,4 +634,12 @@ div[style*="position: fixed"] {
 .swal2-timer-progress-bar {
     background: #4f46e5 !important;
     height: 3px !important;
+}
+
+.text-inter-semibold-11 {
+    @apply font-['Inter'] font-semibold text-[11px];
+}
+
+.text-inter-regular-11 {
+    @apply font-['Inter'] font-normal text-[11px];
 }

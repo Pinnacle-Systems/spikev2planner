@@ -254,6 +254,32 @@ export function sortWeekDaysIfLastWeek(currentMonthDays) {
     return weekArray
 }
 
+export const getWeeksInMonth = (month) => {
+    let dateObj = new Date(month);
+    const currentYear = dateObj.getFullYear();
+    const currentMonth = dateObj.getMonth();
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+    const allDays = getDateArray(firstDay, lastDay);
+
+    const weekKeys = sortWeekDaysIfLastWeek(allDays);
+    return weekKeys.map((weekKey, index) => {
+        const daysInWeek = allDays.filter(d => moment.utc(d).format('W') === weekKey);
+        const startDay = new Date(daysInWeek[0]).getDate();
+        const endDay = new Date(daysInWeek[daysInWeek.length - 1]).getDate();
+        const monthShort = moment.utc(daysInWeek[0]).format('MMM');
+        return {
+            weekKey,
+            index,
+            label: `Week ${index + 1}: ${monthShort} ${startDay}–${endDay} (W${weekKey})`,
+            shortLabel: `W${weekKey} (${startDay}–${endDay})`,
+            days: daysInWeek,
+            startDate: daysInWeek[0],
+            endDate: daysInWeek[daysInWeek.length - 1]
+        };
+    });
+};
+
 export function styleTypeMatchingWarningMessage(line, order) {
     if (line?.styleType !== order?.styleType) {
         toast.warning(STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE)

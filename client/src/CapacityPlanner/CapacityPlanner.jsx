@@ -77,6 +77,10 @@ const CapacityPlanner = () => {
 
     const [productionMode, setProductionMode] = useState(false);
 
+    const [calendarViewMode, setCalendarViewMode] = useState('month'); // 'month' | '15days' | 'week'
+    const [calendarHalf, setCalendarHalf] = useState(1); // 1: 1-15, 2: 16-end
+    const [calendarWeek, setCalendarWeek] = useState(0); // week index
+
     const [isModified, setIsModified] = useState(false);
 
 
@@ -198,7 +202,10 @@ const CapacityPlanner = () => {
                 viewPlanDetails, setViewPlanDetails,
                 reduceEndDate, setReduceEndDate,
                 prevOrders,
-                isModified, setIsModified
+                isModified, setIsModified,
+                calendarViewMode, setCalendarViewMode,
+                calendarHalf, setCalendarHalf,
+                calendarWeek, setCalendarWeek
             }}>
             <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -233,15 +240,16 @@ const CapacityPlanner = () => {
             <Modal widthClass={''} closeIcon isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
                 <ProductionDetails />
             </Modal>
-            <Modal isOpen={loading}>
+            {/* <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
                     Loading...
                 </button>
-            </Modal>
+            </Modal> */}
+
             <div className='relative'>
-                <div className='w-[25%] h-full float-left'>
-                    <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
+                <div className='w-[30%] h-full float-left'>
+                    {/* <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
                         <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
                             <img src={addOrders} width={20} alt="" />
                             <span>
@@ -260,11 +268,11 @@ const CapacityPlanner = () => {
                                 Units
                             </span>
                         </button>
-                    </div>
-                    <ReportPanel />
+                    </div> */}
+                    {/* <ReportPanel /> */}
                     <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
                 </div>
-                <div className='w-[75%] float-right overflow-auto h-screen'>
+                <div className='w-[70%] float-right overflow-auto h-screen'>
                     <SelectionPanel />
                     <Calendar />
                 </div>

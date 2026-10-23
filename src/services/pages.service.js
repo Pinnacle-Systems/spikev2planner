@@ -36,7 +36,7 @@ async function getPageId(pageId) {
 async function getPermissions(req) {
 
     const { roleId, pageId } = req.params
-    console.log(req.params,"req.params")
+    console.log(req.params, "req.params")
 
     let pageData = await getPageId(pageId);
 
@@ -79,7 +79,7 @@ async function create(body) {
     const data = await prisma.page.create(
         {
             data: {
-                name, link, active, type, pageGroupId: parseInt(pageGroupId)
+                name, link, active, type, pageGroupId: pageGroupId ? parseInt(pageGroupId) : null
             }
         }
     )
@@ -99,7 +99,7 @@ async function update(id, body) {
             id: parseInt(id),
         },
         data: {
-            name, link, active, type, pageGroupId: parseInt(pageGroupId)
+            name, link, active, type, pageGroupId: pageGroupId ? parseInt(pageGroupId) : null
         }
     })
     return { statusCode: 0, data };

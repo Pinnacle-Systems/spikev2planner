@@ -4,13 +4,13 @@ import { generateSubscriptionCode } from '../utils/helper.js';
 import bcrypt from "bcrypt";
 
 async function get() {
-    const data = await prisma.company.findMany();
+    const data = await prisma.Company.findMany();
     return { statusCode: 0, data };
 }
 
 
 async function getOne(id) {
-    const data = await prisma.company.findUnique({
+    const data = await prisma.Company.findUnique({
         where: {
             id: parseInt(id)
         },
@@ -40,7 +40,7 @@ async function getOne(id) {
 
 async function getSearch(req) {
     const { searchKey } = req.params
-    const data = await prisma.company.findMany({
+    const data = await prisma.Company.findMany({
         where: {
             OR: [
                 {
@@ -61,7 +61,7 @@ async function getSearch(req) {
 
 async function create(body) {
     const { name, code, gstNo, panNo, contactEmail, contactName, contactMobile, validFrom, expireAt, maxUsers } = await body
-    const data = await prisma.company.create({
+    const data = await prisma.Company.create({
         data: {
             name, code, gstNo, panNo, contactEmail, contactName, contactMobile: parseInt(contactMobile),
             branch: {
@@ -99,7 +99,7 @@ async function create(body) {
             }
         },
     });
-    const companyData = await prisma.company.findUnique({
+    const companyData = await prisma.Company.findUnique({
         where: {
             id: parseInt(data.id)
         },
@@ -128,13 +128,13 @@ async function create(body) {
 
 async function update(id, body) {
     const { name, code, gstNo, panNo, contactEmail, contactName, contactMobile } = await body
-    const dataFound = await prisma.company.findUnique({
+    const dataFound = await prisma.Company.findUnique({
         where: {
             id: parseInt(id)
         }
     })
     if (!dataFound) return NoRecordFound("Company");
-    const data = await prisma.company.update({
+    const data = await prisma.Company.update({
         where: {
             id: parseInt(id),
         },
@@ -146,7 +146,7 @@ async function update(id, body) {
 };
 
 async function remove(id) {
-    const data = await prisma.company.delete({
+    const data = await prisma.Company.delete({
         where: {
             id: parseInt(id)
         },

@@ -5,6 +5,9 @@ import { useSelector } from "react-redux";
 import Modal from "../../../Components/Modal";
 import SuperAdminHeader from "../../Components/SuperAdminHeader";
 import ActiveTabList from "../../../Basic/Components/ActiveTabList";
+import { Header, Logout } from "../../../Basic/Components";
+import CapacityPlanner from "../../CapacityPlanner";
+import BranchAndFinYearForm from "../../../Basic/Components/BranchAndFinyear";
 
 const Home = () => {
     const [isGlobalOpen, setIsGlobalOpen] = useState(false);
@@ -17,7 +20,7 @@ const Home = () => {
     );
     const navigate = useNavigate();
     // const openTabs = useSelector((state) => state.openTabs);
-
+    console.log(isSuperAdmin, 'isSuperAdmin')
     return (
         <>
             <Modal
@@ -27,7 +30,7 @@ const Home = () => {
                 }}
                 widthClass={""}
             >
-                {/* <BranchAndFinyearForm setIsGlobalOpen={setIsGlobalOpen} /> */}
+                <BranchAndFinYearForm setIsGlobalOpen={setIsGlobalOpen} />
             </Modal>
             <Modal
                 isOpen={logout}
@@ -36,39 +39,28 @@ const Home = () => {
                 }}
                 widthClass={""}
             >
-                {/* <LogoutConfirm setLogout={setLogout} /> */}
+                <Logout setLogout={setLogout} />
             </Modal>
-            <div className="h-screen overflow-hidden">
+            <div className="h-screen overflow-hidden flex flex-col">
                 {isSuperAdmin ? (
                     <>
                         <SuperAdminHeader
                             setIsGlobalOpen={setIsGlobalOpen}
                             setLogout={setLogout}
                         />
-                        <div className="">
+                        <div className="flex-1 ">
                             <ActiveTabList isSuperAdmin={isSuperAdmin} />
-
                         </div>
 
                     </>
                 ) : (
-                    // <div >
-                    //     <Header profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen}
-                    //     />
 
-                    //     <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} isMainDropdownOpen={isMainDropdownOpen} setIsMainDropdownOpen={setIsMainDropdownOpen} />
-                    //     <div className="pt-9 py-2 px-2 bg-[#f1f1f0] :tab">
-                    //         <ActiveTabList isSuperAdmin={isSuperAdmin} />
-                    //         {openTabs.tabs.length === 0 ? (
-                    //             <div className="flex items-center justify-center h-[80vh]">
-                    //                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    //             </div>
-                    //         ) : ''}
-                    //     </div>
-
-
-                    // </div>
-                    <></>
+                    <>
+                        <Header profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen} />
+                        <div className="flex-1 ">
+                            <ActiveTabList isSuperAdmin={isSuperAdmin} />
+                        </div>
+                    </>
                 )}
 
 

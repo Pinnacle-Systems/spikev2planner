@@ -4,7 +4,7 @@ import { dropDownFinYear, dropDownListObject } from '../../../utils/contructObje
 import { getData } from '../../../utils/Apicalls';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
-import { CLIENT_HOME_URL } from '../../../Constants/clientAppUrls';
+import { CLIENT_HOME_URL, PRODUCT_ADMIN_HOME_PATH } from '../../../Constants/clientAppUrls';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -80,7 +80,9 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentBranchId", currentBranch);
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentFinYear", currentFinYear);
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentFinYearActive", isCurrentFinYearActive());
-        navigate(CLIENT_HOME_URL);
+        // navigate(CLIENT_HOME_URL);
+        navigate(PRODUCT_ADMIN_HOME_PATH);
+
         window.location.reload();
     }
 

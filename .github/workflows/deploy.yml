@@ -1,0 +1,88 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+  # Optional: automatically deploy on push to main
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install backend dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix client
+
+      - name: Build frontend (Vite)
+        env:
+          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
+        run: npm run build --prefix client
+
+      - name: Verify frontend build output
+        run: |
+          echo "Verifying client/dist contents:"
+          ls -la client/dist
+
+      - name: Deploy backend source to VPS
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-az --stats"
+          SOURCE: package.json package-lock.json prisma.config.ts server.js src prisma client/package.json ecosystem.config.cjs
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}/
+          SCRIPT_BEFORE: |
+            mkdir -p ${{ secrets.REMOTE_TARGET }}
+            mkdir -p ${{ secrets.REMOTE_TARGET }}/client/dist
+
+      - name: Deploy frontend build artifacts to VPS
+        uses: easingthemes/ssh-deploy@v5.1.0
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-az --delete --stats"
+          SOURCE: client/dist/
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}/client/dist/
+
+      - name: Run remote install, migrate, and restart on VPS
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            set -eu
+
+            # Load NVM & Node 24
+            . ~/.nvm/nvm.sh
+            nvm install 24
+            nvm use 24
+
+            cd ${{ secrets.REMOTE_TARGET }}
+
+            # 1. Install production-only backend packages
+            npm ci --omit=dev
+
+            # 2. Prisma generation & migration
+            npx prisma generate
+            npx prisma migrate deploy
+
+            # 3. Reload or start PM2 process using ecosystem file
+            pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production

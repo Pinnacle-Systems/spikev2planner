@@ -58,7 +58,11 @@ const Login = () => {
                     if (result?.status === 200) {
                         if (result?.data?.statusCode === 0) {
                             // sessionStorage?.setIttem("sessionId", generateSessionId());
-                            if (1 == 2) {
+                            if (!result.data?.userInfo?.roleId) {
+                                secureLocalStorage.setItem(
+                                    sessionStorage.getItem("sessionId") + "superAdmin",
+                                    true
+                                );
                                 secureLocalStorage.setItem(
                                     sessionStorage.getItem("sessionId") + "userId",
                                     result.data.userInfo.id
@@ -67,13 +71,14 @@ const Login = () => {
                                     sessionStorage.getItem("sessionId") + "username",
                                     result.data.userInfo.username
                                 );
-                                secureLocalStorage.setItem(
-                                    sessionStorage.getItem("sessionId") + "superAdmin",
-                                    true
-                                );
+
                                 navigate(PRODUCT_ADMIN_HOME_PATH);
                             }
                             else {
+                                secureLocalStorage.setItem(
+                                    sessionStorage.getItem("sessionId") + "superAdmin",
+                                    false
+                                );
                                 secureLocalStorage.setItem(
                                     sessionStorage.getItem("sessionId") + "employeeId",
                                     result?.data?.userInfo?.employeeId

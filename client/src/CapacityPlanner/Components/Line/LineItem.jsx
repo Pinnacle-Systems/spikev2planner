@@ -16,14 +16,14 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
             }}
             onMouseOver={onMouseOver}
         >
-            <div className='h-full grid justify-center items-center'>
-                <span className='text-[12px] font-normal'> {line.name}
+            <div className='h-full grid justify-center items-center '>
+                <span className='text-[12px] font-normal mt-4'> {line.name}
                     <span className='text-[10px] capitalize'>
                         ({(line?.styleType || '')?.[0]})
                     </span>
                 </span>
             </div>
-            <div className={`flex flex-col gap-1 text-center p-1 onShow ${isLast ? "-mt-20" : ""}`}>
+            <div className={`flex flex-col gap-1 text-center p-1 onShow  ${isLast ? "-mt-20" : ""}`}>
                 <div className='grid grid-cols-2 border-b items-center'>
                     <b> Name</b>
                     <div> {line.name}</div>

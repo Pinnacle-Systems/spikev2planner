@@ -16,7 +16,7 @@ function App() {
       <Routes>
         <Route path={"/"} element={<Login />} />
         <Route path={PRODUCT_ADMIN_HOME_PATH} element={<Home />} />
-        <Route path={CLIENT_HOME_URL} element={<CapacityPlanner />} />
+        {/* <Route path={CLIENT_HOME_URL} element={<CapacityPlanner />} /> */}
         <Route path={CLIENT_ORDERS_URL} element={<OrderForm />} />
         <Route path={CLIENT_UNIT_URL} element={<UnitForm />} />
         <Route path={CLIENT_HOLIDAY_URL} element={<HolidayCalendar />} />
