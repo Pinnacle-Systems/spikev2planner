@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { REFRESH_ICON } from '../../../Inputs';
-import ReactHTMLTableToExcel from 'react-html-table-to-excel';
+// import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 import { getDateFromDateTimeFormat } from '../../helper';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
@@ -50,7 +50,7 @@ const Parameter = ({ startDate, endDate, setStartDate, setEndDate, selectedUnits
                 To: <input type="date" value={getDateFromDateTimeFormat(localToDate)} onChange={(e) => { setLocalToDate(e.target.value) }} />
             </div>
             <button onClick={handleGenerate} className='bg-green-400 p-1 text-white'>Generate {REFRESH_ICON}</button>
-            <ReactHTMLTableToExcel
+            {/* <ReactHTMLTableToExcel
                 id="test-table-xls-button"
                 className="download-table-xls-button text-white bg-blue-400 p-2 text-xs rounded-xl"
                 table="production-report"
@@ -58,7 +58,7 @@ const Parameter = ({ startDate, endDate, setStartDate, setEndDate, selectedUnits
                 sheet="tablexls"
                 buttonText="Excel"
             >
-            </ReactHTMLTableToExcel>
+            </ReactHTMLTableToExcel> */}
         </div>
     )
 }

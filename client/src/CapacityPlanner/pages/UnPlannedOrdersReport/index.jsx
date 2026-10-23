@@ -3,7 +3,7 @@ import { toast } from 'react-toastify';
 import axios from "axios";
 import { ORDERS_API } from "../../../Constants/Api";
 import moment from 'moment';
-import ReactHTMLTableToExcel from 'react-html-table-to-excel';
+// import ReactHTMLTableToExcel from 'react-html-table-to-excel';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -28,7 +28,7 @@ const UnPlannedOrdersReport = () => {
         <div className='p-5'>
             <h1 className='text-center font-bold text-2xl'>Un Planned Orders Report</h1>
             <div className='flex justify-end'>
-                <ReactHTMLTableToExcel
+                {/* <ReactHTMLTableToExcel
                     id="test-table-xls-button"
                     className="download-table-xls-button text-white bg-blue-400 p-2 text-xs rounded-xl"
                     table="unplannedOrders"
@@ -36,7 +36,7 @@ const UnPlannedOrdersReport = () => {
                     sheet="tablexls"
                     buttonText="Excel"
                 >
-                </ReactHTMLTableToExcel>
+                </ReactHTMLTableToExcel> */}
             </div>
             <div className='flex justify-center text-center'>
                 <table id='unplannedOrders' className='table-fixed w-full text-center'>
