@@ -2,9 +2,6 @@ name: Deploy to VPS
 
 on:
   workflow_dispatch:
-  # Optional: automatically deploy on push to main
-  # push:
-  #   branches: [ main ]
 
 jobs:
   deploy:
@@ -25,40 +22,45 @@ jobs:
         run: npm ci
 
       - name: Install frontend dependencies
-        run: npm ci --prefix client
+        # Added --legacy-peer-deps to prevent peer dependency conflicts
+        run: npm ci --prefix client --legacy-peer-deps
 
-      - name: Build frontend (Vite)
+      - name: Build frontend
         env:
-          VITE_RAZORPAY_KEY_ID: ${{ secrets.VITE_RAZORPAY_KEY_ID }}
+          # Pass any REACT_APP_* variables needed at build time:
+          REACT_APP_SERVER_URL: ${{ secrets.REACT_APP_SERVER_URL }}
         run: npm run build --prefix client
 
       - name: Verify frontend build output
+        # Changed dist to build
         run: |
-          echo "Verifying client/dist contents:"
-          ls -la client/dist
+          echo "Verifying client/build contents:"
+          ls -la client/build
 
       - name: Deploy backend source to VPS
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           ARGS: "-az --stats"
-          SOURCE: package.json package-lock.json prisma.config.ts server.js src prisma client/package.json ecosystem.config.cjs
+          # Only include files that actually exist in your spike_v2 root:
+          SOURCE: package.json package-lock.json server.js src prisma client/package.json
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}/
           SCRIPT_BEFORE: |
             mkdir -p ${{ secrets.REMOTE_TARGET }}
-            mkdir -p ${{ secrets.REMOTE_TARGET }}/client/dist
+            mkdir -p ${{ secrets.REMOTE_TARGET }}/client/build
 
       - name: Deploy frontend build artifacts to VPS
         uses: easingthemes/ssh-deploy@v5.1.0
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           ARGS: "-az --delete --stats"
-          SOURCE: client/dist/
+          # Changed dist/ to build/
+          SOURCE: client/build/
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.REMOTE_TARGET }}/client/dist/
+          TARGET: ${{ secrets.REMOTE_TARGET }}/client/build/
 
       - name: Run remote install, migrate, and restart on VPS
         uses: appleboy/ssh-action@v1.2.5
@@ -70,7 +72,6 @@ jobs:
           script: |
             set -eu
 
-            # Load NVM & Node 24
             . ~/.nvm/nvm.sh
             nvm install 24
             nvm use 24
@@ -84,5 +85,5 @@ jobs:
             npx prisma generate
             npx prisma migrate deploy
 
-            # 3. Reload or start PM2 process using ecosystem file
-            pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
+            # 3. Restart PM2 application
+            pm2 reload spike-api --update-env || pm2 start server.js --name spike-api
