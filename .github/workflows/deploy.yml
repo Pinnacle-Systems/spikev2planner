@@ -86,4 +86,4 @@ jobs:
             npx prisma migrate deploy --schema ./src/models/schema.prisma
 
             # 3. Restart PM2 application
-            pm2 reload spike-api --update-env || pm2 start server.js --name spike-api
+            pm2 reload spike-palnner --update-env || pm2 start server.js --name spike-palnner
