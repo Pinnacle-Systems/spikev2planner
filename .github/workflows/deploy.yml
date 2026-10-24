@@ -42,8 +42,8 @@ jobs:
         with:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           ARGS: "-az --stats"
-          # Only include files that actually exist in your spike_v2 root:
-          SOURCE: package.json package-lock.json server.js src prisma client/package.json
+          # Only include files that actually exist in your spike_v2 root (src includes src/models):
+          SOURCE: package.json package-lock.json server.js src client/package.json
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.REMOTE_TARGET }}/
@@ -82,8 +82,8 @@ jobs:
             npm ci --omit=dev
 
             # 2. Prisma generation & migration
-            npx prisma generate
-            npx prisma migrate deploy
+            npx prisma generate --schema ./src/models/schema.prisma
+            npx prisma migrate deploy --schema ./src/models/schema.prisma
 
             # 3. Restart PM2 application
             pm2 reload spike-api --update-env || pm2 start server.js --name spike-api
