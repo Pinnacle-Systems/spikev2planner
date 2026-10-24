@@ -83,6 +83,26 @@ const CapacityPlanner = () => {
 
     const [isModified, setIsModified] = useState(false);
 
+    const [isOrderListCollapsed, setIsOrderListCollapsed] = useState(() => {
+        try {
+            return localStorage.getItem('orderListCollapsed') === 'true';
+        } catch {
+            return false;
+        }
+    });
+
+    const toggleOrderList = useCallback(() => {
+        setIsOrderListCollapsed(prev => {
+            const next = !prev;
+            try {
+                localStorage.setItem('orderListCollapsed', String(next));
+            } catch (e) {
+                console.error(e);
+            }
+            return next;
+        });
+    }, []);
+
 
     const [lines, setLines] = useState([]);
 
@@ -205,7 +225,9 @@ const CapacityPlanner = () => {
                 isModified, setIsModified,
                 calendarViewMode, setCalendarViewMode,
                 calendarHalf, setCalendarHalf,
-                calendarWeek, setCalendarWeek
+                calendarWeek, setCalendarWeek,
+                isOrderListCollapsed, setIsOrderListCollapsed,
+                toggleOrderList
             }}>
             <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -247,32 +269,19 @@ const CapacityPlanner = () => {
                 </button>
             </Modal> */}
 
-            <div className='relative'>
-                <div className='w-[30%] h-full float-left'>
-                    {/* <div className='flex justify-between items-center' style={{ height: "5%", fontSize: "12px" }}>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_ORDERS_URL)}>
-                            <img src={addOrders} width={20} alt="" />
-                            <span>
-                                Orders
-                            </span>
-                        </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_HOLIDAY_URL)}>
-                            <img src={holidaysIcon} width={20} alt="" />
-                            <span>
-                                Holidays
-                            </span>
-                        </button>
-                        <button className='font-bold p-1 rounded flex justify-between bg-gray-50 gap-1 hover:scale-110' onClick={() => navigate(CLIENT_UNIT_URL)}>
-                            <img src={splitUpIcon} width={20} alt="" />
-                            <span>
-                                Units
-                            </span>
-                        </button>
-                    </div> */}
-                    {/* <ReportPanel /> */}
-                    <OrderList orders={orders} setOrders={setOrders} holidays={holidays} />
+            <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>
+                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${
+                    isOrderListCollapsed ? 'w-12' : 'w-[30%] min-w-[340px] max-w-[480px]'
+                }`}>
+                    <OrderList
+                        orders={orders}
+                        setOrders={setOrders}
+                        holidays={holidays}
+                        isCollapsed={isOrderListCollapsed}
+                        onToggleCollapse={toggleOrderList}
+                    />
                 </div>
-                <div className='w-[70%] float-right overflow-auto h-screen'>
+                <div className='flex-1 min-w-0 h-screen overflow-auto flex flex-col'>
                     <SelectionPanel />
                     <Calendar />
                 </div>

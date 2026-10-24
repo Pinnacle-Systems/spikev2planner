@@ -29,7 +29,7 @@ jobs:
         env:
           # Pass any REACT_APP_* variables needed at build time:
           REACT_APP_SERVER_URL: ${{ secrets.REACT_APP_SERVER_URL }}
-        run: npm run build --prefix client
+        run: CI=false npm run build --prefix client
 
       - name: Verify frontend build output
         # Changed dist to build

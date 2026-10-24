@@ -109,8 +109,8 @@
 
 // export default OrderList
 
-import React, { useContext, useMemo, useState } from 'react'
-import { Search, X, Inbox } from 'lucide-react'
+import React, { useContext, useMemo, useState, useEffect } from 'react'
+import { Search, X, Inbox, PanelLeftClose, PanelLeftOpen, Layers } from 'lucide-react'
 import OrderItem from "./OrderItem"
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 
@@ -124,16 +124,33 @@ const TABS = [
 const HEADERS = ['S.no', 'Order no.', 'Del. date', 'Style', 'Buyer', 'Style type',
     'Qty', 'F%', 'T%', 'Status', 'Find', 'Prod. det'];
 
-const OrderList = () => {
+const EMPTY_ARRAY = [];
 
-    const {
-        orders, setOrders,
-        holidays,
-    } = useContext(CapacityPlannerContext)
+const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggleCollapse }) => {
+
+    const context = useContext(CapacityPlannerContext) || {};
+    const orders = context.orders ?? EMPTY_ARRAY;
+    const setOrders = context.setOrders || (() => {});
+    const holidays = context.holidays;
+
+    const isCollapsed = propIsCollapsed !== undefined ? propIsCollapsed : (context.isOrderListCollapsed ?? false);
+    const onToggleCollapse = propOnToggleCollapse || context.toggleOrderList;
 
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState("");
     const [isDragOver, setIsDragOver] = useState(false);
+
+    // Keyboard shortcut (Ctrl+B or Cmd+B) to toggle backlog
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault();
+                if (onToggleCollapse) onToggleCollapse();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onToggleCollapse]);
 
     function drop(ev) {
         ev.preventDefault();
@@ -149,10 +166,10 @@ const OrderList = () => {
 
     const ordersForLines = useMemo(() => orders.map(ord => {
         let status = "Pending";
-        const isFullyCompleted = (ord.lines).reduce((a, c) => a + parseFloat(c.pcs || 0), 0) == ord.quantity;
+        const isFullyCompleted = (ord.lines || []).reduce((a, c) => a + parseFloat(c.pcs || 0), 0) === parseFloat(ord.quantity || 0);
         if (isFullyCompleted) {
             status = "Allocated";
-        } else if (ord.lines.length > 0) {
+        } else if ((ord.lines || []).length > 0) {
             status = "Partial";
         }
         return { ...ord, status }
@@ -179,6 +196,84 @@ const OrderList = () => {
         );
     }, [baseOrders, statusFilter, searchText]);
 
+    // Collapsed Rail View
+    if (isCollapsed) {
+        return (
+            <aside
+                aria-label="Order backlog sidebar (collapsed)"
+                className={`group flex flex-col items-center justify-between w-full h-full min-h-0 bg-white border border-slate-200 rounded-xl overflow-hidden py-3 transition select-none
+                    ${isDragOver ? 'ring-2 ring-orange-500 bg-orange-50/80 shadow-md' : 'hover:border-slate-300 hover:shadow-xs'}`}
+                style={{ height: 'calc(100vh - 60px)' }}
+                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                onDragLeave={(e) => {
+                    e.preventDefault();
+                    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragOver(false);
+                }}
+                onDrop={(e) => { e.preventDefault(); setIsDragOver(false); drop(e); }}
+            >
+                {/* Top: Expand Button + Pending Badge */}
+                <div className="flex flex-col items-center gap-3 w-full px-1">
+                    <button
+                        type="button"
+                        onClick={onToggleCollapse}
+                        title="Expand order backlog (Ctrl+B)"
+                        aria-label="Expand order backlog"
+                        className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition shadow-xs border border-slate-200 bg-white active:scale-95 cursor-pointer"
+                    >
+                        <PanelLeftOpen size={18} />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onToggleCollapse}
+                        title={`${counts['Pending']} pending, ${baseOrders.length} total orders`}
+                        className="flex flex-col items-center cursor-pointer group/badge focus:outline-none"
+                    >
+                        <span className="w-7 h-7 flex items-center justify-center rounded-full text-[11px] font-bold bg-[#16345F] text-white shadow-xs group-hover/badge:scale-110 transition">
+                            {counts['Pending']}
+                        </span>
+                        <span className="text-[9px] font-semibold text-slate-500 mt-1 uppercase tracking-tight">
+                            Pend
+                        </span>
+                    </button>
+                </div>
+
+                {/* Middle: Rotated Title & Count */}
+                <button
+                    type="button"
+                    onClick={onToggleCollapse}
+                    title="Click to expand order backlog"
+                    className="flex-1 w-full flex flex-col items-center justify-center gap-2 cursor-pointer py-4 hover:bg-slate-50/70 transition focus:outline-none"
+                >
+                    <Layers size={16} className="text-slate-400 group-hover:text-slate-600 transition" />
+                    <span
+                        className="text-[11px] font-bold tracking-wider text-slate-600 group-hover:text-slate-900 uppercase transition"
+                        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                    >
+                        Order Backlog
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium">
+                        ({baseOrders.length})
+                    </span>
+                </button>
+
+                {/* Bottom: Dedicated Unplan Drop Zone Target */}
+                <div
+                    className={`w-10 h-16 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center p-1 transition
+                        ${isDragOver
+                            ? 'border-orange-500 bg-orange-100/90 text-orange-700 animate-pulse ring-2 ring-orange-300'
+                            : 'border-slate-300 bg-slate-50 text-slate-500 hover:border-slate-400'}`}
+                    title="Drag a planned order from the calendar and drop here to unplan it"
+                >
+                    <Inbox size={14} className={isDragOver ? 'text-orange-600' : 'text-slate-400'} />
+                    <span className="text-[8px] font-bold uppercase leading-tight mt-0.5">
+                        {isDragOver ? 'Drop!' : 'Unplan'}
+                    </span>
+                </div>
+            </aside>
+        );
+    }
+
     return (
         // ROOT: fills parent height. min-h-0 and min-w-0 let flex children shrink so the inner area can scroll.
         <div
@@ -193,11 +288,24 @@ const OrderList = () => {
             onDrop={(e) => { e.preventDefault(); setIsDragOver(false); drop(e); }}
         >
             {/* Header (fixed) */}
-            <div className="shrink-0 flex items-center justify-between px-3 pt-3 pb-2">
-                <h2 className="text-sm font-semibold text-slate-900">Order backlog</h2>
-                <span className="text-xs text-slate-600">
-                    {visibleOrders.length} of {baseOrders.length} orders
-                </span>
+            <div className="shrink-0 flex items-center justify-between px-3 pt-3 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2 min-w-0">
+                    <h2 className="text-sm font-semibold text-slate-900 truncate">Order backlog</h2>
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 shrink-0">
+                        {visibleOrders.length} of {baseOrders.length}
+                    </span>
+                </div>
+                {onToggleCollapse && (
+                    <button
+                        type="button"
+                        onClick={onToggleCollapse}
+                        title="Collapse order backlog (Ctrl+B)"
+                        aria-label="Collapse order backlog"
+                        className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition border border-transparent hover:border-slate-200 active:scale-95 shrink-0"
+                    >
+                        <PanelLeftClose size={18} />
+                    </button>
+                )}
             </div>
 
             {/* Search (fixed) */}
