@@ -80,7 +80,7 @@ export default function Form() {
       setExpireAt(data ? (data?.Subscription.length !== 0 ? moment.utc(data?.Subscription[0]?.expireAt).format('YYYY-MM-DD') : "") : "");
       setMaxUsers(data ? (data?.Subscription.length !== 0 ? data?.Subscription[0]?.maxUsers : "") : "");
       setSubscriptionCode(data ? (data?.Subscription.length !== 0 ? data?.Subscription[0]?.code : "") : "");
-      secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "userCompanyId", data?.id);
+      // secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "userCompanyId", data?.id);
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     }, [id])
 

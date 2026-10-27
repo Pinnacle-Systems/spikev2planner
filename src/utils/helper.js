@@ -77,3 +77,32 @@ export function findDateInRange(fromDate, toDate, checkDate) {
   }
   return false;
 }
+
+export function getYearShortCode(year) {
+  return `${new Date(year).getFullYear().toString().slice(2)}`
+}
+export function getYearShortCodeForFinYear(fromDate, toDate) {
+  return `${new Date(fromDate).getFullYear().toString().slice(2)}-${new Date(toDate).getFullYear().toString().slice(2)}`
+}
+export function substract(num1, num2) {
+  let n1 = parseFloat(num1) * 1000;
+  let n2 = parseFloat(num2) * 1000;
+  let result = (n1 - n2) / 1000;
+  return result;
+}
+
+
+export function getDateTimeRange(date) {
+  let startTime = new Date(date);
+  startTime.setHours(0, 0, 0, 0);
+  let endTime = new Date(date);
+  endTime.setHours(23, 59, 59, 99);
+  return { startTime, endTime };
+}
+
+export async function base64Tobuffer(base64) {
+  const response = await fetch(base64);
+  const arrayBuffer = await response.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  return buffer
+}

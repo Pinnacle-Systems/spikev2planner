@@ -82,11 +82,12 @@ function convertLineIntoDbFormat(line) {
 }
 
 async function create(body) {
-    const { name, location, lines } = await body
+    const { name, location, lines, active } = await body
     const data = await prisma.unit.create({
         data: {
             name,
             location,
+            active: Boolean(active),
             line: {
                 createMany: {
                     data: lines.map(line => {
@@ -100,8 +101,8 @@ async function create(body) {
 }
 
 async function update(id, body) {
-    const { name, location, lines } = await body
-    console.log(lines, "lines", id)
+    const { name, location, lines, active } = await body
+
     const dataFound = await prisma.unit.findUnique({
         where: {
             id: parseInt(id)
@@ -116,6 +117,8 @@ async function update(id, body) {
         data: {
             name,
             location,
+            active: Boolean(active)
+
         },
     })
     lines.forEach(async (l) => {

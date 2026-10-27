@@ -4,14 +4,13 @@ import { dropDownFinYear, dropDownListObject } from '../../../utils/contructObje
 import { getData } from '../../../utils/Apicalls';
 import secureLocalStorage from 'react-secure-storage';
 import { useNavigate } from 'react-router-dom';
-import { CLIENT_HOME_URL, PRODUCT_ADMIN_HOME_PATH } from '../../../Constants/clientAppUrls';
+import { PRODUCT_ADMIN_HOME_PATH } from '../../../Constants/clientAppUrls';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Building2, Calendar, ChevronRight, ArrowLeft } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const BASE_URL = process.env.REACT_APP_SERVER_URL
+const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
 const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
     const [loading, setLoading] = useState(false);
@@ -26,6 +25,11 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
 
     const [finYears, setFinYears] = useState([]);
     const [branches, setBranches] = useState([]);
+
+    const userEmail = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userEmail") || 
+                      secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "username") || "";
+
+    const isLoginPage = !window.location.hash || window.location.hash === "#/" || window.location.hash === "#";
 
     const retrieveFinYearData = useCallback(() => getData(FIN_YEAR_API, setFinYears, setLoading, { companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId") }), []);
     useEffect(retrieveFinYearData, [retrieveFinYearData]);
@@ -52,11 +56,9 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
                 Swal.fire({
                     title: "Server Down",
                     icon: "error",
-
                 });
             });
         }
-
     }, []);
     useEffect(retrieveBranchData, [retrieveBranchData]);
 
@@ -68,118 +70,122 @@ const BranchAndFinYearForm = ({ setIsGlobalOpen }) => {
             let selectedFinYears = dropDownFinYear(finYears?.filter(val => val?.active));
             setcurrentFinYear(selectedFinYears[0]?.value || "");
         }
-    }, [branches, finYears, currentBranch, currentFinYear])
+    }, [branches, finYears, currentBranch, currentFinYear]);
 
     const navigate = useNavigate();
 
-    const onSubmit = () => {
+    const onSubmit = (e) => {
+        if (e) e.preventDefault();
         if (!(currentBranch && currentFinYear)) {
             toast.info("Select Branch and Fin. Year", { position: 'top-center' });
-            return
+            return;
         }
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentBranchId", currentBranch);
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentFinYear", currentFinYear);
         secureLocalStorage.setItem(sessionStorage.getItem("sessionId") + "currentFinYearActive", isCurrentFinYearActive());
-        // navigate(CLIENT_HOME_URL);
         navigate(PRODUCT_ADMIN_HOME_PATH);
 
         window.location.reload();
-    }
+    };
 
     const isCurrentFinYearActive = () => {
         const year = finYears.find((finYr) => finYr.id === parseInt(currentFinYear));
         return year ? year.active : false;
-    }
+    };
 
     return (
-        <div className="flex flex-col items-center justify-center bg-transparent w-full max-w-md mx-auto">
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="w-full bg-white  shadow-2xl overflow-hidden border border-stone-100"
-            >
-                <div className="px-2 pt-2 pb-2">
-                    <h2 className="text-2xl font-bold text-center text-stone-900 mb-2">Session Details</h2>
-                    <p className="text-stone-500 text-center text-sm">Please select your working environment.</p>
+        <div className="w-full max-w-md mx-auto p-6 sm:p-8 bg-white rounded-2xl shadow-xl border border-gray-100 font-sans">
+            {/* Header */}
+            <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1.5">
+                    Select Workspace
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-500">
+                    Choose the workspace to continue signing in.
+                </p>
+                {userEmail && (
+                    <p className="text-xs text-gray-400 mt-1.5">
+                        Signed in as: <span className="text-slate-600 font-medium">{userEmail}</span>
+                    </p>
+                )}
+            </div>
+
+            {/* Form */}
+            <form onSubmit={onSubmit} className="space-y-4">
+                {/* Branch Field */}
+                <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5" htmlFor="branch">
+                        Branch
+                    </label>
+                    <div className="relative">
+                        <select
+                            id="branch"
+                            name="branch"
+                            value={currentBranch}
+                            onChange={(e) => setCurrentBranch(e.target.value)}
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-lg border border-gray-300 text-slate-800 bg-white focus:outline-none focus:border-[#e46230] focus:ring-1 focus:ring-[#e46230] transition-colors cursor-pointer appearance-none pr-10"
+                        >
+                            <option value="" hidden>Select Branch</option>
+                            {dropDownListObject(branches, "branchName", "id").map((branch) => (
+                                <option key={branch.value} value={branch.value}>
+                                    {branch.show}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-400">
+                            <ChevronDown className="h-4 w-4" />
+                        </div>
+                    </div>
                 </div>
 
-                <form className="px-8 pb-10 space-y-6">
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-stone-700 uppercase tracking-widest pl-1" htmlFor="branch">
-                            Branch
-                        </label>
-                        <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Building2 className="h-4 w-4 text-stone-400 group-focus-within:text-stone-900 transition-colors" />
-                            </div>
-                            <select
-                                id="branch"
-                                name="branch"
-                                value={currentBranch}
-                                onChange={(e) => { setCurrentBranch(e.target.value) }}
-                                className="block w-full pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
-                            >
-                                <option value="" hidden>Select Branch</option>
-                                {dropDownListObject(branches, "branchName", "id").map((branch) => (
-                                    <option key={branch.value} value={branch.value}>
-                                        {branch.show}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                <ChevronRight className="h-4 w-4 text-stone-400 rotate-90" />
-                            </div>
+                {/* Financial Year Field */}
+                <div>
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5" htmlFor="finyear">
+                        Financial Year
+                    </label>
+                    <div className="relative">
+                        <select
+                            id="finyear"
+                            name="finyear"
+                            value={currentFinYear}
+                            onChange={(e) => setcurrentFinYear(e.target.value)}
+                            className="w-full px-3.5 py-2.5 sm:py-3 text-sm rounded-lg border border-gray-300 text-slate-800 bg-white focus:outline-none focus:border-[#e46230] focus:ring-1 focus:ring-[#e46230] transition-colors cursor-pointer appearance-none pr-10"
+                        >
+                            <option value="" hidden>Select Financial Year</option>
+                            {dropDownFinYear(finYears).map((finyear) => (
+                                <option key={finyear.value} value={finyear.value}>
+                                    {finyear.show}
+                                </option>
+                            ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-400">
+                            <ChevronDown className="h-4 w-4" />
                         </div>
                     </div>
+                </div>
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-bold text-stone-700 uppercase tracking-widest pl-1" htmlFor="finyear">
-                            Financial Year
-                        </label>
-                        <div className="relative group">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Calendar className="h-4 w-4 text-stone-400 group-focus-within:text-stone-900 transition-colors" />
-                            </div>
-                            <select
-                                id="finyear"
-                                name="finyear"
-                                value={currentFinYear}
-                                onChange={(e) => { setcurrentFinYear(e.target.value) }}
-                                className="block w-full pl-11 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-stone-900 transition-all text-sm appearance-none cursor-pointer"
-                            >
-                                <option value="" hidden>Select Financial Year</option>
-                                {dropDownFinYear(finYears).map((finyear) => (
-                                    <option key={finyear.value} value={finyear.value}>
-                                        {finyear.show}
-                                    </option>
-                                ))}
-                            </select>
-                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                <ChevronRight className="h-4 w-4 text-stone-400 rotate-90" />
-                            </div>
-                        </div>
-                    </div>
+                {/* Continue Button */}
+                <div className="pt-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-2.5 sm:py-3 px-4 bg-[#e46230] hover:bg-[#d05322] active:bg-[#bd4516] disabled:opacity-70 text-white font-semibold rounded-lg text-sm shadow-sm transition-colors duration-150 flex items-center justify-center cursor-pointer"
+                    >
+                        {loading ? "Loading..." : "Continue"}
+                    </button>
+                </div>
 
-                    <div className="flex gap-4 pt-4">
-                        <button
-                            onClick={() => { setIsGlobalOpen(false) }}
-                            className="flex-1 flex items-center justify-center gap-2 py-1.5 px-4 border border-stone-200 text-stone-600 rounded-2xl font-bold text-sm hover:bg-stone-50 hover:text-stone-900 transition-all active:scale-[0.98]"
-                            type="button"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                            Back
-                        </button>
-                        <button
-                            onClick={onSubmit}
-                            className="flex-[2] py-3.5 px-4 bg-stone-900 text-white rounded-2xl font-bold text-sm hover:bg-black shadow-lg shadow-stone-200 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                            type="button"
-                        >
-                            Workspace
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
-                    </div>
-                </form>
-            </motion.div>
+                {/* Back Link */}
+                <div className="text-center pt-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsGlobalOpen(false)}
+                        className="text-xs sm:text-sm text-[#e46230] hover:text-[#c54b1d] font-medium transition-colors hover:underline cursor-pointer"
+                    >
+                        {isLoginPage ? "← Back to Sign In" : "← Cancel"}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

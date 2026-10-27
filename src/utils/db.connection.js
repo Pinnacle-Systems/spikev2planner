@@ -4,19 +4,19 @@ const oracledb = require('oracledb');
 oracledb.initOracleClient({ libDir: process.env.ORACLE_CLIENT_PATH });
 
 
-const dbConfig = {
-      user: "pssbsa",
-      password: "PSSBSA_MAY2023",
-      connectString: "203.95.216.155:1556/avt06p",
-};
+// const dbConfig = {
+//       user: "pssbsa",
+//       password: "PSSBSA_MAY2023",
+//       connectString: "203.95.216.155:1556/avt06p",
+// };
 
 //Spike V2
 
-// const dbConfig = {
-//       user: "TIPLSPIKE",
-//       password: "TIPLSPIKE_DEC2025",
-//       connectString: "203.95.216.182:1557/avt07p",
-// };
+const dbConfig = {
+      user: "TIPLSPIKE",
+      password: "TIPLSPIKE_DEC2025",
+      connectString: "203.95.216.182:1557/avt07p",
+};
 
 export async function getConnection() {
       let connection;

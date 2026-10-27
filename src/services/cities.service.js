@@ -1,0 +1,184 @@
+import { NoRecordFound } from '../configs/Responses.js';
+import { prisma } from '../lib/prisma.js';
+
+async function get(req) {
+    const { companyId, active } = req.query
+
+    let data
+    data = await prisma.city.findMany({
+        where: {
+            state: {
+                country: {
+                    companyId: companyId ? parseInt(companyId) : undefined,
+                },
+            },
+            active: active ? Boolean(active) : undefined,
+        },
+        select: {
+            name: true, code: true, active: true, id: true, stateId: true,
+            state: {
+                select: {
+                    name: true,
+                    country: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            },
+            _count: {
+                select: {
+                    doctorPermCity: true,
+                    Party: true
+                }
+            }
+        },
+
+    });
+
+    data = data.map((item) => {
+        const types = [];
+
+        if (item._count.doctorPermCity) types.push("Employee Master");
+        if (item._count.Party) types.push("Customer/Supplier Master");
+
+        return {
+            ...item,
+            referencedIn: types.join(", ")
+
+        };
+    });
+
+    return { statusCode: 0, data };
+}
+
+
+async function getOne(id) {
+    const childRecord = await prisma.Party.count({ where: { cityId: parseInt(id) } });
+
+    const data = await prisma.city.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    })
+    if (!data) return NoRecordFound("City");
+    return { statusCode: 0, data: { ...data, ...{ childRecord } } };
+}
+
+async function getSearch(req) {
+    const { searchKey } = req.params
+    const { companyId, active } = req.query
+    const data = await prisma.city.findMany({
+        where: {
+            state: {
+                country: {
+                    companyId: companyId ? parseInt(companyId) : undefined,
+                },
+            },
+            active: active ? Boolean(active) : undefined,
+            OR: [
+                {
+                    name: {
+                        contains: searchKey,
+                    },
+                },
+                {
+                    code: {
+                        contains: searchKey,
+                    },
+                },
+                {
+                    state: {
+                        name: {
+                            contains: searchKey
+                        },
+                    }
+                }
+            ],
+        },
+        select: {
+            name: true, code: true, active: true, id: true,
+            _count: {
+                select: {
+                    doctorLocalCity: true,
+                    Party: true
+                }
+            },
+            state: {
+                select: {
+                    name: true,
+                    country: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+    })
+    data = data.map((item) => {
+        return {
+            ...item,
+            _count: {
+                ...item._count,
+                name: item._count.doctorLocalCity ? "Employee (" + item.name + ")" : (item._count.Party ? "Customer/Supplier Master (" + item.name + ")" : item.name)
+            }
+        }
+    })
+    return { statusCode: 0, data: data };
+}
+
+
+async function create(body) {
+    const { name, code, state } = await body
+    const data = await prisma.city.create({
+        data: {
+            name, code,
+            state: {
+                connect: { id: parseInt(state) }
+            }
+        },
+    });
+    return { statusCode: 0, data };
+}
+
+async function update(id, body) {
+    const { name, code, active, state } = await body
+    const dataFound = await prisma.city.findUnique({
+        where: {
+            id: parseInt(id)
+        },
+    })
+    if (!dataFound) return NoRecordFound("City");
+    const data = await prisma.city.update({
+        where: {
+            id: parseInt(id),
+        },
+        data:
+        {
+            name, code, active,
+            state: {
+                connect: { id: parseInt(state) }
+            }
+        },
+    })
+    return { statusCode: 0, data };
+};
+
+async function remove(id) {
+    const data = await prisma.city.delete({
+        where: {
+            id: parseInt(id)
+        },
+    })
+    return { statusCode: 0, data };
+}
+
+export {
+    get,
+    getOne,
+    getSearch,
+    create,
+    update,
+    remove
+}

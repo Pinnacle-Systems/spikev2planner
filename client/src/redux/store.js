@@ -28,6 +28,8 @@ import {
   paymentApi,
   DeliveryChallanApi,
   paymentAdjustmentApi,
+  UnitMasterApi,
+  LineMasterApi,
 } from "./services"
 import projectPaymentFormApi from "./services/ProjectPaymentService";
 import {
@@ -233,7 +235,11 @@ const commonReducers = {
   paymentAdjustment: paymentAdjustmentApi.reducer,
   [DashboardApi.reducerPath]: DashboardApi.reducer,
   [SalesDashboardApi.reducerPath]: SalesDashboardApi.reducer,
+  UnitMaster: UnitMasterApi.reducer,
+  [LineMasterApi.reducerPath]: LineMasterApi.reducer
 }
+
+
 const commonMiddleware = [countryMasterApi.middleware,
 pageMasterApi.middleware,
 UnitOfMeasurementApi.middleware,
@@ -260,7 +266,6 @@ purchaseBillApi.middleware,
 stockApi.middleware,
 salesBillApi.middleware,
 purchaseReturnApi.middleware,
-salesReturnApi.middleware,
 uomMasterApi.middleware,
 quotesApi.middleware,
 leadFormApi.middleware,
@@ -367,7 +372,9 @@ ExpenseEntryApi.middleware,
 DayBookApi.middleware,
 paymentAdjustmentApi.middleware,
 DashboardApi.middleware,
-SalesDashboardApi.middleware
+SalesDashboardApi.middleware,
+LineMasterApi.middleware,
+UnitMasterApi.middleware,
 ];
 
 

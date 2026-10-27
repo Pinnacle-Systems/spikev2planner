@@ -57,7 +57,7 @@ const Home = () => {
 
                     <>
                         <Header profile={profile} setProfile={setProfile} setIsGlobalOpen={setIsGlobalOpen} />
-                        <div className="flex-1 ">
+                        <div className="flex-1  pl-3">
                             <ActiveTabList isSuperAdmin={isSuperAdmin} />
                         </div>
                     </>

@@ -136,6 +136,8 @@ export const DAY_BOOK_API = "dayBook"
 export const PAYMENT_ADJUSTMENT_API = "paymentAdjustment"
 export const DASHBOARD_API = "dashboard"
 export const SALES_DASHBOARD_API = "salesDashboard"
+export const UNIT_API = "units";
+export const LINES_API = "lines";
 
 
 

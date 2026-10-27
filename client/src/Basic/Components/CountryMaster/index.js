@@ -10,7 +10,7 @@ import {
 } from "../../../redux/services/CountryMasterService";
 
 import { TextInput, ToggleButton, ReusableTable, TextInputNew, TextInputNew1 } from "../../../Inputs";
-import { statusDropdown } from "../../../Utils/DropdownData";
+import { statusDropdown } from "../../../utils/DropdownData";
 import Modal from "../../../UiComponents/Modal";
 
 import { push } from "../../../redux/features/opentabs";

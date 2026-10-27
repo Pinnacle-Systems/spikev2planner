@@ -9,7 +9,7 @@ import {
   useUpdateCountryMutation,
 } from "../../../redux/services/CountryMasterService";
 
-import { TextInput, ToggleButton, ReusableTable, TextInputNew, TextInputNew1 } from "../../../Inputs";
+import { TextInput, ToggleButton, ReusableTable, TextInputNew, TextInputNew1, DropdownInputNew } from "../../../Inputs";
 import { statusDropdown } from "../../../utils/DropdownData";
 import Modal from "../../../UiComponents/Modal";
 
@@ -20,6 +20,11 @@ import { Check, Power } from "lucide-react";
 import Swal from "sweetalert2";
 import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
 import MasterPageLayout from "../MasterPageLayout";
+import SearchableTableCellSelect from "../../ReusabelComponents/SearchableTableCellSelect";
+import { useGetLineQuery } from "../../../redux/services/LineMasterService";
+import { styleTypeOptions } from "../../../utils/selectOptions";
+import TransactionLineItemsSection, { transactionTableClassName, transactionTableFocusCellClassName, transactionTableHeadClassName, transactionTableHeaderCellClassName, transactionTableNumberInputClassName } from "../../ReusabelComponents/TransactionLineItemsSection";
+import { useAddUnitMutation, useDeleteUnitMutation, useGetUnitByIdQuery, useGetUnitQuery, useUpdateUnitMutation } from "../../../redux/services/UnitMasterService";
 // import { usePermissionForUsers } from "../HasPermission";
 
 const MODEL = "Country Master";
@@ -36,7 +41,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const [searchValue, setSearchValue] = useState("");
   const { refs, handlers } = useFormKeyboardNavigation();
   const formRef = useRef(null);
-
+  const [lines, setLines] = useState([])
   const childRecord = useRef(0);
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -47,21 +52,51 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     data: allData,
     isLoading,
     isFetching,
-  } = useGetCountriesQuery({ params, searchParams: searchValue });
+  } = useGetUnitQuery({ params, searchParams: searchValue });
   const {
     data: singleData,
     isFetching: isSingleFetching,
     isLoading: isSingleLoading,
-  } = useGetCountryByIdQuery(id, { skip: !id });
+  } = useGetUnitByIdQuery(id, { skip: !id });
 
-  const [addData] = useAddCountryMutation();
-  const [updateData] = useUpdateCountryMutation();
-  const [removeData] = useDeleteCountryMutation();
+  const [addData] = useAddUnitMutation();
+  const [updateData] = useUpdateUnitMutation();
+  const [removeData] = useDeleteUnitMutation();
+
+
+
+  const {
+    data: lineData,
+  } = useGetLineQuery({
+    params: {
+      isGetLinesFromERP: true
+    }, searchParams: searchValue,
+  });
+
+  const createStandardPriceRow = () => ({
+    lineId: "",
+    styleType: "",
+    offerPrice: "",
+    salesPrice: "",
+    sku: "",
+  });
+
 
 
 
   const syncFormWithDb = useCallback(
     (data) => {
+
+      if (!id) {
+        setLines([createStandardPriceRow()])
+      } else {
+        setLines(data?.lines)
+        setName(data?.name || "");
+        setCode(data?.code || "");
+        setActive(data?.active ?? true);
+        childRecord.current = data?.childRecord ? data?.childRecord : 0;
+      }
+
       setName(data?.name || "");
       setCode(data?.code || "");
       setActive(data?.active ?? true);
@@ -84,6 +119,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     ),
     active,
     id,
+    lines
   };
 
   const validateData = (data) => {
@@ -288,35 +324,79 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     }
   }, [form, onSuccess]);
 
+  function handleInputChange(value, index, field) {
+    setLines(lines => {
+      const newBlend = structuredClone(lines);
+      newBlend[index][field] = value;
+      return newBlend
+    }
+    );
+  };
+
+
+  const lineOptions = (id ? lineData?.data : lineData?.data || [])?.map((item) => ({
+    value: item.linename,
+    label: item?.linename || "",
+  }));
+
+  const styleTypeOptions = [{
+    value: "regular",
+    label: "Regular"
+  }, {
+    value: "casual",
+    label: "Casual"
+  }]
+
+  const compactFocusCellClassName = transactionTableFocusCellClassName;
+  const compactNumberInputClassName = transactionTableNumberInputClassName;
+  const compactHeaderCellClassName = transactionTableHeaderCellClassName;
+
+  const addNewRow = () => {
+    const newRow = {
+      itemId: "",
+      qty: "",
+      tax: "0",
+      colorId: "",
+      uomId: "",
+      price: "",
+      discountTypes: "",
+      discountValue: "0.00",
+      id: '',
+      poItemsId: "",
+      taxMethod: "",
+      barcode: "",
+      barcodeType: "REGULAR"
+    };
+    setLines([...lines, newRow]);
+  };
+
   const formBody = (
-    <div className="flex-1 p-3">
+    <div className="flex-1 p-3 h-[70%]">
       <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
-        <div className="p-2" ref={formRef}>
-          <div className="flex">
-            <div className="mb-3 w-[60%]">
-              <TextInputNew1
-                name="Country Name"
-                type="text"
-                value={name}
-                setValue={setName}
-                required={true}
-                readOnly={readOnly}
-                ref={countryNameRef}
-                disabled={childRecord.current > 0}
-              />
-            </div>
-            <div className="mb-3 ml-5">
-              <TextInputNew1
-                name="Code"
-                type="text"
-                value={code}
-                setValue={setCode}
-                required={true}
-                readOnly={readOnly}
-                disabled={childRecord.current > 0}
-                onKeyDown={handlers.handleLastInputKeyDown}
-              />
-            </div>
+        <div className="grid grid-cols-5 gap-2" ref={formRef}>
+          <div className="col-span-2">
+            <TextInputNew1
+              name="Unit Name"
+              type="text"
+              value={name}
+              setValue={setName}
+              required={true}
+              readOnly={readOnly}
+              ref={countryNameRef}
+              disabled={childRecord.current > 0}
+            />
+          </div>
+          <div className="col-span-2">
+            <TextInputNew1
+              name="Unit Location"
+              type="text"
+              value={code}
+              setValue={setCode}
+              required={true}
+              readOnly={readOnly}
+              disabled={childRecord.current > 0}
+              onKeyDown={handlers.handleLastInputKeyDown}
+            />
           </div>
           <ToggleButton
             name="Status"
@@ -329,6 +409,161 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
             onKeyDown={handlers.handleToggleKeyDown}
           />
         </div>
+
+        <fieldset className="p-0.5 mt-3 min-h-0 h-[90%] overflow-y-auto">
+          <TransactionLineItemsSection
+            panelClassName="h-full min-h-0"
+            contentClassName="min-h-0 overflow-hidden rounded-md border border-slate-200 !py-0"
+          >
+            <div className="h-full overflow-x-auto overflow-y-auto">
+              <table className={transactionTableClassName}>
+                <thead className={transactionTableHeadClassName}>
+                  <tr>
+                    <th className={`${compactHeaderCellClassName} w-12`}>S.No</th>
+                    <th className={`${compactHeaderCellClassName} w-12`}>Line Name</th>
+                    <th className={`${compactHeaderCellClassName} w-20`}>Style Type</th>
+                    <th className={`${compactHeaderCellClassName} w-32`}>Incharge</th>
+                    <th className={`${compactHeaderCellClassName} w-16`}>Max Capacity / per day(piece)</th>
+                    <th className={`${compactHeaderCellClassName} w-16`}>Efficiency (%)</th>
+                    <th className={`${compactHeaderCellClassName} w-32`}>Current Capacity / per day(piece)</th>
+
+
+                    <th className={`${compactHeaderCellClassName} w-7`}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lines.map((row, index) => (
+                    <tr
+                      key={index}
+                      onContextMenu={(e) => {
+
+                      }}
+                    >
+                      <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
+                      <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+                        <SearchableTableCellSelect
+                          value={row.lineId}
+                          options={lineOptions}
+                          disabled={readOnly}
+                          onChange={(nextValue) => handleInputChange(nextValue, index, "lineId")}
+                        />
+                      </td>
+                      <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
+
+                        <SearchableTableCellSelect
+                          value={row.styleType}
+                          options={styleTypeOptions}
+                          disabled={readOnly}
+                          onChange={(nextValue) => handleInputChange(nextValue, index, "styleType")}
+                        />
+                      </td>
+                      <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                        <input
+                          onKeyDown={e => {
+                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
+                            if (e.key === "Delete") handleInputChange("0.000", index, "inCharge");
+                          }}
+                          className={compactNumberInputClassName}
+                          onFocus={e => e.target.select()}
+                          value={row?.inCharge}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "inCharge")}
+                          onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "inCharge")}
+                        />
+                      </td>
+                      <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                        <input
+                          onKeyDown={e => {
+                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
+                            if (e.key === "Delete") handleInputChange("0.000", index, "capacity");
+                          }}
+                          min="0" type="number"
+                          className={compactNumberInputClassName}
+                          onFocus={e => e.target.select()}
+                          value={row?.capacity}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "capacity")}
+                          onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "capacity")}
+                        />
+                      </td>
+                      <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                        <input
+                          onKeyDown={e => {
+                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
+                            if (e.key === "Delete") handleInputChange("0.000", index, "efficiency");
+                          }}
+                          min="0" type="number"
+                          className={compactNumberInputClassName}
+                          onFocus={e => e.target.select()}
+                          value={row?.efficiency}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "efficiency")}
+                          onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "efficiency")}
+                        />
+                      </td>
+                      <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                        <input
+                          onKeyDown={e => {
+                            if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
+                            if (e.key === "Delete") handleInputChange("0.000", index, "qty");
+                          }}
+                          min="0" type="number"
+                          className={compactNumberInputClassName}
+                          onFocus={e => e.target.select()}
+                          value={row?.qty}
+                          disabled={readOnly}
+                          onChange={e => handleInputChange(e.target.value, index, "qty")}
+                          onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")}
+                        />
+                      </td>
+                      <td className="w-16 px-1 py-1 text-center">
+                        <button
+                          onClick={() => addNewRow()}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              if (index === lines.length - 1) {
+                                addNewRow();
+                              }
+                            }
+                          }}
+                          className="h-full w-full rounded-none bg-blue-50 py-0"
+                        >
+                          +
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {/* 
+              {contextMenu && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: `${contextMenu.mouseY - 240}px`,
+                    left: `${contextMenu.mouseX - 30}px`,
+                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                    padding: "8px", borderRadius: "4px", zIndex: 1000,
+                  }}
+                  className="bg-gray-100"
+                  onMouseLeave={handleCloseContextMenu}
+                >
+                  <div className="flex flex-col gap-1">
+                    <button className="text-black text-[12px] text-left rounded px-1"
+                      onClick={() => { handleDeleteRow(contextMenu.rowId); handleCloseContextMenu(); }}>
+                      Delete
+                    </button>
+                    <button className="text-black text-[12px] text-left rounded px-1"
+                      onClick={() => { handleDeleteAllRows(); handleCloseContextMenu(); }}>
+                      Delete All
+                    </button>
+                  </div>
+                </div>
+              )} */}
+            </div>
+          </TransactionLineItemsSection>
+        </fieldset>
       </div>
     </div>
   );
@@ -450,7 +685,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[40%] h-[320px]"}
+            widthClass={"w-[80%] h-[95%]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);

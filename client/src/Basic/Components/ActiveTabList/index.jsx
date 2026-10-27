@@ -1,11 +1,15 @@
 import React, { useState, Suspense, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
-import { push, remove, clearAll } from "../../../CapacityPlanner/redux/features/opentabs";
+import { push, remove, clearAll } from "../../../redux/features/opentabs";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
-import { useGetRoleByIdQuery } from "../../../CapacityPlanner/redux/services/RolesMasterService";
-import { CompanyMaster, PageGroupMaster, PageMaster, UnitMaster, UserAndRolesMaster } from "..";
+import { useGetRoleByIdQuery } from "../../../redux/services/RolesMasterService";
+import { CityMaster, CompanyMaster, CountryMaster, DepartmentMaster, EmployeeCategoryMaster, EmployeeMaster, PageGroupMaster, PageMaster, StateMaster, UnitMaster, UserAndRolesMaster } from "..";
 import CapacityPlanner from "../../../CapacityPlanner/CapacityPlanner";
+import { HolidayCalendar, OrderForm, UnPlannedOrdersReport } from "../../../CapacityPlanner/pages";
+import ProductionReport from "../../../CapacityPlanner/pages/ProductionReport";
+import Home from "../../../CapacityPlanner/pages/Home";
+import HomeDashboard from "../Home";
 
 const formatTabTitle = (name) => {
   if (!name) return "";
@@ -49,13 +53,25 @@ const ActiveTabList = ({ isSuperAdmin }) => {
   }, [isSuperAdmin, defaultAdmin, roleData]);
 
   const tabs = {
-    "HOME": <CapacityPlanner />,
+    "HOME": <HomeDashboard />,
+    "Home": <HomeDashboard />,
     "PAGE GROUP MASTER": <PageGroupMaster />,
     "PAGE MASTER": <PageMaster />,
     "COMPANY MASTER": <CompanyMaster />,
     "CAPASITY PLANNER": <CapacityPlanner />,
     "USERS & ROLES": <UserAndRolesMaster />,
-    "UNIT MASTER": <UnitMaster />
+    "UNIT MASTER": <UnitMaster />,
+    "ORDER DETAILS FORM": <OrderForm />,
+    "HOLIDAYS": <HolidayCalendar />,
+    "PLANNED ORDERS": <ProductionReport />,
+    "UNPLANNED ORDERS": <UnPlannedOrdersReport />,
+    "COUNTRY MASTER": <CountryMaster />,
+    "STATE MASTER": <StateMaster />,
+    "CITY MASTER": <CityMaster />,
+    "DEPARTMENT MASTER": <DepartmentMaster />,
+    "EMPLOYEE CATEGORY MASTER": <EmployeeCategoryMaster />,
+    "EMPLOYEE MASTER": <EmployeeMaster />,
+
   };
 
   // Ensure tabs array is available and Home is present

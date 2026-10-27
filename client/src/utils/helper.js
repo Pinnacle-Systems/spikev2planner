@@ -180,3 +180,7 @@ export function findFromList(id, list, property) {
   if (!data) return ""
   return data[property]
 }
+
+export function viewBase64String(base64String) {
+  return "data:image/png;base64, " + base64String
+}

@@ -1,0 +1,595 @@
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import secureLocalStorage from "react-secure-storage";
+import {
+  useGetStateQuery,
+  useGetStateByIdQuery,
+  useAddStateMutation,
+  useUpdateStateMutation,
+  useDeleteStateMutation,
+} from "../../../redux/services/StateMasterService";
+import { useGetCountriesQuery } from "../../../redux/services/CountryMasterService";
+import CountryMaster from "../CountryMaster";
+
+import { toast } from "react-toastify";
+import { TextInput, CheckBox, DropdownInput, ToggleButton, ReusableTable, TextInputNew1, DropdownInputNew } from "../../../Inputs";
+import { dropDownListObject } from '../../../utils/contructObject';
+import { useDispatch } from "react-redux";
+import { Check, Power } from "lucide-react";
+import Modal from "../../../UiComponents/Modal";
+import Swal from "sweetalert2";
+import useInvalidateTags from "../../../CustomHooks/useInvalidateTags";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../MasterPageLayout";
+
+
+const MODEL = "State Master";
+
+export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel } = {}) {
+  const [form, setForm] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const [openTable, setOpenTable] = useState(false);
+
+  const [readOnly, setReadOnly] = useState(false);
+  const [id, setId] = useState(editId || deleteId || "");
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [active, setActive] = useState(true);
+  const [country, setCountry] = useState("");
+  const [gstNo, setGstNo] = useState("");
+
+  const [searchValue, setSearchValue] = useState("");
+  // const nameRef = useRef(null);
+  const formRef = useRef(null);
+
+  const childRecord = useRef(0);
+  const dispatch = useDispatch();
+
+  console.log(childRecord, "childRecord")
+
+  const params = {
+    companyId: secureLocalStorage.getItem(
+      sessionStorage.getItem("sessionId") + "userCompanyId"
+    ),
+  };
+  const { data: countriesList, isLoading: isCountryLoading, isFetching: isCountryFetching } =
+    useGetCountriesQuery({ params });
+
+  const { data: allData, isLoading, isFetching } = useGetStateQuery({ params, searchParams: searchValue });
+  const [invalidateTagsDispatch] = useInvalidateTags();
+
+  console.log(countriesList, "countriesList");
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+  const {
+    firstInputRef: nameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
+
+
+
+  const {
+    data: singleData,
+    isFetching: isSingleFetching,
+    isLoading: isSingleLoading,
+  } = useGetStateByIdQuery(id, { skip: !id });
+
+  const [addData] = useAddStateMutation();
+  const [updateData] = useUpdateStateMutation();
+  const [removeData] = useDeleteStateMutation();
+
+  const syncFormWithDb = useCallback((data) => {
+
+    // setReadOnly(true);
+    // setActive(true)
+    setName(data?.name || "");
+    setCode(data?.code || "");
+    setActive(id ? (data?.active ?? false) : true);
+    setCountry(data?.countryId || "");
+    setGstNo(data?.gstNo || "");
+    childRecord.current = data?.childRecord ? data?.childRecord : 0;
+  }, [id]);
+
+
+
+  useEffect(() => {
+    syncFormWithDb(singleData?.data);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  const data = {
+    name, code, active, country, gstNo, id
+  };
+
+  const validateData = (data) => {
+    if (data.name && data.code) {
+      return true;
+    }
+    return false;
+  };
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
+    try {
+      let returnData = await callback(data).unwrap();
+      if (onSuccess) {
+        onSuccess(returnData.data.id);
+        await Swal.fire({
+          title: "Saved Successfully",
+          icon: "success",
+        });
+        return;
+      }
+      await Swal.fire({
+        title: text + "  " + "Successfully",
+        icon: "success",
+      });
+      invalidateTagsDispatch()
+      if (nextProcess == "new") {
+        syncFormWithDb(undefined)
+        onNew()
+        nameRef?.current?.focus(); // ✅ focus called directly
+        setId("")
+      } else {
+        setForm(false)
+        setId("")
+      }
+      // 
+
+
+    } catch (error) {
+      console.log(error, "error for state master")
+      Swal.fire({
+        icon: 'error',
+        text: error.data?.message || 'Something went wrong!',
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
+    }
+  };
+
+  const saveData = (nextProcess) => {
+    if (readOnly) return toast.info("Turn On Edit Mode !..")
+
+    const upperName = name.toUpperCase();
+    const upperCode = code.toUpperCase();
+
+    const finalData = {
+      ...data,
+      name: upperName,
+      code: upperCode
+    };
+
+    if (!validateData(finalData)) {
+      Swal.fire({
+        title: "Please fill all required fields...!",
+        icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
+      return;
+    }
+
+
+    let foundItem;
+    if (id) {
+      foundItem = allData?.data
+        ?.filter((i) => i.id != id)
+        ?.some((item) => item.name.toUpperCase() == upperName && item.countryId == country);
+    } else {
+      foundItem = allData?.data?.some((item) => item.name.toUpperCase() == upperName && item.countryId == country);
+    }
+    if (foundItem) {
+      Swal.fire({
+        text: "The State Name already exists.",
+        icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
+      return false;
+    }
+
+
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) {
+        return;
+      }
+    }
+    if (id) {
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
+    } else {
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
+    }
+  };
+
+  const deleteData = async (id) => {
+
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) {
+        return;
+      }
+      try {
+        await removeData(id)
+        setId("");
+        invalidateTagsDispatch()
+        dispatch({
+          type: `countryMaster/invalidateTags`,
+          payload: ['Countries'],
+        });
+        await Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
+        setForm(false);
+      } catch (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'Submission error',
+          text: error.data?.message || 'Something went wrong!',
+        });
+        setForm(false);
+      }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
+  const onNew = () => {
+    syncFormWithDb(undefined)
+    setId("");
+    setReadOnly(false);
+    setForm(true);
+    setSearchValue("");
+
+    setTimeout(() => {
+      nameRef.current?.focus();
+    }, 200);
+  };
+
+
+  const handleView = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(true);
+    console.log("view");
+  };
+  const handleEdit = (id) => {
+    setId(id);
+    setForm(true);
+    setReadOnly(false);
+    console.log("Edit");
+  };
+
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const columns = [
+    {
+      header: "S.No",
+      accessor: (item, index) => index + 1,
+      className: "font-medium text-gray-900 w-12  text-center",
+    },
+    {
+      header: "State Name",
+      accessor: (item) => item?.name,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
+    },
+    {
+      header: "Country Name",
+      accessor: (item) => item?.country?.name,
+      //   cellClass: () => "font-medium  text-gray-900",
+      className: "font-medium text-gray-900 text-left uppercase w-64",
+      enableSearch: true
+
+    },
+
+    {
+      header: "Status",
+      accessor: (item) => (item.active ? ACTIVE : INACTIVE),
+      //   cellClass: () => "font-medium text-gray-900",
+      className: "font-medium text-gray-900 text-center uppercase w-16",
+    },
+
+  ];
+
+
+  useEffect(() => {
+    if ((form || onSuccess) && nameRef.current) {
+      nameRef.current.focus();
+    }
+  }, [form, onSuccess]);
+
+  const formBody = (
+    <div className="flex-1 overflow-auto p-3">
+      <div className="grid grid-cols-1 gap-3 h-full">
+        <div className="bg-white p-3 rounded-md border border-gray-200 h-full">
+          <fieldset className="grid grid-cols-2 gap-2 rounded mt-2" ref={formRef}>
+            <div>
+              <TextInputNew1
+                name="State Name"
+                type="text"
+                value={name}
+                setValue={setName}
+                required={true}
+                readOnly={readOnly}
+                ref={nameRef}
+                disabled={childRecord.current > 0}
+              />
+            </div>
+            <div>
+              <DropdownInputNew
+                name="Country"
+                options={dropDownListObject(
+                  id
+                    ? countriesList?.data
+                    : countriesList?.data?.filter((item) => item?.active),
+                  "name",
+                  "id"
+                )}
+                value={country}
+                setValue={setCountry}
+                required={true}
+                readOnly={readOnly}
+                className={`w-[150px]`}
+                disabled={childRecord.current > 0}
+                addNewLabel="+ Add New Country"
+                childComponent={CountryMaster}
+
+                addNewModalWidth="w-[40%] h-[45%]"
+              />
+            </div>
+            <div>
+              <TextInputNew1
+                name="Code"
+                type="text"
+                value={code}
+                setValue={setCode}
+                required={true}
+                readOnly={readOnly}
+                disabled={childRecord.current > 0}
+              />
+            </div>
+            <div className="">
+              <ToggleButton
+                name="Status"
+                value={active}
+                setActive={setActive}
+                required={true}
+                readOnly={readOnly}
+                onKeyDown={handlers.handleToggleKeyDown}
+                ref={toggleButtonRef}
+              />
+            </div>
+          </fieldset>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (deleteId) {
+    const childCount = singleData?.data?.childRecord ?? 0;
+    const isLoadingRecord = isSingleFetching || isSingleLoading;
+
+    const handleConfirmDelete = async () => {
+      try {
+        const res = await removeData(deleteId).unwrap();
+        if (res?.statusCode === 1) {
+          Swal.fire({
+            title: res?.data?.message || "Cannot delete: child records exist",
+            icon: "error",
+          });
+          return;
+        }
+        Swal.fire({
+          title: "Deleted Successfully",
+          icon: "success",
+        });
+        onSuccess?.();
+      } catch (err) {
+        Swal.fire({
+          title: err?.data?.message || "Failed to delete country",
+          icon: "error",
+        });
+      }
+    };
+
+    return (
+      <div className="h-full flex flex-col bg-gray-200">
+        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete State</h2>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 rounded">
+          {isLoadingRecord ? (
+            <p className="text-xs text-gray-400">Checking records...</p>
+          ) : childCount > 0 ? (
+            <>
+              <div className="flex flex-col items-center gap-2">
+                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <p className="text-sm font-semibold text-red-600">Cannot Delete</p>
+                <p className="text-xs text-gray-600 text-center">
+                  <span className="font-semibold">"{deleteLabel}"</span> has{" "}
+                  <span className="font-semibold text-red-600">{childCount} linked {childCount > 1 ? "cities" : "city"}</span>.
+                  Remove them first before deleting this state.
+                </p>
+              </div>
+              <button type="button" onClick={onClose}
+                className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                Close
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-700 text-center">
+                Are you sure you want to delete{" "}
+                <span className="font-semibold">"{deleteLabel}"</span>?
+              </p>
+              <div className="flex gap-3">
+                <button type="button" onClick={onClose}
+                  className="px-4 py-1.5 text-xs border border-gray-400 text-gray-600 hover:bg-gray-100 rounded">
+                  Cancel
+                </button>
+                <button type="button" onClick={handleConfirmDelete}
+                  className="px-4 py-1.5 text-xs bg-red-600 text-white hover:bg-red-700 rounded">
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (onSuccess) {
+    return (
+      <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
+        <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
+            {editId ? "Edit State" : "Add New State"}
+          </h2>
+          <button
+            type="button"
+            onClick={() => saveData("close")}
+            ref={saveCloseButtonRef}
+            onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+            className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs"
+          >
+            <Check size={14} />
+            {editId ? "Update" : "Save"}
+          </button>
+        </div>
+        {formBody}
+      </div>
+    );
+  }
+
+  return (
+    <MasterPageLayout
+      title="State Master"
+      addButtonLabel="+ Add New State"
+      onAdd={() => {
+        setForm(true);
+        onNew();
+      }}
+      onKeyDown={handleKeyDown}
+    >
+      <ReusableTable
+        columns={columns}
+        data={allData?.data}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={deleteData}
+        itemsPerPage={15}
+        childRecordLabel="City Master"
+        enableSearch
+      />
+
+      <div>
+        {form === true && (
+          <Modal
+            isOpen={form}
+            form={form}
+            widthClass={"w-[40%] h-[320px]"}
+            onClose={() => {
+              setForm(false);
+              setId("")
+
+            }}
+          >
+            <div className="h-full flex flex-col bg-gray-200 ">
+              <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg px-2 py-0.5 font-semibold  text-gray-800">
+                    {id
+                      ? !readOnly
+                        ? "Edit State  Master"
+                        : "State  Master"
+                      : "Add New State "}
+                  </h2>
+                </div>
+                <div className="flex gap-2">
+                  <div>
+                    {readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm(false);
+                          setSearchValue("");
+                          setId(false);
+                        }}
+                        className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("close");
+                        }}
+                        ref={saveCloseButtonRef}
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                        className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 
+                  border border-blue-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {id ? "Update" : "Save & close"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!readOnly && !id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          saveData("new");
+                        }}
+                        ref={saveNewButtonRef} // ✅ Add ref
+                        tabIndex={0} // ✅ Add tabIndex
+                        onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                        className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 
+                  border border-green-600 flex items-center gap-1 text-xs"
+                      >
+                        <Check size={14} />
+                        {"Save & New"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {formBody}
+            </div>
+          </Modal>
+        )}
+      </div>
+
+    </MasterPageLayout>
+  )
+}

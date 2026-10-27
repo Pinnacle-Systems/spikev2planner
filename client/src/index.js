@@ -7,7 +7,7 @@ import 'semantic-ui-css/semantic.min.css';
 
 // 1. Import Provider and your Redux store
 import { Provider } from 'react-redux';
-import store from './CapacityPlanner/redux/store';
+import store from './redux/store';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import secureLocalStorage from "react-secure-storage";
 import useOutsideClick from "../../../CustomHooks/handleOutsideClick";
-import { push } from "../../redux/features/opentabs";
+import { push } from "../../../redux/features/opentabs";
 
 export function MastersDropDown({ heading, items }) {
 

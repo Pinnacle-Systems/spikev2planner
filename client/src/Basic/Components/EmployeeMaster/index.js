@@ -1,0 +1,977 @@
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import secureLocalStorage from "react-secure-storage";
+import {
+  useGetEmployeeQuery,
+  useGetEmployeeByIdQuery,
+  useAddEmployeeMutation,
+  useUpdateEmployeeMutation,
+  useDeleteEmployeeMutation,
+} from "../../../redux/services/EmployeeMasterService";
+import { useGetCountriesQuery } from "../../../redux/services/CountryMasterService";
+import { useGetCityQuery } from "../../../redux/services/CityMasterService";
+// import LiveWebCam from "../LiveWebCam";
+import { toast } from "react-toastify";
+import {
+  TextInput,
+  DropdownInput,
+  DropdownInputNew,
+  TextArea,
+  DateInput,
+  DisabledInput,
+  ToggleButton,
+  ReusableTable,
+  TextInputNew1,
+  TextAreaNew,
+} from "../../../Inputs";
+import {
+  dropDownListObject,
+  dropDownListMergedObject,
+} from "../../../utils/contructObject";
+import Modal from "../../../UiComponents/Modal";
+import {
+  statusDropdown,
+  employeeType,
+  genderList,
+  maritalStatusList,
+  bloodList,
+} from "../../../utils/DropdownData";
+import moment from "moment";
+import { useGetEmployeeCategoryQuery } from "../../../redux/services/EmployeeCategoryMasterService";
+import { getCommonParams, viewBase64String } from "../../../utils/helper";
+import SingleImageFileUploadComponent from "../SingleImageUploadComponent";
+import EmployeeLeavingForm from "./EmployeeLeavingForm";
+import { useGetDepartmentQuery } from "../../../redux/services/DepartmentMasterService";
+import EmployeeCategoryMaster from "../EmployeeCategoryMaster";
+import DepartmentMaster from "../DepartmentMaster";
+import CityMaster from "../CityMaster";
+import { useDispatch } from "react-redux";
+import useInvalidateTags from '../../../CustomHooks/useInvalidateTags';
+import {
+  Check,
+  LayoutGrid,
+  Plus,
+  Power,
+  Table,
+} from "lucide-react";
+import imageDefault from "../../../assets/default-dp.png";
+import Swal from "sweetalert2";
+import { useFormKeyboardNavigation } from "../../../CustomHooks/useFormKeyboardNavigation";
+import MasterPageLayout from "../MasterPageLayout";
+// import BarCodePrintFormat from "./BarcodePrintFormat";
+
+const MODEL = "Employee Master";
+
+export default function Form() {
+  const [view, setView] = useState("table");
+  const [form, setForm] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [readOnly, setReadOnly] = useState(false);
+  const [id, setId] = useState("");
+  const [panNo, setPanNo] = useState("");
+  const [name, setName] = useState("");
+  const [fatherName, setFatherName] = useState("");
+  const [dob, setDob] = useState("");
+  const [chamberNo, setChamberNo] = useState("");
+  const [localAddress, setlocalAddress] = useState("");
+  const [localCity, setLocalCity] = useState("");
+  const [localPincode, setLocalPincode] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [degree, setDegree] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [salaryPerMonth, setSalaryPerMonth] = useState("");
+  const [commissionCharges, setCommissionCharges] = useState("");
+  const [gender, setGender] = useState("");
+  const [regNo, setRegNo] = useState("");
+  const [joiningDate, setJoiningDate] = useState("");
+  const [permAddress, setPermAddress] = useState("");
+  const [permCity, setPermCity] = useState("");
+  const [permPincode, setPermPincode] = useState("");
+  const [email, setEmail] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("");
+  const [consultFee, setConsultFee] = useState("");
+  const [accountNo, setAccountNo] = useState("");
+  const [ifscNo, setIfscNo] = useState("");
+  const [branchName, setbranchName] = useState("");
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [department, setDepartment] = useState("");
+  const [employeeCategory, setEmployeeCategory] = useState("");
+  const [permanent, setPermanent] = useState("");
+  const [active, setActive] = useState(true);
+  const [leavingForm, setLeavingForm] = useState(false);
+  const [leavingDate, setLeavingDate] = useState("");
+  const [leavingReason, setLeavingReason] = useState("");
+  const [canRejoin, setCanRejoin] = useState("");
+  const [rejoinReason, setRejoinReason] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+  const [image, setImage] = useState(null);
+  const [newForm, setNewForm] = useState(false);
+  const [aadharNo, setAadharNo] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
+  const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState({});
+  const [stickerCount, setStickerCount] = useState(1);
+
+  const nameRef = useRef(null);
+  const input2Ref = useRef(null);
+  const input3Ref = useRef(null);
+  const input4Ref = useRef(null);
+  const childRecord = useRef(0);
+  const dispatch = useDispatch();
+  const [dispatchInvalidate] = useInvalidateTags();
+
+
+
+
+  const params = {
+    companyId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId"),
+    finYearId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentFinYear"),
+    userId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userId"),
+    branchId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentBranchId"),
+  };
+  const companyId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "userCompanyId");
+  const finYearId = secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentFinYear");
+
+  const { data: cityList } = useGetCityQuery({ params });
+  const { data: employeeCategoryList } = useGetEmployeeCategoryQuery({ params: companyId, finYearId });
+  const { data: departmentList } = useGetDepartmentQuery({ params });
+  const { data: allData, isLoading, isFetching } = useGetEmployeeQuery({ params, searchParams: searchValue });
+
+
+  const { refs, handlers, focusFirstInput } = useFormKeyboardNavigation();
+
+  const {
+    firstInputRef: countryNameRef,
+    toggleButtonRef,
+    saveCloseButtonRef,
+    saveNewButtonRef,
+  } = refs;
+
+  const isCurrentEmployeeDoctor = (employeeCategory) =>
+    employeeCategoryList?.data
+      ?.find((cat) => parseInt(cat.id) === parseInt(employeeCategory))
+      ?.name?.toUpperCase() === "DOCTOR";
+
+  const { data: singleData, isFetching: isSingleFetching, isLoading: isSingleLoading } =
+    useGetEmployeeByIdQuery(id, { skip: !id });
+
+  const [addData] = useAddEmployeeMutation();
+  const [updateData] = useUpdateEmployeeMutation();
+  const [removeData] = useDeleteEmployeeMutation();
+
+  const getRegNo = useCallback(() => {
+    if (id || isLoading || isFetching) return;
+    if (allData?.Regno) setRegNo(allData?.Regno);
+  }, [allData, isLoading, isFetching, id]);
+
+  useEffect(getRegNo, [getRegNo, id]);
+
+  // ✅ Clear individual field error when user fills it
+  const clearError = (field) => {
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const syncFormWithDb = useCallback((data) => {
+    if (!id) {
+      setPanNo(""); setName(""); setFatherName(""); setDob("");
+      setChamberNo(""); setlocalAddress(""); setLocalCity("");
+      setLocalPincode(""); setMobile(""); setDegree("");
+      setSpecialization(""); setSalaryPerMonth(""); setCommissionCharges("");
+      setGender(""); setRegNo(""); setJoiningDate(""); setPermAddress("");
+      setPermCity(""); setPermPincode(""); setEmail(""); setMaritalStatus("");
+      setConsultFee(""); setAccountNo(""); setIfscNo(""); setbranchName("");
+      setBloodGroup(""); setDepartment(""); setImage(null);
+      setEmployeeCategory(""); setPermanent(""); setActive(true);
+      setLeavingDate(""); setLeavingReason(""); setCanRejoin(false);
+      setRejoinReason(""); setAadharNo(""); setBankName("");
+      setDesignation(""); setEmployeeId("");
+      return;
+    }
+    setPanNo(data?.panNo || "");
+    setName(data?.name || "");
+    setFatherName(data?.fatherName || "");
+    setDob(data?.dob ? moment.utc(data?.dob).format("YYYY-MM-DD") : "");
+    setChamberNo(data?.chamberNo || "");
+    setlocalAddress(data?.localAddress || "");
+    setLocalCity(data?.localCity?.id || "");
+    setLocalPincode(data?.localPincode || "");
+    setMobile(data?.mobile || "");
+    setDegree(data?.degree || "");
+    setSpecialization(data?.specialization || "");
+    setSalaryPerMonth(data?.salaryPerMonth || "");
+    setCommissionCharges(data?.commissionCharges || "");
+    setGender(data?.gender || "");
+    setRegNo(data?.regNo || "");
+    setJoiningDate(data?.joiningDate ? moment.utc(data?.joiningDate).format("YYYY-MM-DD") : "");
+    setPermAddress(data?.permAddress || "");
+    setPermCity(data?.permCity?.id || "");
+    setPermPincode(data?.permPincode || "");
+    setEmail(data?.email || "");
+    setMaritalStatus(data?.maritalStatus || "");
+    setConsultFee(data?.consultFee || "");
+    setAccountNo(data?.accountNo || "");
+    setIfscNo(data?.ifscNo || "");
+    setbranchName(data?.branchName || "");
+    setBloodGroup(data?.bloodGroup || "");
+    setDepartment(data?.department?.id || "");
+    setImage(data?.imageBase64 ? viewBase64String(data?.imageBase64) : null);
+    setEmployeeCategory(data?.employeeCategoryId || "");
+    setPermanent(data?.permanent || "");
+    setActive(id ? (data?.active ? data?.active : false) : true);
+    setLeavingDate(data?.leavingDate || "");
+    setLeavingReason(data?.leavingReason || "");
+    setCanRejoin(data?.canRejoin || false);
+    setRejoinReason(data?.rejoinReason || "");
+    setAadharNo(data?.aadharNo || "");
+    setBankName(data?.bankName || "");
+    setDesignation(data?.designation || "");
+    setEmployeeId(data?.employeeId || "");
+    secureLocalStorage.setItem(
+      sessionStorage.getItem("sessionId") + "currentEmployeeSelected",
+      data?.id
+    );
+  }, [id]);
+
+  useEffect(() => {
+    syncFormWithDb(singleData?.data);
+  }, [isSingleFetching, isSingleLoading, id, syncFormWithDb, singleData]);
+
+  const data = {
+    branchId: secureLocalStorage.getItem(sessionStorage.getItem("sessionId") + "currentBranchId"),
+    panNo, name, fatherName, dob, chamberNo, localAddress, localCity, localPincode,
+    mobile, degree, specialization, salaryPerMonth, commissionCharges, gender,
+    joiningDate, permAddress, permCity, permPincode, email, maritalStatus,
+    consultFee, accountNo, ifscNo, branchName, bloodGroup,
+    ...(department && { department }),
+    employeeCategoryId: employeeCategory,
+    permanent, active, id, leavingReason, leavingDate, canRejoin, rejoinReason,
+    regNo, employeeCategory, department, aadharNo, finYearId, bankName,
+    designation, employeeId,
+  };
+
+  // ✅ Validate and set errors for highlighting
+  const validateData = (data) => {
+    let newErrors = {};
+    if (!data.name) newErrors.name = "Full Name is required";
+    if (!data.gender) newErrors.gender = "Gender is required";
+    if (!data.dob) newErrors.dob = "Date of Birth is required";
+    if (!data.employeeCategory) newErrors.employeeCategory = "Employee Category is required";
+    if (!data.department) newErrors.department = "Department is required";
+    if (!data.joiningDate) newErrors.joiningDate = "Joining Date is required";
+    if (!data.employeeId) newErrors.employeeId = "Employee Id is required";
+    if (!data.mobile) newErrors.mobile = "Mobile No is required";
+    if (!data.localAddress) newErrors.localAddress = "Address is required";
+    if (!data.permCity) newErrors.permCity = "City is required";
+    if (!data.permPincode) newErrors.permPincode = "Pincode is required";
+    if (!data.aadharNo?.trim()) newErrors.aadharNo = "Aadhar No is required";
+    if (!data.maritalStatus?.trim()) newErrors.maritalStatus = "Marital Status is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmitCustom = async (callback, data, text, nextProcess) => {
+    try {
+      let returnData;
+      const formData = new FormData();
+      for (let key in data) formData.append(key, data[key]);
+      if (image instanceof File) formData.append("image", image);
+      else if (!image) formData.append("isDeleteImage", true);
+
+      if (text === "Updated") {
+        returnData = await callback({ id, body: formData }).unwrap();
+      } else {
+        returnData = await callback(formData).unwrap();
+      }
+
+      setErrors({}); // ✅ clear errors on success
+      dispatchInvalidate();
+      await Swal.fire({ title: text + " Successfully", icon: "success" }); // ✅ await first
+
+      if (nextProcess === "new") {
+        setId("");
+        syncFormWithDb(undefined);
+        onNew(); // ✅ then onNew after swal
+        nameRef.current?.focus();
+
+      } else {
+        setId("");
+        setForm(false);
+      }
+
+      setSearchValue("");
+      setStep(1);
+      setNewForm(false);
+    } catch (error) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Submission error',
+        text: error.data?.message || 'Something went wrong!',
+        didClose: () => nameRef.current?.focus()
+      });
+    }
+  };
+
+  const saveData = (nextProcess) => {
+    const upperName = name.toUpperCase();
+    const finalData = { ...data, name: upperName, };
+
+
+    let foundItem;
+
+    if (id) {
+      foundItem = allData?.data?.filter(i => i.id != id)?.some(item => item?.employeeId === employeeId);
+    } else {
+      foundItem = allData?.data?.some(item => item?.employeeId === employeeId);
+    }
+
+
+    if (foundItem) {
+      Swal.fire({
+        text: "The Employee Id already exists.",
+        icon: "warning",
+        didClose: () => {
+          nameRef?.current?.focus();
+        }
+      });
+      return false;
+    }
+
+    if (!validateData(finalData)) {
+      Swal.fire({ title: "Please fill all required fields...!", icon: "error", didClose: () => nameRef.current?.focus() });
+      return;
+    }
+
+    if (id) {
+      if (!window.confirm("Are you sure update the details ...?")) return;
+    }
+
+    if (id) {
+      handleSubmitCustom(updateData, finalData, "Updated", nextProcess);
+    } else {
+      handleSubmitCustom(addData, finalData, "Added", nextProcess);
+    }
+  };
+
+  const deleteData = async (id) => {
+    if (id) {
+      if (!window.confirm("Are you sure to delete...?")) { setForm(false); return; }
+      try {
+        await removeData(id).unwrap();
+        setId("");
+        dispatchInvalidate();
+        await Swal.fire({ title: "Deleted Successfully", icon: "success" });
+        setForm(false);
+        setSearchValue("");
+        setStep(1);
+      } catch (error) {
+        await Swal.fire({ icon: 'error', title: 'Submission error', text: error.data?.message || 'Something went wrong!' });
+      }
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    let charCode = String.fromCharCode(event.which).toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && charCode === "s") {
+      event.preventDefault();
+      saveData();
+    }
+  };
+
+  const handleKeyNext = (e, nextRef) => {
+    if (e.key === "Enter") { e.preventDefault(); nextRef?.current?.focus(); }
+  };
+
+  const onNew = () => {
+    setId("");
+    setReadOnly(false);
+    setForm(true);
+    setSearchValue("");
+    syncFormWithDb(undefined);
+    setErrors({});
+    if (document.activeElement) document.activeElement.blur();
+    setTimeout(() => { nameRef.current?.focus(); }, 200);
+  };
+
+  const submitLeavingForm = () => {
+    if (id) handleSubmitCustom(updateData, data, "Updated");
+    else handleSubmitCustom(addData, data, "Added");
+    setLeavingForm(false);
+  };
+
+  const handleView = (id) => { setId(id); setForm(true); setReadOnly(true); };
+  const handleEdit = (id) => { setId(id); setForm(true); setReadOnly(false); };
+  const printData = async (id) => {
+    const { value: count } = await Swal.fire({
+      title: "How many stickers?",
+      input: "number",
+      inputLabel: "Stickers Count",
+      inputValue: 1,
+      showCancelButton: true,
+      inputValidator: (value) => {
+        if (!value || value < 1) {
+          return "Please enter a valid number!";
+        }
+      },
+    });
+
+    if (count) {
+      setStickerCount(count);
+      setId(id);
+      setBarcodePrintOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    if (form && nameRef.current) nameRef.current.focus();
+  }, [form]);
+
+  const ACTIVE = (
+    <div className="bg-gradient-to-r from-green-200 to-green-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-green-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+  const INACTIVE = (
+    <div className="bg-gradient-to-r from-red-200 to-red-500 inline-flex items-center justify-center rounded-full border-2 w-6 border-red-500 shadow-lg text-white hover:scale-110 transition-transform duration-300">
+      <Power size={10} />
+    </div>
+  );
+
+  const columns = [
+    { header: "S.No", accessor: (item, index) => index + 1, className: "font-medium text-gray-900 w-12 text-center" },
+    { header: "Doc Id", accessor: (item) => item?.regNo, className: "font-medium text-gray-900 text-left uppercase w-40", enableSearch: true },
+    { header: "Employee Name", accessor: (item) => item?.name, className: "font-medium text-gray-900 text-left uppercase w-72", enableSearch: true },
+    { header: "Employee Id", accessor: (item) => item?.employeeId, className: "font-medium text-gray-900 text-left uppercase w-72", enableSearch: true },
+
+    { header: "Employee Category", accessor: (item) => item?.EmployeeCategory?.name, className: "font-medium text-gray-900 text-left uppercase w-48", enableSearch: true },
+    { header: "Gender", accessor: (item) => item?.gender, className: "font-medium text-gray-900 text-left uppercase w-24", enableSearch: true },
+    { header: "Status", accessor: (item) => (item.active ? ACTIVE : INACTIVE), className: "font-medium text-gray-900 text-center uppercase w-16" },
+  ];
+
+  // ✅ Reusable error border class
+  const errorClass = (field) => errors[field] ? "border-red-500 bg-red-50" : "";
+
+
+  const [barcodePrintOpen, setBarcodePrintOpen] = useState(false);
+
+  return (
+    <>
+
+      <MasterPageLayout
+        title="Employee Master"
+        onKeyDown={handleKeyDown}
+        headerActions={
+          <>
+            <button
+              onClick={() => { setForm(true); onNew(); setNewForm(true); }}
+              className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
+            >
+              <Plus size={16} /> Add New Employee
+            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setView("table")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
+                <Table size={16} /> Table
+              </button>
+              <button onClick={() => setView("card")}
+                className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "card" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
+                <LayoutGrid size={16} /> Cards
+              </button>
+            </div>
+          </>
+        }
+      >
+        {view === "table" ? (
+          <ReusableTable
+            columns={columns}
+            data={allData?.data}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={deleteData}
+            itemsPerPage={17}
+            printData={printData}
+            enableSearch={true}
+          />
+        ) : (
+          <div className="h-full overflow-auto bg-gray-100 p-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {allData?.data?.map((employee, index) => (
+                <div key={index} onClick={() => { setId(employee.id); setForm(true); }}
+                  className={`overflow-hidden rounded-lg border transition-all duration-200 hover:shadow-md cursor-pointer ${employee?.active ? "border-green-200" : "border-red-200"}`}>
+                  <div className={`p-4 ${employee?.active ? "bg-green-50" : "bg-red-50"}`}>
+                    <div className="flex items-center">
+                      <img src={employee?.imageBase64 || imageDefault} alt="Profile"
+                        className={`h-12 w-12 rounded-full border-2 object-cover ${employee?.active ? "border-green-500" : "border-red-500"}`} />
+                      <div className="ml-3">
+                        <h3 className="font-medium text-gray-900">{employee?.name}</h3>
+                        <p className="text-xs text-gray-500">{employee?.regNo}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><p className="text-gray-500">Department</p><p className="font-medium">{employee?.department?.name || "-"}</p></div>
+                      <div><p className="text-gray-500">Status</p><p className={`font-medium ${employee?.active ? "text-green-600" : "text-red-600"}`}>{employee?.active ? "Active" : "Inactive"}</p></div>
+                      <div><p className="text-gray-500">Mobile</p><p className="font-medium">{employee?.mobile || "-"}</p></div>
+                      <div><p className="text-gray-500">Email</p><p className="font-medium truncate">{employee?.email || "-"}</p></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {form && (
+          <Modal isOpen={form} form={form} widthClass={"w-[95%]  h-[95vh]"}
+            onClose={() => { setForm(false); setErrors({}); }}>
+            <div className="h-full flex flex-col bg-gray-200">
+              <div className="border-b py-2 px-4 mx-3 flex justify-between items-center sticky top-0 z-10 bg-white mt-2">
+                <h2 className="text-lg font-semibold text-gray-800">
+                  {id ? (!readOnly ? "Edit Employee" : "Employee Master") : "Add New Employee"}
+                </h2>
+                <div className="flex gap-2">
+                  {readOnly && (
+                    <button type="button" onClick={() => { setForm(false); setSearchValue(""); setId(false); }}
+                      className="px-3 py-1 text-red-600 hover:bg-red-600 hover:text-white border border-red-600 text-xs rounded">
+                      Cancel
+                    </button>
+                  )}
+                  {!readOnly && (
+                    <button type="button" onClick={() => saveData("close")}
+                      ref={saveCloseButtonRef} // ✅ Add ref
+                      tabIndex={0}
+                      onKeyDown={handlers.handleSaveCloseKeyDown(saveData)}
+                      className="px-3 py-1 hover:bg-blue-600 hover:text-white rounded text-blue-600 border border-blue-600 flex items-center gap-1 text-xs">
+                      <Check size={14} /> {id ? "Update" : "Save & close"}
+                    </button>
+                  )}
+                  {(!readOnly && !id) && (
+                    <button type="button" onClick={() => saveData("new")}
+                      ref={saveNewButtonRef} // ✅ Add ref
+                      tabIndex={0}
+                      onKeyDown={handlers.handleSaveNewKeyDown(saveData)}
+                      className="px-3 py-1 hover:bg-green-600 hover:text-white rounded text-green-600 border border-green-600 flex items-center gap-1 text-xs">
+                      <Check size={14} /> Save & New
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto p-3">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+
+                  {/* ── LEFT COL ── */}
+                  <div className="lg:col-span-3 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <SingleImageFileUploadComponent
+                        setWebCam={setCameraOpen} disabled={readOnly}
+                        image={image} setImage={setImage} className="mb-3"
+                      />
+                      <div className="space-y-2">
+
+                        {/* Full Name */}
+                        <TextInputNew1
+                          ref={nameRef}
+                          name="Full Name"
+                          value={name}
+                          setValue={(val) => { setName(val); clearError("name"); }}
+                          required={true}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          onKeyDown={(e) => handleKeyNext(e, input2Ref)}
+                          className={errorClass("name")}
+                        />
+                        {errors.name && <span className="text-red-500 text-xs ml-1">{errors.name}</span>}
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Gender */}
+                          <div>
+                            <DropdownInput
+                              ref={input2Ref}
+                              name="Gender"
+                              options={genderList}
+                              value={gender}
+                              setValue={(val) => { setGender(val); clearError("gender"); }}
+                              required
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              className={errorClass("gender")}
+                            />
+                            {errors.gender && <span className="text-red-500 text-xs ml-1">{errors.gender}</span>}
+                          </div>
+
+                          {/* Blood Group */}
+                          <div>
+                            <DropdownInput
+                              name="Blood Group"
+                              options={bloodList}
+                              value={bloodGroup}
+                              setValue={setBloodGroup}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Date of Birth */}
+                        <DateInput
+                          name="Date of Birth"
+                          value={dob}
+                          setValue={(val) => { setDob(val); clearError("dob"); }}
+                          required
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className={errorClass("dob")}
+                        />
+                        {errors.dob && <span className="text-red-500 text-xs ml-1">{errors.dob}</span>}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200 h-[90px]">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Employment Status</h3>
+                      <ToggleButton
+                        options={statusDropdown}
+                        value={active}
+                        setActive={setActive}
+                        required={true}
+                        readOnly={readOnly}
+                      />
+                      {errors.active && <span className="text-red-500 text-xs ml-1">{errors.active}</span>}
+                    </div>
+                  </div>
+
+                  {/* ── MIDDLE COL ── */}
+                  <div className="lg:col-span-5 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Official Details</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                        {/* Employee Category */}
+                        <div>
+                          <DropdownInputNew
+                            ref={input3Ref}
+                            nextRef={input4Ref}
+                            name="Employee Category"
+                            options={dropDownListObject(
+                              id ? employeeCategoryList?.data : employeeCategoryList?.data?.filter((item) => item.active),
+                              "name", "id"
+                            )}
+                            value={employeeCategory}
+                            setValue={(val) => { setEmployeeCategory(val); clearError("employeeCategory"); }}
+                            required={true}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            addNewLabel="+ Add New Employee Category"
+                            childComponent={EmployeeCategoryMaster}
+                            addNewModalWidth="w-[40%] h-[40%]"
+                            className={errorClass("employeeCategory")}
+                          />
+                          {errors.employeeCategory && <span className="text-red-500 text-xs ml-1">{errors.employeeCategory}</span>}
+                        </div>
+
+                        {/* Department */}
+                        <div>
+                          <DropdownInputNew
+                            ref={input4Ref}
+                            name="Department"
+                            options={dropDownListObject(
+                              id ? departmentList?.data : departmentList?.data?.filter((item) => item.active),
+                              "name", "id"
+                            )}
+                            value={department}
+                            setValue={(val) => { setDepartment(val); clearError("department"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                            addNewLabel="+ Add New Department"
+                            childComponent={DepartmentMaster}
+                            addNewModalWidth="w-[40%] h-[45%]"
+                            className={errorClass("department")}
+                          />
+                          {errors.department && <span className="text-red-500 text-xs ml-1">{errors.department}</span>}
+                        </div>
+
+                        {/* Designation */}
+                        <div>
+                          <TextInputNew1
+                            name="Designation"
+                            value={designation}
+                            setValue={setDesignation}
+                            readOnly={readOnly}
+                            required={isCurrentEmployeeDoctor(employeeCategory)}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Joining Date */}
+                        <div>
+                          <DateInput
+                            name="Joining Date"
+                            value={joiningDate}
+                            setValue={(val) => { setJoiningDate(val); clearError("joiningDate"); }}
+                            required={true}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("joiningDate")}
+                          />
+                          {errors.joiningDate && <span className="text-red-500 text-xs ml-1">{errors.joiningDate}</span>}
+                        </div>
+
+                        {/* Employee Id */}
+                        <div>
+                          <TextInputNew1
+                            name="Employee Id"
+                            value={employeeId}
+                            setValue={(val) => { setEmployeeId(val); clearError("employeeId"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("employeeId")}
+                          />
+                          {errors.employeeId && <span className="text-red-500 text-xs ml-1">{errors.employeeId}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Additional Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+
+                        {/* Father Name */}
+                        <div>
+                          <TextInputNew1
+                            name="Father Name"
+                            value={fatherName}
+                            setValue={setFatherName}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Marital Status */}
+                        <div>
+                          <DropdownInput
+                            name="Marital Status"
+                            options={maritalStatusList}
+                            value={maritalStatus}
+                            setValue={(val) => { setMaritalStatus(val); clearError("maritalStatus"); }}
+                            readOnly={readOnly}
+                            required={true}
+                            disabled={childRecord.current > 0}
+                          />
+                          {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
+
+                        </div>
+
+                        {/* Aadhar No */}
+                        <div>
+                          <TextInput
+                            name="Aadhar No"
+                            value={aadharNo}
+                            type="aadhar"
+                            setValue={(val) => { setAadharNo(val); clearError("aadharNo"); }}
+                            required
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("aadharNo")}
+                          />
+                          {errors.aadharNo && <span className="text-red-500 text-xs ml-1">{errors.aadharNo}</span>}
+                        </div>
+
+                        {/* Pan No */}
+                        <div>
+                          <TextInput
+                            name="Pan No"
+                            value={panNo}
+                            type="pan_no"
+                            setValue={setPanNo}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Degree */}
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Degree"
+                            value={degree}
+                            setValue={setDegree}
+                            readOnly={readOnly}
+
+                          />
+                        </div>
+
+                        {/* Specialization */}
+                        <div className="md:col-span-2">
+                          <TextAreaNew
+                            rows={2}
+                            name="Specialization"
+                            value={specialization}
+                            setValue={setSpecialization}
+                            readOnly={readOnly}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── RIGHT COL ── */}
+                  <div className="lg:col-span-4 space-y-3">
+                    <div className="bg-white p-3 rounded-md border border-gray-200">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Bank Details</h3>
+                      <div className=" grid grid-cols-2 gap-2">
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Bank Name"
+                            type="text"
+                            value={bankName}
+                            setValue={setBankName}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <TextInputNew1
+                            name="Branch Name"
+                            value={branchName}
+                            setValue={setbranchName}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                        <TextInput
+                          name="Account No"
+                          type="number"
+                          value={accountNo}
+                          setValue={setAccountNo}
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                        />
+                        <div>
+                          <TextInputNew1
+                            name="IFSC No"
+                            value={ifscNo}
+                            setValue={setIfscNo}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-md border border-gray-200 mt-2">
+                      <h3 className="font-medium text-gray-800 mb-2 text-sm">Contact Information</h3>
+                      <div className="space-y-2">
+
+                        {/* Mobile No */}
+                        <div className="w-full">
+                          <TextInputNew1
+                            name="Mobile No"
+                            type="number"
+                            value={mobile}
+                            setValue={(val) => { setMobile(val); clearError("mobile"); }}
+                            required={true}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                            className={errorClass("mobile")}
+                          />
+                          {errors.mobile && <span className="text-red-500 text-xs ml-1">{errors.mobile}</span>}
+                        </div>
+
+                        {/* Email */}
+                        <div className="w-full">
+                          <TextInputNew1
+                            name="Email Id"
+                            type="email"
+                            value={email}
+                            setValue={setEmail}
+                            readOnly={readOnly}
+                            disabled={childRecord.current > 0}
+                          />
+                        </div>
+
+                        {/* Address */}
+                        <TextAreaNew
+                          name="Address"
+                          rows="2"
+                          value={localAddress}
+                          setValue={(val) => { setlocalAddress(val); clearError("localAddress"); }}
+                          required
+                          readOnly={readOnly}
+                          disabled={childRecord.current > 0}
+                          className={errorClass("localAddress")}
+                        />
+                        {errors.localAddress && <span className="text-red-500 text-xs ml-1">{errors.localAddress}</span>}
+
+                        <div className="col-span-2 flex flex-row gap-2">
+                          {/* Pincode */}
+                          <div className="w-20">
+                            <TextInput
+                              name="Pincode"
+                              type="number"
+                              value={permPincode}
+                              setValue={(val) => { setPermPincode(val); clearError("permPincode"); }}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              required
+                              className={errorClass("permPincode")}
+                            />
+                            {errors.permPincode && <span className="text-red-500 text-xs ml-1">{errors.permPincode}</span>}
+                          </div>
+
+                          {/* City */}
+                          <div className="w-64">
+                            <DropdownInputNew
+                              name="City/State"
+                              options={dropDownListMergedObject(
+                                (cityList?.data || []).filter((item) => id || item.active),
+                                "name", "id"
+                              )}
+                              value={permCity}
+                              setValue={(val) => { setPermCity(val); clearError("permCity"); }}
+                              readOnly={readOnly}
+                              disabled={childRecord.current > 0}
+                              required
+                              addNewLabel="+ Add New City"
+                              childComponent={CityMaster}
+                              addNewModalWidth="w-[40%] h-[350px]"
+                              className={errorClass("permCity")}
+                              ref={toggleButtonRef}
+                              nextRef={saveCloseButtonRef}
+                            />
+                            {errors.permCity && <span className="text-red-500 text-xs ml-1">{errors.permCity}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+            {/* <Modal isOpen={cameraOpen} onClose={() => setCameraOpen(false)}>
+              <LiveWebCam picture={image} setPicture={setImage} onClose={() => setCameraOpen(false)} />
+            </Modal> */}
+
+            <Modal isOpen={leavingForm} onClose={() => setLeavingForm(false)}>
+              <EmployeeLeavingForm
+                leavingReason={leavingReason} setLeavingReason={setLeavingReason}
+                leavingDate={leavingDate} setLeavingDate={setLeavingDate}
+                canRejoin={canRejoin} setCanRejoin={setCanRejoin}
+                rejoinReason={rejoinReason} setRejoinReason={setRejoinReason}
+                onSubmit={submitLeavingForm} onClose={() => setLeavingForm(false)}
+              />
+            </Modal>
+          </Modal>
+        )}
+      </MasterPageLayout>
+    </>
+
+  );
+}

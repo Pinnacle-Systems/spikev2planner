@@ -48,17 +48,19 @@ model ProductionDetails {
 }
 
 model OrderLines {
-  id                 Int                  @id @default(autoincrement())
-  Line               Line                 @relation(fields: [lineId], references: [id])
-  lineId             Int
-  Orders             Orders               @relation(fields: [ordersId], references: [id], onDelete: Cascade)
-  ordersId           Int
-  pcs                Int
-  startDate          DateTime             @db.Date
-  endDate            DateTime             @db.Date
-  days               Int
-  efficiency         Int?                 @default(0)
-  capacity           Int?                 @default(0)
+  id         Int      @id @default(autoincrement())
+  Line       Line     @relation(fields: [lineId], references: [id])
+  lineId     Int
+  Orders     Orders   @relation(fields: [ordersId], references: [id], onDelete: Cascade)
+  ordersId   Int
+  pcs        Int
+  startDate  DateTime @db.Date
+  endDate    DateTime @db.Date
+  days       Int
+  efficiency Int?     @default(0)
+  capacity   Int?     @default(0)
+  active     Boolean? @default(false)
+
   learningCurveItems LearningCurveItems[]
 }
 
@@ -70,9 +72,10 @@ model LearningCurveItems {
 }
 
 model Unit {
-  id       Int     @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   name     String?
   location String?
+  active   Boolean? @default(false)
   line     Line[]
 }
 
@@ -129,30 +132,33 @@ model Company {
   Role          Role[]
   finYear       FinYear[]
   Subscription  Subscription[]
+  country       Country[]
+  Department    Department[]
 }
 
 model Branch {
-  id             Int            @id @default(autoincrement())
-  branchName     String
-  branchCode     String?
-  contactName    String?
-  contactMobile  BigInt
-  contactEmail   String?
-  company        Company        @relation(fields: [companyId], references: [id])
-  companyId      Int
-  active         Boolean        @default(true)
+  id               Int                @id @default(autoincrement())
+  branchName       String
+  branchCode       String?
+  contactName      String?
+  contactMobile    BigInt
+  contactEmail     String?
+  company          Company            @relation(fields: [companyId], references: [id])
+  companyId        Int
+  active           Boolean            @default(true)
   // EmployeeCategory                   EmployeeCategory[]
-  UserOnBranch   UserOnBranch[]
-  Employee       Employee[]
-  idPrefix       String?
-  idSequence     String?
-  tempPrefix     String?
-  tempSequence   String?
-  prefixCategory String?
-  address        String?
-  gstNo          String?
-  panNo          String?
-  logo           String?
+  UserOnBranch     UserOnBranch[]
+  Employee         Employee[]
+  idPrefix         String?
+  idSequence       String?
+  tempPrefix       String?
+  tempSequence     String?
+  prefixCategory   String?
+  address          String?
+  gstNo            String?
+  panNo            String?
+  logo             String?
+  EmployeeCategory EmployeeCategory[]
 }
 
 model FinYear {
@@ -197,14 +203,55 @@ model UserOnBranch {
 }
 
 model Employee {
-  id        Int     @id @default(autoincrement())
-  name      String?
-  email     String? @unique
-  regNo     String? @unique
-  chamberNo String?
-  User      User[]
-  branch    Branch? @relation(fields: [branchId], references: [id])
-  branchId  Int?
+  id                 Int               @id @default(autoincrement())
+  name               String?
+  email              String?           @unique
+  regNo              String?           @unique
+  chamberNo          String?
+  department         Department?       @relation(fields: [departmentId], references: [id])
+  departmentId       Int?
+  joiningDate        DateTime?
+  fatherName         String?
+  dob                DateTime?
+  gender             String?
+  maritalStatus      String?
+  bloodGroup         String?
+  panNo              String?
+  consultFee         String?
+  salaryPerMonth     String?
+  commissionCharges  String?
+  mobile             BigInt?
+  accountNo          String?
+  ifscNo             String?
+  branchName         String?
+  degree             String?
+  specialization     String?
+  localAddress       String?
+  localCity          City?             @relation("localCity", fields: [localCityId], references: [id])
+  localCityId        Int?
+  localPincode       Int?
+  permAddress        String?
+  permCity           City?             @relation("permCity", fields: [permCityId], references: [id])
+  permCityId         Int?
+  permPincode        Int?
+  active             Boolean?          @default(true)
+  image              Bytes?            @db.LongBlob
+  Branch             Branch?           @relation(fields: [branchId], references: [id])
+  branchId           Int?
+  EmployeeCategory   EmployeeCategory? @relation(fields: [employeeCategoryId], references: [id])
+  employeeCategoryId Int?
+  permanent          Boolean?          @default(false)
+  leavingReason      String?
+  leavingDate        DateTime?
+  canRejoin          Boolean?          @default(true)
+  rejoinReason       String?
+  createdAt          DateTime?         @default(now())
+  updatedAt          DateTime?         @updatedAt
+  aadharNo           String?
+  bankName           String?
+  designation        String?
+  employeeId         String?
+  User               User[]
 }
 
 model Role {
@@ -251,4 +298,57 @@ model Page {
   PageGroup   PageGroup?   @relation(fields: [pageGroupId], references: [id])
   pageGroupId Int?
   RoleOnPage  RoleOnPage[]
+}
+
+model Country {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String
+  active    Boolean @default(true)
+  Company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
+  state     State[]
+}
+
+model State {
+  id        Int     @id @default(autoincrement())
+  name      String
+  code      String
+  gstNo     String
+  country   Country @relation(fields: [countryId], references: [id])
+  countryId Int
+  active    Boolean @default(true)
+  city      City[]
+}
+
+model City {
+  id              Int        @id @default(autoincrement())
+  name            String
+  code            String
+  state           State      @relation(fields: [stateId], references: [id])
+  stateId         Int
+  active          Boolean    @default(true)
+  doctorLocalCity Employee[] @relation(name: "localCity")
+  doctorPermCity  Employee[] @relation(name: "permCity")
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String
+  code      String
+  active    Boolean    @default(true)
+  doctor    Employee[] @relation()
+  Company   Company    @relation(fields: [companyId], references: [id])
+  companyId Int
+}
+
+model EmployeeCategory {
+  id              Int        @id @default(autoincrement())
+  name            String?
+  code            String?
+  Branch          Branch?    @relation(fields: [branchId], references: [id])
+  branchId        Int?
+  active          Boolean?   @default(true)
+  defaultCategory Boolean?   @default(false)
+  Employee        Employee[]
 }

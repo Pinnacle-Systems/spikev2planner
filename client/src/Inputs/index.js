@@ -2078,10 +2078,10 @@ export const ReusableTable = ({
 
   return (
     <>
-      <div className={`flex min-h-0 flex-col overflow-hidden bg-[#F1F1F0] ${heightClass}`}>
+      <div className={` flex min-h-0 flex-col overflow-hidden bg-[#f8fafc] ${heightClass}`}>
         <div className="min-h-0 flex-1 overflow-auto">
           <table className="table-auto">
-            <thead className="sticky top-0 z-10 bg-gray-200 text-gray-800">
+            <thead className="sticky top-0 z-10 bg-[#e2e8f0] text-gray-800">
 
               <tr>
                 {columns?.map((column, index) => (
@@ -2996,6 +2996,386 @@ export function childRecordCountTotal(count) {
 }
 
 
+// export const DropdownInputNew = forwardRef(({
+//   name,
+//   beforeChange = () => { },
+//   onBlur = null,
+//   options,
+//   value,
+//   setValue,
+//   defaultValue,
+//   className = "",
+//   readOnly = false,
+//   required = false,
+//   disabled = false,
+//   clear = false,
+//   tabIndex = null,
+//   autoFocus = false,
+//   width = "full",
+//   country,
+//   openOnFocus = false,
+//   show,
+//   searchable = true,
+//   addNewLabel = "+ Add New",
+//   childComponent = null,
+//   addNewModalWidth = "w-[40%] h-[45%]",
+//   widthClass,
+//   nextRef = null,
+// }, ref) => {
+
+//   const [isOpen, setIsOpen] = useState(false);
+//   const [search, setSearch] = useState("");
+//   const [showAddNew, setShowAddNew] = useState(false);
+//   const [editingOption, setEditingOption] = useState(null);
+//   const [deletingOption, setDeletingOption] = useState(null);
+//   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+//   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+//   const containerRef = useRef(null);
+//   const buttonRef = useRef(null);
+//   const dropdownRef = useRef(null);
+//   const searchRef = useRef(null);
+//   const listRef = useRef(null);
+
+//   const isDisabled = readOnly || disabled;
+
+//   useImperativeHandle(ref, () => ({
+//     focus: () => {
+//       buttonRef.current?.focus();
+//     }
+//   }), []);
+
+//   const handleAddNewSuccess = (newValue) => {
+//     beforeChange();
+//     setValue(newValue);
+//     setShowAddNew(false);
+//     setIsOpen(false);
+//     setSearch("");
+//     if (onBlur) onBlur();
+//   };
+
+//   const handleDeleteSuccess = () => {
+//     if (deletingOption && String(deletingOption.value) === String(value)) {
+//       beforeChange();
+//       setValue("");
+//       if (onBlur) onBlur();
+//     }
+//     setDeletingOption(null);
+//   };
+
+//   const updateDropdownPos = useCallback(() => {
+//     if (buttonRef.current) {
+//       const rect = buttonRef.current.getBoundingClientRect();
+//       const dropdownHeight = 280; // approx max height (search + list max-h-48 + padding)
+//       const spaceBelow = window.innerHeight - rect.bottom;
+//       const spaceAbove = rect.top;
+//       const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+//       const targetWidth = Math.max(rect.width, 180);
+//       let left = rect.left;
+//       if (typeof window !== "undefined" && left + targetWidth > window.innerWidth - 8) {
+//         left = Math.max(8, window.innerWidth - targetWidth - 8);
+//       }
+//       setDropdownPos({
+//         top: openUpward ? undefined : rect.bottom + 4,
+//         bottom: openUpward ? window.innerHeight - rect.top + 4 : undefined,
+//         left,
+//         width: rect.width,
+//       });
+//     }
+//   }, []);
+
+//   // Close on outside click
+//   useEffect(() => {
+//     if (!isOpen) return;
+//     const handleClickOutside = (e) => {
+//       if (
+//         containerRef.current && !containerRef.current.contains(e.target) &&
+//         dropdownRef.current && !dropdownRef.current.contains(e.target)
+//       ) {
+//         setIsOpen(false);
+//         setSearch("");
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, [isOpen]);
+
+//   // When dropdown opens, update positioning and focus search input
+//   useEffect(() => {
+//     if (isOpen) {
+//       updateDropdownPos();
+//       if (searchable && searchRef.current) {
+//         searchRef.current.focus();
+//       }
+//     } else {
+//       setHighlightedIndex(-1);
+//     }
+//   }, [isOpen, searchable, updateDropdownPos]);
+
+//   // Reset highlight when search changes
+//   useEffect(() => {
+//     setHighlightedIndex(-1);
+//   }, [search]);
+
+//   // Scroll highlighted item into view
+//   useEffect(() => {
+//     if (highlightedIndex >= 0 && listRef.current) {
+//       const item = listRef.current.children[highlightedIndex];
+//       if (item) item.scrollIntoView({ block: "nearest" });
+//     }
+//   }, [highlightedIndex]);
+
+//   // Reposition dropdown on resize or scroll while open
+//   useEffect(() => {
+//     if (!isOpen) return;
+//     const handleReposition = () => updateDropdownPos();
+//     window.addEventListener("resize", handleReposition);
+//     window.addEventListener("scroll", handleReposition, true);
+//     return () => {
+//       window.removeEventListener("resize", handleReposition);
+//       window.removeEventListener("scroll", handleReposition, true);
+//     };
+//   }, [isOpen, updateDropdownPos]);
+
+//   useEffect(() => {
+//     if (buttonRef?.current && openOnFocus) {
+//       buttonRef.current.focus();
+//     }
+//   }, [openOnFocus]);
+
+//   const currentValue = (value !== undefined && value !== null && value !== "") ? value : defaultValue;
+//   const selectedLabel = options?.find((o) => String(o.value) === String(currentValue))?.show || "";
+//   const filtered = (options || []).filter((o) =>
+//     String(o.show).toLowerCase().includes(search.toLowerCase())
+//   );
+
+//   const handleSelect = (optionValue, fromKeyboard = false) => {
+//     beforeChange();
+//     setValue(optionValue);
+//     setIsOpen(false);
+//     setSearch("");
+//     if (onBlur) onBlur();
+//     if (fromKeyboard) {
+//       setTimeout(() => {
+//         if (nextRef?.current) {
+//           nextRef.current.focus();
+//         } else {
+//           // Fallback: move focus to the next focusable input/select after this dropdown button
+//           if (!buttonRef.current) return;
+//           const allFocusable = Array.from(
+//             document.querySelectorAll(
+//               'input:not([disabled]):not([readonly]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]), select:not([disabled])'
+//             )
+//           ).filter(el => el.offsetParent !== null);
+//           const nextInput = allFocusable.find(
+//             el => buttonRef.current.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING
+//           );
+//           if (nextInput) nextInput.focus();
+//         }
+//       }, 0);
+//     }
+//   };
+
+//   return (
+//     <div className={`mb-1 ${width}`} ref={containerRef}>
+//       {name && (
+//         <label className="block text-xs font-bold text-slate-700 mb-1">
+//           {required ? <RequiredLabel name={name} /> : name}
+//         </label>
+//       )}
+//       <button
+//         ref={buttonRef}
+//         type="button"
+//         autoFocus={autoFocus}
+//         disabled={isDisabled}
+//         tabIndex={tabIndex ?? undefined}
+//         onKeyDown={(e) => {
+//           if (isDisabled) return;
+//           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+//             e.preventDefault();
+//             if (!isOpen) {
+//               updateDropdownPos();
+//               setIsOpen(true);
+//             }
+//             if (searchable) {
+//               setTimeout(() => searchRef.current?.focus(), 0);
+//             }
+//           } else if (e.key === "Enter" || e.key === " ") {
+//             e.preventDefault();
+//             updateDropdownPos();
+//             setIsOpen((o) => !o);
+//           } else if (e.key === "Escape") {
+//             setIsOpen(false);
+//             setSearch("");
+//           }
+//         }}
+//         onClick={() => {
+//           if (!isDisabled) {
+//             updateDropdownPos();
+//             setIsOpen((o) => !o);
+//           }
+//         }}
+//         className={`w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg text-left
+//           focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+//           transition-all duration-150 shadow-sm flex justify-between items-center
+//           ${isDisabled ? "bg-slate-100 cursor-not-allowed" : "bg-white cursor-pointer"}
+//           ${className}`}
+//       >
+//         <span className={`pointer-events-none truncate ${selectedLabel ? "text-gray-800" : "text-gray-400"}`}>
+//           {selectedLabel || "Select"}
+//         </span>
+//         <svg className={`w-3 h-3 text-gray-500 transition-transform pointer-events-none flex-shrink-0 ml-1 ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+//         </svg>
+//       </button>
+
+//       {isOpen && createPortal(
+//         <div
+//           ref={dropdownRef}
+//           style={{
+//             position: "fixed",
+//             top: dropdownPos.top,
+//             bottom: dropdownPos.bottom,
+//             left: dropdownPos.left,
+//             width: dropdownPos.width,
+//             minWidth: Math.max(dropdownPos.width || 0, 180),
+//             zIndex: 99999,
+//           }}
+//           className="bg-white border border-gray-300 rounded-lg shadow-lg"
+//         >
+//           {searchable && (
+//             <div className="p-1.5 border-b border-gray-200">
+//               <input
+//                 ref={searchRef}
+//                 type="text"
+//                 value={search}
+//                 onChange={(e) => setSearch(e.target.value)}
+//                 placeholder="Search..."
+//                 className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+//                 onKeyDown={(e) => {
+//                   if (e.key === "ArrowDown") {
+//                     e.preventDefault();
+//                     setHighlightedIndex((i) => Math.min(i + 1, filtered.length - 1));
+//                   } else if (e.key === "ArrowUp") {
+//                     e.preventDefault();
+//                     setHighlightedIndex((i) => Math.max(i - 1, 0));
+//                   } else if (e.key === "Enter") {
+//                     e.preventDefault();
+//                     if (highlightedIndex >= 0 && filtered[highlightedIndex]) {
+//                       handleSelect(filtered[highlightedIndex].value, true);
+//                     }
+//                   } else if (e.key === "Escape") {
+//                     setIsOpen(false);
+//                     setSearch("");
+//                     buttonRef.current?.focus();
+//                   }
+//                 }}
+//               />
+//             </div>
+//           )}
+//           <ul ref={listRef} className="max-h-48 overflow-y-auto py-1">
+//             {childComponent && !isDisabled && (
+//               <li
+//                 onClick={() => { setIsOpen(false); setSearch(""); setShowAddNew(true); }}
+//                 className="px-3 py-1.5 text-xs text-blue-600 font-semibold hover:bg-blue-50 cursor-pointer border-b border-gray-100"
+//               >
+//                 {addNewLabel}
+//               </li>
+//             )}
+//             {clear && (
+//               <li
+//                 onClick={() => handleSelect("")}
+//                 className="px-3 py-1.5 text-xs text-gray-400 hover:bg-blue-50 cursor-pointer"
+//               >
+//                 Select
+//               </li>
+//             )}
+//             {filtered.length === 0 ? (
+//               <li className="px-3 py-2 text-xs text-gray-400 text-center">No results</li>
+//             ) : (
+//               filtered.map((option, index) => (
+//                 <li
+//                   key={index}
+//                   onClick={() => handleSelect(option.value)}
+//                   onMouseEnter={() => setHighlightedIndex(index)}
+//                   className={`group px-3 py-1.5 text-xs cursor-pointer flex justify-between items-center
+//                     ${index === highlightedIndex ? "bg-blue-50" : ""}
+//                     ${String(option.value) === String(value) ? "bg-blue-100 font-semibold text-blue-700" : "text-gray-800"}`}
+//                 >
+//                   <span className="flex-1 truncate">{option.show}</span>
+//                   {childComponent && !isDisabled && (
+//                     <span className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+//                       <button
+//                         type="button"
+//                         onClick={(e) => { e.stopPropagation(); setIsOpen(false); setSearch(""); setEditingOption(option); }}
+//                         className="p-0.5 text-blue-500 hover:text-blue-700 hover:bg-blue-100 rounded"
+//                         title="Edit"
+//                       >
+//                         <FaEdit size={10} />
+//                       </button>
+//                       <button
+//                         type="button"
+//                         onClick={(e) => {
+//                           if (childRecordCount(option?._count)) {
+//                             Swal.fire({
+//                               title: `Child Record Exists`,
+//                               icon: "warning",
+//                             });
+//                             return;
+//                           }
+//                           e.stopPropagation(); setIsOpen(false); setSearch(""); setDeletingOption(option);
+//                         }}
+//                         className="p-0.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"
+//                         title="Delete"
+//                       >
+//                         <FaTrash size={10} />
+//                       </button>
+//                     </span>
+//                   )}
+//                 </li>
+//               ))
+//             )}
+//           </ul>
+//         </div>,
+//         document.body
+//       )}
+//       {showAddNew && childComponent && (() => {
+//         const AddNew = childComponent;
+//         return (
+//           <Modal isOpen={showAddNew} onClose={() => setShowAddNew(false)} widthClass={addNewModalWidth}>
+//             <AddNew onSuccess={handleAddNewSuccess} onClose={() => setShowAddNew(false)} />
+//           </Modal>
+//         );
+//       })()}
+//       {editingOption && childComponent && (() => {
+//         const EditComp = childComponent;
+//         return (
+//           <Modal isOpen={!!editingOption} onClose={() => setEditingOption(null)} widthClass={addNewModalWidth}>
+//             <EditComp
+//               editId={editingOption.value}
+//               onSuccess={() => setEditingOption(null)}
+//               onClose={() => setEditingOption(null)}
+//             />
+//           </Modal>
+//         );
+//       })()}
+//       {deletingOption && childComponent && (() => {
+//         const DeleteComp = childComponent;
+//         return (
+//           <Modal isOpen={!!deletingOption} onClose={() => setDeletingOption(null)} widthClass={addNewModalWidth}>
+//             <DeleteComp
+//               deleteId={deletingOption.value}
+//               deleteLabel={deletingOption.show}
+//               onSuccess={handleDeleteSuccess}
+//               onClose={() => setDeletingOption(null)}
+//             />
+//           </Modal>
+//         );
+//       })()}
+//     </div>
+//   );
+// });
+
+
 export const DropdownInputNew = forwardRef(({
   name,
   beforeChange = () => { },
@@ -3028,14 +3408,12 @@ export const DropdownInputNew = forwardRef(({
   const [showAddNew, setShowAddNew] = useState(false);
   const [editingOption, setEditingOption] = useState(null);
   const [deletingOption, setDeletingOption] = useState(null)
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
   const listRef = useRef(null);
-  const isMouseDownRef = useRef(false);
 
   const isDisabled = readOnly || disabled;
   // Use custom dropdown when addNewComponent is provided (native select can't host clickable options)
@@ -3068,44 +3446,28 @@ export const DropdownInputNew = forwardRef(({
     setDeletingOption(null);
   };
 
-  const updateDropdownPos = useCallback(() => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const dropdownHeight = 280; // approx max height (search + list max-h-48 + padding)
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      const openUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
-      setDropdownPos({
-        top: openUpward ? undefined : rect.bottom,
-        bottom: openUpward ? window.innerHeight - rect.top : undefined,
-        left: rect.left,
-        width: rect.width,
-      });
-    }
-  }, []);
-
-  // Close on outside click (searchable mode)
+  // Close on outside click — only listen while the dropdown is open
   useEffect(() => {
-    if (!useCustomDropdown) return;
+    if (!isOpen) return;
     const handleClickOutside = (e) => {
-      if (
-        containerRef.current && !containerRef.current.contains(e.target) &&
-        dropdownRef.current && !dropdownRef.current.contains(e.target)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);
         setSearch("");
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [useCustomDropdown]);
+  }, [isOpen]);
 
-  // Focus search input when dropdown opens; reset highlight
+  // When dropdown opens, focus search; when closes, reset highlight
   useEffect(() => {
-    if (isOpen && searchRef.current) {
-      searchRef.current.focus();
+    if (isOpen) {
+      if (searchRef.current) {
+        searchRef.current.focus();
+      }
+    } else {
+      setHighlightedIndex(-1);
     }
-    if (!isOpen) setHighlightedIndex(-1);
   }, [isOpen]);
 
   // Reset highlight when search changes
@@ -3120,18 +3482,6 @@ export const DropdownInputNew = forwardRef(({
       if (item) item.scrollIntoView({ block: "nearest" });
     }
   }, [highlightedIndex]);
-
-  // Reposition dropdown on resize or scroll while open
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleReposition = () => updateDropdownPos();
-    window.addEventListener("resize", handleReposition);
-    window.addEventListener("scroll", handleReposition, true);
-    return () => {
-      window.removeEventListener("resize", handleReposition);
-      window.removeEventListener("scroll", handleReposition, true);
-    };
-  }, [isOpen, updateDropdownPos]);
 
   useEffect(() => {
     if (ref?.current && openOnFocus) {
@@ -3225,7 +3575,7 @@ export const DropdownInputNew = forwardRef(({
   };
 
   return (
-    <div className={`mb-1 ${width}`} ref={containerRef}>
+    <div className={`relative mb-1 ${width}`} ref={containerRef}>
       {name && (
         <label className="block text-xs font-bold text-slate-700 mb-1">
           {required ? <RequiredLabel name={name} /> : name}
@@ -3237,28 +3587,16 @@ export const DropdownInputNew = forwardRef(({
         autoFocus={autoFocus}
         disabled={isDisabled}
         tabIndex={tabIndex ?? undefined}
-        onMouseDown={() => { isMouseDownRef.current = true; }}
-        onFocus={() => {
-          if (!isDisabled && !isMouseDownRef.current) {
-            // Keyboard / Tab navigation — open immediately
-            updateDropdownPos();
-            setIsOpen(true);
-          }
-          isMouseDownRef.current = false;
-        }}
         onKeyDown={(e) => {
           if (isDisabled) return;
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             if (!isOpen) {
-              updateDropdownPos();
               setIsOpen(true);
             }
-            // Focus the search input; ArrowDown/Up on it will then navigate options
             setTimeout(() => searchRef.current?.focus(), 0);
           } else if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            updateDropdownPos();
             setIsOpen((o) => !o);
           } else if (e.key === "Escape") {
             setIsOpen(false);
@@ -3267,8 +3605,6 @@ export const DropdownInputNew = forwardRef(({
         }}
         onClick={() => {
           if (!isDisabled) {
-            isMouseDownRef.current = false;
-            updateDropdownPos();
             setIsOpen((o) => !o);
           }
         }}
@@ -3286,11 +3622,11 @@ export const DropdownInputNew = forwardRef(({
         </svg>
       </button>
 
-      {isOpen && createPortal(
+      {isOpen && (
         <div
           ref={dropdownRef}
-          style={{ position: "fixed", top: dropdownPos.top, bottom: dropdownPos.bottom, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
-          className="bg-white border border-gray-300 rounded-lg shadow-lg"
+          className="absolute left-0 top-full mt-1 w-full min-w-[200px] bg-white border border-gray-300 rounded-lg shadow-2xl z-[9999]"
+          style={{ zIndex: 9999 }}
         >
           <div className="p-1.5 border-b border-gray-200">
             <input
@@ -3385,8 +3721,7 @@ export const DropdownInputNew = forwardRef(({
               ))
             )}
           </ul>
-        </div>,
-        document.body
+        </div>
       )}
       {showAddNew && childComponent && (() => {
         const AddNew = childComponent;
@@ -3424,9 +3759,6 @@ export const DropdownInputNew = forwardRef(({
     </div>
   );
 });
-
-
-
 
 
 export const PriceInputWithTax = forwardRef(({
