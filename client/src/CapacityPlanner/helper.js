@@ -281,9 +281,27 @@ export const getWeeksInMonth = (month) => {
 };
 
 export function styleTypeMatchingWarningMessage(line, order) {
+    console.log({
+        line,
+        order
+    }, "styleTypeMatchingWarningMessage")
     if (line?.styleType !== order?.styleType) {
         toast.warning(STYLE_TYPE_NOT_MATCHING_WARNING_MESSAGE)
         return false
     }
     return true
 }
+
+export const isDateInPreviousWeek = (date) => {
+    if (!date) return false;
+    const startOfCurrentWeek = moment().startOf('isoWeek').format('YYYY-MM-DD');
+    const targetDate = getDateFromDateTimeFormat(date);
+    return moment(targetDate).isBefore(startOfCurrentWeek, 'day');
+};
+
+export const getDaysUntilDelivery = (dDate, fromDate = null) => {
+    if (!dDate) return null;
+    const delivery = moment.utc(dDate).startOf('day');
+    const baseDate = fromDate ? moment.utc(fromDate).startOf('day') : moment().startOf('day');
+    return delivery.diff(baseDate, 'days');
+};

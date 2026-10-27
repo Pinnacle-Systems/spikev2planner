@@ -121,8 +121,8 @@ const TABS = [
     { label: 'Allocated', value: 'Allocated' },
 ];
 
-const HEADERS = ['S.no', 'Order no.', 'Del. date', 'Style', 'Buyer', 'Style type',
-    'Qty', 'F%', 'T%', 'Status', 'Find', 'Prod. det'];
+const HEADERS = ['S.no', 'Order no', 'Delivery date', 'Style', 'Buyer', 'Style type',
+    'Qty', 'Status', 'Find', 'Production details'];
 
 const EMPTY_ARRAY = [];
 
@@ -130,7 +130,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
 
     const context = useContext(CapacityPlannerContext) || {};
     const orders = context.orders ?? EMPTY_ARRAY;
-    const setOrders = context.setOrders || (() => {});
+    const setOrders = context.setOrders || (() => { });
     const holidays = context.holidays;
 
     const isCollapsed = propIsCollapsed !== undefined ? propIsCollapsed : (context.isOrderListCollapsed ?? false);
@@ -211,7 +211,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                 }}
                 onDrop={(e) => { e.preventDefault(); setIsDragOver(false); drop(e); }}
             >
-                {/* Top: Expand Button + Pending Badge */}
+
                 <div className="flex flex-col items-center gap-3 w-full px-1">
                     <button
                         type="button"
@@ -238,7 +238,6 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                     </button>
                 </div>
 
-                {/* Middle: Rotated Title & Count */}
                 <button
                     type="button"
                     onClick={onToggleCollapse}
@@ -250,14 +249,13 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                         className="text-[11px] font-bold tracking-wider text-slate-600 group-hover:text-slate-900 uppercase transition"
                         style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
                     >
-                        Order Backlog
+                        {/* Order Backlog */}
                     </span>
                     <span className="text-[10px] text-slate-400 font-medium">
                         ({baseOrders.length})
                     </span>
                 </button>
 
-                {/* Bottom: Dedicated Unplan Drop Zone Target */}
                 <div
                     className={`w-10 h-16 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center p-1 transition
                         ${isDragOver
@@ -290,9 +288,9 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
             {/* Header (fixed) */}
             <div className="shrink-0 flex items-center justify-between px-3 pt-3 pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2 min-w-0">
-                    <h2 className="text-sm font-semibold text-slate-900 truncate">Order backlog</h2>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 shrink-0">
-                        {visibleOrders.length} of {baseOrders.length}
+                    <h1 className="text-[15px] font-semibold text-slate-900 truncate mb-0">Order backlog</h1>
+                    <span className="px-1.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 shrink-0">
+                        {/* {visibleOrders.length} of {baseOrders.length} */}
                     </span>
                 </div>
                 {onToggleCollapse && (
@@ -349,7 +347,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                                 ${active ? 'bg-[#16345F] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                         >
                             {t.label}
-                            <span className={`ml-1 ${active ? 'text-white/80' : 'text-slate-500'}`}>{counts[t.value]}</span>
+                            <span className={`ml-1 ${active ? 'text-white/80' : 'text-slate-500'}`}> {counts[t.value] ? `(${counts[t.value]})` : ''}</span>
                         </button>
                     );
                 })}
@@ -392,7 +390,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
 
             {/* Hint (fixed) */}
             <div className="shrink-0 px-3 py-2 text-[11px] text-slate-600 border-t border-slate-200 bg-slate-50">
-                Drag an order onto a line to plan it. Drop a planned order here to unplan it.
+                {/* Drag an order onto a line to plan it. Drop a planned order here to unplan it. */}
             </div>
         </div>
     )

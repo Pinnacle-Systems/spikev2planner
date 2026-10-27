@@ -129,6 +129,7 @@ const CapacityPlanner = () => {
             method: 'get',
             url: BASE_URL + UNITS_API + `/${selectedUnit}`,
         }).then((result) => {
+            console.log(result.data.data.orderSplitDetailModel, "result from single unit api")
             setLines(result.data.data.line)
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
@@ -270,9 +271,8 @@ const CapacityPlanner = () => {
             </Modal> */}
 
             <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>
-                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${
-                    isOrderListCollapsed ? 'w-12' : 'w-[30%] min-w-[340px] max-w-[480px]'
-                }`}>
+                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[30%] min-w-[340px] max-w-[480px]'
+                    }`}>
                     <OrderList
                         orders={orders}
                         setOrders={setOrders}
@@ -281,7 +281,7 @@ const CapacityPlanner = () => {
                         onToggleCollapse={toggleOrderList}
                     />
                 </div>
-                <div className='flex-1 min-w-0 h-screen overflow-auto flex flex-col'>
+                <div className='flex min-w-0 h-full overflow-auto flex flex-col'>
                     <SelectionPanel />
                     <Calendar />
                 </div>

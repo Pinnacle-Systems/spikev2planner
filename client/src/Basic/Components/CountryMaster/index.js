@@ -430,7 +430,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   return (
     <MasterPageLayout
       title="Country Master"
-      addButtonLabel="+ Add New Country"
+      addButtonLabel="Add New Country"
       onAdd={() => {
         setForm(true);
         onNew();

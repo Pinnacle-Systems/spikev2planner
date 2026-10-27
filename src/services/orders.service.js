@@ -211,7 +211,11 @@ async function update(id, body) {
 };
 
 async function updateMany(req) {
+
     const { orders } = await req.body
+
+    console.log(orders, "orders")
+
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orders.length; index++) {
             const order = orders[index];

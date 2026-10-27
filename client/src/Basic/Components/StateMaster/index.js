@@ -488,7 +488,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   return (
     <MasterPageLayout
       title="State Master"
-      addButtonLabel="+ Add New State"
+      addButtonLabel="Add New State"
       onAdd={() => {
         setForm(true);
         onNew();

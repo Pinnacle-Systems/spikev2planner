@@ -7,6 +7,7 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import ToggleButton from '../../../Components/ToggleButton';
 import { Building2, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { getWeeksInMonth } from '../../helper';
+import SearchableTableCellSelect from '../../../Basic/ReusabelComponents/SearchableTableCellSelect';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -119,15 +120,17 @@ const SelectionPanel = () => {
         setSelectedUnit(sessionStorage.getItem("selectedUnit") || "");
     }, [setSelectedUnit]);
 
+    const unitOptions = (units || [])?.map((item) => ({
+        value: item.id,
+        label: item?.name || "",
+    }));
 
     return (
-        <div className="flex items-center gap-2 h-12 px-3 bg-white border-b border-slate-200 text-xs whitespace-nowrap overflow-x-auto">
+        <div className="flex items-center gap-2 h-12 px-3 bg-white border-b border-slate-200 text-xs whitespace-nowrap">
 
-            {/* Unit */}
-            <label className="shrink-0 flex items-center gap-1.5 h-8 pl-2 pr-1 rounded-md border border-slate-300 bg-white
+            <label className="shrink-0 z-30 flex items-center gap-1.5 h-8 pl-2 pr-1 rounded-md border border-slate-300 bg-white
                       focus-within:border-orange-600 focus-within:ring-2 focus-within:ring-orange-100">
-                <Building2 size={14} className="text-slate-500" aria-hidden="true" />
-                <select
+                {/* <select
                     id="unit"
                     name="unit"
                     aria-label="Unit"
@@ -136,10 +139,20 @@ const SelectionPanel = () => {
                         setSelectedUnit(e.target.value);
                         sessionStorage.setItem("selectedUnit", e.target.value);
                     }}
-                    className="bg-transparent text-xs font-medium text-slate-800 outline-none cursor-pointer pr-1"
+                    className="bg-transparent text-[11px] w-[100px] font-medium text-slate-800 outline-none cursor-pointer pr-1"
                 >
+                    <option value=""> </option>
                     {units.map(unit => <option key={unit.id} value={unit.id}>{unit.name}</option>)}
-                </select>
+                </select> */}
+                <SearchableTableCellSelect
+                    value={selectedUnit}
+                    options={unitOptions}
+                    onChange={(e) => {
+                        setSelectedUnit(e.target.value);
+                        sessionStorage.setItem("selectedUnit", e.target.value);
+                    }}
+                />
+
             </label>
 
             <span className="shrink-0 h-5 w-px bg-slate-200" aria-hidden="true" />
@@ -171,13 +184,13 @@ const SelectionPanel = () => {
                     <ChevronRight size={16} />
                 </button>
             </div>
-            <button
+            {/* <button
                 type="button"
                 className="shrink-0 h-8 px-2.5 rounded-md border border-slate-300 bg-white font-medium text-slate-700 hover:bg-slate-100 shadow-xs"
                 onClick={handleToday}
             >
                 Today
-            </button>
+            </button> */}
 
             <span className="shrink-0 h-5 w-px bg-slate-200" aria-hidden="true" />
 
@@ -185,33 +198,30 @@ const SelectionPanel = () => {
             <div className="shrink-0 flex items-center h-8 p-0.5 rounded-md border border-slate-300 bg-slate-100 text-xs">
                 <button
                     type="button"
-                    className={`px-2 h-full rounded font-medium transition-all ${
-                        calendarViewMode === 'month'
-                            ? 'bg-white text-[#16345F] font-bold shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`px-2 h-full rounded font-medium transition-all ${calendarViewMode === 'month'
+                        ? 'bg-white text-[#16345F] font-bold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     onClick={() => setCalendarViewMode('month')}
                 >
                     Month
                 </button>
                 <button
                     type="button"
-                    className={`px-2 h-full rounded font-medium transition-all ${
-                        calendarViewMode === '15days'
-                            ? 'bg-white text-[#16345F] font-bold shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`px-2 h-full rounded font-medium transition-all ${calendarViewMode === '15days'
+                        ? 'bg-white text-[#16345F] font-bold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     onClick={() => setCalendarViewMode('15days')}
                 >
                     15 Days
                 </button>
                 <button
                     type="button"
-                    className={`px-2 h-full rounded font-medium transition-all ${
-                        calendarViewMode === 'week'
-                            ? 'bg-white text-[#16345F] font-bold shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    className={`px-2 h-full rounded font-medium transition-all ${calendarViewMode === 'week'
+                        ? 'bg-white text-[#16345F] font-bold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     onClick={() => setCalendarViewMode('week')}
                 >
                     Week
@@ -231,11 +241,10 @@ const SelectionPanel = () => {
                     </button>
                     <button
                         type="button"
-                        className={`px-2 h-full font-medium transition-all ${
-                            calendarHalf === 1
-                                ? 'bg-orange-50 text-orange-700 font-bold'
-                                : 'text-slate-600 hover:bg-slate-50'
-                        }`}
+                        className={`px-2 h-full font-medium transition-all ${calendarHalf === 1
+                            ? 'bg-orange-50 text-orange-700 font-bold'
+                            : 'text-slate-600 hover:bg-slate-50'
+                            }`}
                         onClick={() => setCalendarHalf(1)}
                     >
                         1st – 15th
@@ -243,11 +252,10 @@ const SelectionPanel = () => {
                     <span className="h-4 w-px bg-slate-200" />
                     <button
                         type="button"
-                        className={`px-2 h-full font-medium transition-all ${
-                            calendarHalf === 2
-                                ? 'bg-orange-50 text-orange-700 font-bold'
-                                : 'text-slate-600 hover:bg-slate-50'
-                        }`}
+                        className={`px-2 h-full font-medium transition-all ${calendarHalf === 2
+                            ? 'bg-orange-50 text-orange-700 font-bold'
+                            : 'text-slate-600 hover:bg-slate-50'
+                            }`}
                         onClick={() => setCalendarHalf(2)}
                     >
                         16th – End

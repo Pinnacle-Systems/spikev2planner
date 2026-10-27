@@ -50,6 +50,7 @@ import {
   Check,
   LayoutGrid,
   Plus,
+  PlusIcon,
   Power,
   Table,
 } from "lucide-react";
@@ -257,17 +258,17 @@ export default function Form() {
     let newErrors = {};
     if (!data.name) newErrors.name = "Full Name is required";
     if (!data.gender) newErrors.gender = "Gender is required";
-    if (!data.dob) newErrors.dob = "Date of Birth is required";
+    // if (!data.dob) newErrors.dob = "Date of Birth is required";
     if (!data.employeeCategory) newErrors.employeeCategory = "Employee Category is required";
     if (!data.department) newErrors.department = "Department is required";
-    if (!data.joiningDate) newErrors.joiningDate = "Joining Date is required";
-    if (!data.employeeId) newErrors.employeeId = "Employee Id is required";
+    // if (!data.joiningDate) newErrors.joiningDate = "Joining Date is required";
+    // if (!data.employeeId) newErrors.employeeId = "Employee Id is required";
     if (!data.mobile) newErrors.mobile = "Mobile No is required";
     if (!data.localAddress) newErrors.localAddress = "Address is required";
     if (!data.permCity) newErrors.permCity = "City is required";
     if (!data.permPincode) newErrors.permPincode = "Pincode is required";
-    if (!data.aadharNo?.trim()) newErrors.aadharNo = "Aadhar No is required";
-    if (!data.maritalStatus?.trim()) newErrors.maritalStatus = "Marital Status is required";
+    // if (!data.aadharNo?.trim()) newErrors.aadharNo = "Aadhar No is required";
+    // if (!data.maritalStatus?.trim()) newErrors.maritalStatus = "Marital Status is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -466,11 +467,20 @@ export default function Form() {
         headerActions={
           <>
             <button
+              type="button"
+              onClick={() => { setForm(true); onNew(); setNewForm(true); }}
+              className="inline-flex items-center gap-2 rounded-md bg-[#E0562C] hover:bg-[#e0562cf2] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E0562C] focus-visible:ring-offset-2 active:bg-indigo-800"
+            >
+              <PlusIcon height={12} />
+              Add New Employee
+              {/* {addButtonLabel} */}
+            </button>
+            {/* <button
               onClick={() => { setForm(true); onNew(); setNewForm(true); }}
               className="bg-white border text-xs border-indigo-600 text-indigo-600 hover:bg-indigo-700 hover:text-white px-4 py-1 rounded-md shadow transition-colors duration-200 flex items-center gap-2"
             >
               <Plus size={16} /> Add New Employee
-            </button>
+            </button> */}
             <div className="flex items-center gap-2">
               <button onClick={() => setView("table")}
                 className={`px-3 py-1 rounded-md text-xs flex items-center gap-1 ${view === "table" ? "bg-indigo-100 text-indigo-600" : "text-gray-600 hover:bg-gray-100"}`}>
@@ -622,7 +632,7 @@ export default function Form() {
                           name="Date of Birth"
                           value={dob}
                           setValue={(val) => { setDob(val); clearError("dob"); }}
-                          required
+                          // required
                           readOnly={readOnly}
                           disabled={childRecord.current > 0}
                           className={errorClass("dob")}
@@ -713,7 +723,7 @@ export default function Form() {
                             name="Joining Date"
                             value={joiningDate}
                             setValue={(val) => { setJoiningDate(val); clearError("joiningDate"); }}
-                            required={true}
+                            // required={true}
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             className={errorClass("joiningDate")}
@@ -728,7 +738,7 @@ export default function Form() {
                             value={employeeId}
                             setValue={(val) => { setEmployeeId(val); clearError("employeeId"); }}
                             readOnly={readOnly}
-                            required={true}
+                            // required={true}
                             disabled={childRecord.current > 0}
                             className={errorClass("employeeId")}
                           />
@@ -747,7 +757,7 @@ export default function Form() {
                             name="Father Name"
                             value={fatherName}
                             setValue={setFatherName}
-                            required
+                            // required
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                           />
@@ -761,7 +771,7 @@ export default function Form() {
                             value={maritalStatus}
                             setValue={(val) => { setMaritalStatus(val); clearError("maritalStatus"); }}
                             readOnly={readOnly}
-                            required={true}
+                            // required={true}
                             disabled={childRecord.current > 0}
                           />
                           {errors.maritalStatus && <span className="text-red-500 text-xs ml-1">{errors.maritalStatus}</span>}
@@ -775,7 +785,7 @@ export default function Form() {
                             value={aadharNo}
                             type="aadhar"
                             setValue={(val) => { setAadharNo(val); clearError("aadharNo"); }}
-                            required
+                            // required
                             readOnly={readOnly}
                             disabled={childRecord.current > 0}
                             className={errorClass("aadharNo")}

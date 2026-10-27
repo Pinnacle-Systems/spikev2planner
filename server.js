@@ -45,17 +45,12 @@ app.use("/cities", cities);
 app.use("/employees", employees);
 app.use("/employeeCategories", employeeCategories);
 app.use("/departments", departments);
-
-
 app.use("/users", users);
 app.use("/pages", pages);
 app.use("/pageGroup", pageGroup);
 app.use("/companies", companies);
 app.use("/branches", branches);
 app.use("/roles", roles);
-
-
-
 app.use("/orders", orders);
 app.use("/units", units);
 app.use("/holidays", holidays);

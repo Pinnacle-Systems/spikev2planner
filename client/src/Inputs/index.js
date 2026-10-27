@@ -2118,7 +2118,7 @@ export const ReusableTable = ({
                         <input
                           type="text"
                           placeholder="Search..."
-                          className="w-full text-[12px] font-normal uppercase px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500"
+                          className="w-full bg-white text-[12px] font-normal uppercase px-1 py-0.5 border border-gray-300 rounded text-gray-700 outline-none focus:border-blue-500"
                           value={columnFilters[column.header] || ""}
                           onChange={(e) => {
                             e.preventDefault()
@@ -4243,3 +4243,34 @@ const DynamicRenderer = ({ openModelForAddress, onCloseForm, componentName, edit
 
   return ComponentToRender ? <ComponentToRender /> : <div>Not found</div>;
 };
+
+
+
+
+export function ReusableInput(
+  { setValue, label, type, value, className = "", placeholder, readOnly, disabled }
+) {
+  return (
+    <div className="mb-2">
+      {label && (
+        <label className="mb-1 block text-xs font-bold text-slate-700">
+          {label}
+        </label>
+      )}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) =>
+          type === "number" ? setValue(e.target.value) : handleOnChange(e, setValue)
+        }
+        placeholder={placeholder}
+        readOnly={readOnly}
+        disabled={disabled}
+        className={`w-full px-2 py-1 text-xs border border-slate-300 rounded-md 
+          focus:border-indigo-300 focus:outline-none transition-all duration-200
+          hover:border-slate-400 ${readOnly || disabled ? "bg-slate-100" : ""
+          } ${className}`}
+      />
+    </div>
+  );
+}

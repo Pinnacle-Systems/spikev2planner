@@ -42,6 +42,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
   const { refs, handlers } = useFormKeyboardNavigation();
   const formRef = useRef(null);
   const [lines, setLines] = useState([])
+  const [location, setLocation] = useState("")
   const childRecord = useRef(0);
   const params = {
     companyId: secureLocalStorage.getItem(
@@ -90,15 +91,15 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       if (!id) {
         setLines([createStandardPriceRow()])
       } else {
-        setLines(data?.lines)
+        setLines(data?.line)
         setName(data?.name || "");
-        setCode(data?.code || "");
+        setLocation(data?.location || "");
         setActive(data?.active ?? true);
         childRecord.current = data?.childRecord ? data?.childRecord : 0;
       }
 
       setName(data?.name || "");
-      setCode(data?.code || "");
+      setLocation(data?.location || "");
       setActive(data?.active ?? true);
       childRecord.current = data?.childRecord ? data?.childRecord : 0;
     },
@@ -119,15 +120,18 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     ),
     active,
     id,
-    lines
+    lines,
+    location
   };
 
   const validateData = (data) => {
-    if (data.name && data.code) {
+    if (data.name && data.location) {
       return true;
     }
     return false;
   };
+
+  console.log(lines, "lines from master page")
 
   const handleSubmitCustom = async (callback, data, text, nextProcess) => {
     try {
@@ -165,6 +169,41 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       });
     }
   };
+  function isGridDatasValid(datas, isRequiredAllData, mandatoryFields = []) {
+    console.log(datas, "datas");
+    console.log(isRequiredAllData, "isRequiredAllData");
+    console.log(mandatoryFields, "mandatoryFields")
+
+    // If the array is empty, we consider it invalid because there must be at least one row.
+    if (!datas || datas.length === 0) {
+      return false;
+    }
+
+    const isInvalidValue = (value) => {
+      if (value === "" || value === null || value === undefined || value === "NaN") return true;
+      if (typeof value === "number" && isNaN(value)) return true;
+
+      // Treat strictly numeric zero values (like 0, "0", "0.00") as invalid.
+      // Number(value) evaluates to NaN for strings like "WRNWITRED05" or "0ABC", 
+      // so this safely allows alphanumeric barcodes to pass validation.
+      if (String(value).trim() !== "" && !isNaN(Number(value)) && Number(value) === 0) {
+        return true;
+      }
+
+      return false;
+    };
+
+    if (isRequiredAllData) {
+      return datas.every(obj => Object.values(obj).every(value => !isInvalidValue(value)));
+    } else {
+      return datas.every(obj =>
+        mandatoryFields.every(field => {
+          const value = obj[field];
+          return value !== undefined && !isInvalidValue(value);
+        })
+      );
+    }
+  }
 
   const saveData = (nextProcess) => {
     const upperName = name.toUpperCase();
@@ -176,6 +215,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       code: upperCode
     };
 
+    const mandatoryFields = [
+
+      "capacity",
+      "lineId",
+      "styleType",
+      "capacity",
+      "efficiency",
+      "qty",
+
+    ];
+
     if (!validateData(finalData)) {
       Swal.fire({
         title: 'Please fill all required fields...!',
@@ -183,6 +233,21 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
         didClose: () => {
           countryNameRef?.current?.focus();
         }
+      });
+      return;
+    }
+
+
+    if (
+      !isGridDatasValid(
+        data?.directInwardReturnItems?.filter((i) => i.itemId),
+        false,
+        mandatoryFields,
+      )
+    ) {
+      Swal.fire({
+        title: "Please fill all Po Items Mandatory fields...!",
+        icon: "warning",
       });
       return;
     }
@@ -339,13 +404,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     label: item?.linename || "",
   }));
 
-  const styleTypeOptions = [{
-    value: "regular",
-    label: "Regular"
-  }, {
-    value: "casual",
-    label: "Casual"
-  }]
+  const styleTypeOptions = [
+    {
+      value: "regular",
+      label: "Regular"
+    },
+    {
+      value: "casual",
+      label: "Casual"
+    },
+    {
+      value: "basic",
+      label: "basic"
+    }
+  ]
 
   const compactFocusCellClassName = transactionTableFocusCellClassName;
   const compactNumberInputClassName = transactionTableNumberInputClassName;
@@ -386,12 +458,12 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               disabled={childRecord.current > 0}
             />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-1">
             <TextInputNew1
               name="Unit Location"
               type="text"
-              value={code}
-              setValue={setCode}
+              value={location}
+              setValue={setLocation}
               required={true}
               readOnly={readOnly}
               disabled={childRecord.current > 0}
@@ -419,20 +491,20 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               <table className={transactionTableClassName}>
                 <thead className={transactionTableHeadClassName}>
                   <tr>
-                    <th className={`${compactHeaderCellClassName} w-12`}>S.No</th>
-                    <th className={`${compactHeaderCellClassName} w-12`}>Line Name</th>
-                    <th className={`${compactHeaderCellClassName} w-20`}>Style Type</th>
-                    <th className={`${compactHeaderCellClassName} w-32`}>Incharge</th>
-                    <th className={`${compactHeaderCellClassName} w-16`}>Max Capacity / per day(piece)</th>
-                    <th className={`${compactHeaderCellClassName} w-16`}>Efficiency (%)</th>
-                    <th className={`${compactHeaderCellClassName} w-32`}>Current Capacity / per day(piece)</th>
+                    <th className={`${compactHeaderCellClassName} w-12`}>S.No  </th>
+                    <th className={`${compactHeaderCellClassName} w-12`}>Line Name <span className="text-red-500">*</span></th>
+                    <th className={`${compactHeaderCellClassName} w-20`}>Style Type <span className="text-red-500">*</span></th>
+                    <th className={`${compactHeaderCellClassName} w-32`}>Incharge </th>
+                    <th className={`${compactHeaderCellClassName} w-16`}>Max Capacity / per day(piece) <span className="text-red-500">*</span></th>
+                    <th className={`${compactHeaderCellClassName} w-16`}>Efficiency (%) <span className="text-red-500">*</span></th>
+                    <th className={`${compactHeaderCellClassName} w-32`}>Current Capacity / per day(piece) <span className="text-red-500">*</span></th>
 
 
                     <th className={`${compactHeaderCellClassName} w-7`}></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {lines.map((row, index) => (
+                  {(lines || []).map((row, index) => (
                     <tr
                       key={index}
                       onContextMenu={(e) => {
@@ -442,10 +514,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                       <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
                       <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
                         <SearchableTableCellSelect
-                          value={row.lineId}
+                          value={row.name}
                           options={lineOptions}
                           disabled={readOnly}
-                          onChange={(nextValue) => handleInputChange(nextValue, index, "lineId")}
+                          onChange={(nextValue) => handleInputChange(nextValue, index, "name")}
                         />
                       </td>
                       <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
@@ -461,14 +533,14 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                         <input
                           onKeyDown={e => {
                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
-                            if (e.key === "Delete") handleInputChange("0.000", index, "inCharge");
+                            if (e.key === "Delete") handleInputChange("", index, "inCharge");
                           }}
                           className={compactNumberInputClassName}
                           onFocus={e => e.target.select()}
                           value={row?.inCharge}
                           disabled={readOnly}
                           onChange={e => handleInputChange(e.target.value, index, "inCharge")}
-                          onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "inCharge")}
+                          onBlur={e => handleInputChange((e.target.value), index, "inCharge")}
                         />
                       </td>
                       <td className={`${compactFocusCellClassName} w-40 text-right`}>
@@ -516,7 +588,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")}
                         />
                       </td>
-                      <td className="w-16 px-1 py-1 text-center">
+                      <td className={`${compactFocusCellClassName} w-16 px-1 py-1 text-center`}>
                         <button
                           onClick={() => addNewRow()}
                           onKeyDown={(e) => {
@@ -536,31 +608,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                   ))}
                 </tbody>
               </table>
-              {/* 
-              {contextMenu && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: `${contextMenu.mouseY - 240}px`,
-                    left: `${contextMenu.mouseX - 30}px`,
-                    boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
-                    padding: "8px", borderRadius: "4px", zIndex: 1000,
-                  }}
-                  className="bg-gray-100"
-                  onMouseLeave={handleCloseContextMenu}
-                >
-                  <div className="flex flex-col gap-1">
-                    <button className="text-black text-[12px] text-left rounded px-1"
-                      onClick={() => { handleDeleteRow(contextMenu.rowId); handleCloseContextMenu(); }}>
-                      Delete
-                    </button>
-                    <button className="text-black text-[12px] text-left rounded px-1"
-                      onClick={() => { handleDeleteAllRows(); handleCloseContextMenu(); }}>
-                      Delete All
-                    </button>
-                  </div>
-                </div>
-              )} */}
+
             </div>
           </TransactionLineItemsSection>
         </fieldset>
@@ -685,7 +733,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           <Modal
             isOpen={form}
             form={form}
-            widthClass={"w-[80%] h-[95%]"}
+            widthClass={"w-[90%] h-[95%]"}
             onClose={() => {
               setForm(false);
               syncFormWithDb(undefined);

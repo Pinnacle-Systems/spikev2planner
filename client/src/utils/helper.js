@@ -184,3 +184,24 @@ export function findFromList(id, list, property) {
 export function viewBase64String(base64String) {
   return "data:image/png;base64, " + base64String
 }
+
+
+export const ModeChip = ({ id, readOnly }) => {
+  if (id && readOnly) {
+    return (
+      <span className="mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">
+        Read Mode
+      </span>
+    );
+  }
+
+  if (id && !readOnly) {
+    return (
+      <span className="mt-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-600 text-white">
+        Edit Mode
+      </span>
+    );
+  }
+
+  return null;
+};

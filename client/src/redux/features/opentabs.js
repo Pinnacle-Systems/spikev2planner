@@ -1,26 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const getInitialTabs = () => {
-  try {
-    const saved = localStorage.getItem("openTabs");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const hasHome = parsed.some((t) => t.name.toUpperCase() === "HOME");
-        if (!hasHome) {
-          return [{ name: "Home", active: parsed.every((t) => !t.active) }, ...parsed];
-        }
-        return parsed;
-      }
-    }
-  } catch (e) {
-    console.error("Error reading openTabs from localStorage", e);
-  }
-  return [{ name: "Home", active: true }];
-};
-
 const initialState = {
-  tabs: getInitialTabs(),
+  tabs: [{ name: "Home", active: true }],
 };
 
 export const openTabs = createSlice({
@@ -48,7 +29,6 @@ export const openTabs = createSlice({
           active: true,
         });
       }
-      localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
     remove: (state, action) => {
       if (action.payload.name?.toUpperCase() === "HOME") {
@@ -79,7 +59,6 @@ export const openTabs = createSlice({
       if (!state.tabs.some(tab => tab.name.toUpperCase() === "HOME")) {
         state.tabs.unshift({ name: "Home", active: state.tabs.length === 0 });
       }
-      localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
     clearAll: (state) => {
       const homeTab = state.tabs.find(
@@ -90,13 +69,10 @@ export const openTabs = createSlice({
       } else {
         state.tabs = [{ name: "Home", active: true }];
       }
-      localStorage.setItem("openTabs", JSON.stringify(state.tabs));
     },
   },
 });
 
-// Action creators are generated for each case reducer function
 export const { push, remove, clearAll } = openTabs.actions;
 
 export default openTabs.reducer;
-

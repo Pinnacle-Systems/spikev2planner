@@ -376,7 +376,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     return (
         <MasterPageLayout
             title="Employee Category Master"
-            addButtonLabel="+ Add New Employee Category"
+            addButtonLabel="Add New Employee Category"
             onAdd={() => { setForm(true); onNew(); }}
             onKeyDown={handleKeyDown}
         >

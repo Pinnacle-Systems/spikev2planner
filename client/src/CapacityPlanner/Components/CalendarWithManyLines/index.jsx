@@ -188,13 +188,14 @@ import OrderItem from '../orderpanel/OrderItem';
 import moment from 'moment';
 import LineItem from '../Line/LineItem';
 import { NATIONAL_HOLIDAY_COLOR, SUNDAY_COLOR } from '../../../Constants/colors';
+import { toast } from 'react-toastify';
 
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { isHoliday, isSunday, isNationalHoliday } from './helper';
-import { sortWeekDaysIfLastWeek, getWeeksInMonth } from '../../helper';
+import { sortWeekDaysIfLastWeek, getWeeksInMonth, isDateInPreviousWeek, getDaysUntilDelivery } from '../../helper';
 
 // Height of everything ABOVE the calendar (header + toolbar). Tune this number if the bottom is cut off or has a gap.
-const CALENDAR_HEIGHT = 'calc(100vh - 150px)';
+const CALENDAR_HEIGHT = 'calc(100vh - 117px)';
 const DAY_COL_MIN = 38;   // min width of one day column in Month view (px)
 const LINE_COL = 96;      // width of the Lines column (px)
 
@@ -245,7 +246,31 @@ const Calendar = () => {
     async function drop(ev, date, line) {
         ev.preventDefault();
         setHoverCell(null);
-        await setCurrentOrder(JSON.parse(ev.dataTransfer.getData("order")));
+
+        const raw = ev.dataTransfer.getData("order");
+        if (!raw) return;
+        const order = JSON.parse(raw);
+
+        // 1. Restrict to current week or above (cannot assign to previous week)
+        if (isDateInPreviousWeek(date)) {
+            toast.warning("Cannot assign order to a previous week. Please assign to current week or later.");
+            return;
+        }
+
+        // 2. Alert if order delivery is more than 45 days
+        const daysFromToday = getDaysUntilDelivery(order.dDate);
+        const daysFromPlan = getDaysUntilDelivery(order.dDate, date);
+        const maxDeliveryDays = Math.max(daysFromToday ?? 0, daysFromPlan ?? 0);
+        if (maxDeliveryDays > 45) {
+            const formattedDeliveryDate = order.dDate ? moment.utc(order.dDate).format("DD-MM-YYYY") : "";
+            const confirmMsg = `Alert: Order ${order.orderNo || ''} delivery date (${formattedDeliveryDate}) is more than 45 days away (${maxDeliveryDays} days). Do you want to make plan?`;
+            if (!window.confirm(confirmMsg)) {
+                return;
+            }
+            toast.info(`Alert: Order delivery is more than 45 days away (${maxDeliveryDays} days).`);
+        }
+
+        await setCurrentOrder(order);
         await setCurrentLine(line);
         await setCurrentDate(date);
         await setLineEntryConformation(true);
@@ -301,6 +326,7 @@ const Calendar = () => {
     const dayHeaderClass = (date) => {
         if (isHoliday(date, holidays)) return 'bg-red-50 text-red-700';
         if (isSunday(date)) return 'bg-slate-200 text-slate-600';
+        if (isDateInPreviousWeek(date)) return 'bg-slate-100/60 text-slate-400';
         return 'bg-slate-100 text-slate-800';
     }
 
@@ -325,13 +351,13 @@ const Calendar = () => {
                     {/* Row 1: weeks */}
                     <tr>
                         {manualSelect ? <th className='sticky top-0 z-40 bg-slate-100 border-b border-slate-200'></th> : null}
-                        <th className='sticky top-0 left-0 z-50 bg-slate-100 border-b border-r border-slate-200 h-7 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600'
+                        <th className='sticky top-0 left-0 z-10 bg-slate-100 border-b border-r border-slate-200 h-7 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-600'
                             style={{ width: LINE_COL }}>
                             Week →
                         </th>
                         {sortWeekDaysIfLastWeek(visibleDays).map((weekday, index) =>
                             <th key={index}
-                                className="sticky top-0 z-40 h-7 bg-slate-100 border-b border-r border-slate-200 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+                                className="sticky top-0 z-20 h-7 bg-slate-100 border-b border-r border-slate-200 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
                                 colSpan={weekCounts[weekday]}>
                                 <div className='flex justify-center'>
                                     Week {weekday}
@@ -341,7 +367,7 @@ const Calendar = () => {
                     </tr>
                     {/* Row 2: days (sticks just below row 1: 28px = h-7) */}
                     <tr>
-                        <th className='sticky left-0 top-[28px] z-50 bg-slate-100 border-b-2 border-r border-slate-300 px-2 py-1 text-left whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-slate-600'>
+                        <th className='sticky left-0 top-[28px] z-10 bg-slate-100 border-b-2 border-r border-slate-300 px-2 py-1 text-left whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-slate-600'>
                             ↓ Lines
                         </th>
                         {visibleDays.map((date, index) => {
@@ -349,7 +375,7 @@ const Calendar = () => {
                             return (
                                 <th key={index}
                                     style={{ width: `${dayColWidth}px`, minWidth: `${dayColWidth}px` }}
-                                    className={`sticky top-[28px] z-40 py-1 border-r border-slate-200 border-b-2
+                                    className={`sticky top-[28px] z-10 py-1 border-r border-slate-200 border-b-2
                                         ${dayHeaderClass(date)}
                                         ${isToday ? 'border-b-orange-600' : 'border-b-slate-300'}`}>
                                     <div className={`flex justify-center text-[13px] font-bold ${isToday ? 'text-orange-700' : ''}`}>
@@ -368,10 +394,11 @@ const Calendar = () => {
                         <tr key={index} className='h-12'>
                             <LineItem index={index} line={line} isLast={index >= (lines.length / 2)} />
                             {visibleDays.map((date, dIndex) => {
+                                const isPastWeek = isDateInPreviousWeek(date);
                                 const placedOrder = getOrderIfOrderPlacedInCurrentDate(date, line);
                                 const cellId = line.id + "/" + getDateFromDateTimeFormat(date);
                                 const bg = getBackgroundColor(date, holidays);
-                                const blocked = isNationalHoliday(date, holidays);
+                                const blocked = isNationalHoliday(date, holidays) || isPastWeek;
                                 const isHover = hoverCell === cellId && !blocked;
                                 const placedLine = placedOrder
                                     ? placedOrder.lines.find(l => parseInt(l.id) === parseInt(line.id))
@@ -407,8 +434,10 @@ const Calendar = () => {
                                     <td key={dIndex} id={cellId}
                                         style={{ backgroundColor: bg ? bg : undefined, width: `${dayColWidth}px`, minWidth: `${dayColWidth}px` }}
                                         className={`border-b border border-slate-200 bg-white w-full onHover-holiday
+                                            ${isPastWeek ? '!bg-slate-50/70' : ''}
                                             ${isHover ? 'ring-2 ring-inset ring-orange-500 !bg-orange-50' : ''}
                                             ${blocked ? 'cursor-not-allowed' : ''}`}
+                                        title={isPastWeek ? 'Cannot assign orders to a previous week' : undefined}
                                         onDragOver={blocked ? undefined : (e) => onDragOver(e, cellId)}
                                         onDragLeave={(e) => { onDragLeave(e, cellId) }}
                                         onDrop={(e) => { drop(e, date, line) }}

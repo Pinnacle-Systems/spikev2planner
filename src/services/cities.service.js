@@ -29,7 +29,7 @@ async function get(req) {
             _count: {
                 select: {
                     doctorPermCity: true,
-                    Party: true
+                    // Party: xtrue
                 }
             }
         },
@@ -40,7 +40,7 @@ async function get(req) {
         const types = [];
 
         if (item._count.doctorPermCity) types.push("Employee Master");
-        if (item._count.Party) types.push("Customer/Supplier Master");
+        // if (item._count.Party) types.push("Customer/Supplier Master");
 
         return {
             ...item,

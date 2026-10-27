@@ -18,9 +18,16 @@ const OrderItem = ({
     startsBefore = false,
     endsAfter = false
 }) => {
+
+
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, productionMode, setCurrentDate,
         setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine, setProductionDetails,
     } = useContext(CapacityPlannerContext)
+
+
+
+
+
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
     }
@@ -51,7 +58,7 @@ const OrderItem = ({
             setSelectedUnit(lines[0]?.Line?.unitId);
         }
         setFindOrder({ orderId: order.id })
-        setScrollLine({ lineId: lines[0]?.id })
+        // setScrollLine({ lineId: lines[0]?.id })
     }
     function handleFindOrderDisable() {
         setFindOrder({})
@@ -63,39 +70,41 @@ const OrderItem = ({
 
     orderNoSplit = orderNoSplit.slice(1).join("/");
 
+    console.log(fromOrderList, "fromOrderListfromOrderList")
     return (
         <>
             {fromOrderList
                 ?
                 <tr
-                    style={{ fontSize: "10px" }} id={order.id}
+                    style={{ fontSize: "11px" }} id={order.id}
                     draggable={["Pending", "Partial"].includes(order.status) && !order.isReplanned}
                     onDragStart={(e) => { drag(e) }}
                     onDragOver={(e) => { e.preventDefault(); }}
                     className={`orderItem noDrop select-none text-center border grabbable`}
                 >
-                    <td style={{ backgroundColor: order.color }}>
+                    <td
+                    >
                         {index}
                     </td>
-                    <td>
+                    <td className='py-1 border border-grya-200'>
                         {order.orderNo}
                     </td>
-                    <td>
+                    <td className='py-1 border border-grya-200'>
                         {getDateFromDateTimeFormatToDisplay(order.dDate)}
                     </td>
-                    <td>
+                    <td className='py-1 border border-grya-200'>
                         {order.style}
                     </td>
-                    <td>
+                    <td className='py-1 border border-grya-200'>
                         {order.buyer}
                     </td>
-                    <td className='capitalize'>
+                    <td className='capitalize py-1 border border-grya-200'>
                         {order.styleType}
                     </td>
-                    <td>
+                    <td className='py-1 border border-grya-200'>
                         {order.quantity}
                     </td>
-                    <td>
+                    {/* <td>
                         <strong>
                             {parseInt(order?.timeAndAction?.fPer || 0)}%
                         </strong>
@@ -104,21 +113,21 @@ const OrderItem = ({
                         <strong>
                             {parseInt(order?.timeAndAction?.tPer || 0)}%
                         </strong>
-                    </td>
-                    <td>
+                    </td> */}
+                    <td className='py-1 border border-grya-200'>
                         {order.status}
                     </td>
                     {order.status == "Pending" ?
-                        <td >
+                        <td className='py-1 border border-grya-200'>
                             {BAN_ICON}
                         </td>
                         :
-                        <td onClick={handleFindOrder} onBlur={handleFindOrderDisable}>
+                        <td onClick={handleFindOrder} className='py-1 border border-grya-200' onBlur={handleFindOrderDisable}>
                             <button >{VIEW}</button>
                         </td>
                     }
 
-                    <td onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
+                    <td className='py-1 border border-grya-200' onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
                         <button >{VIEW}</button>
                     </td>
                 </tr>

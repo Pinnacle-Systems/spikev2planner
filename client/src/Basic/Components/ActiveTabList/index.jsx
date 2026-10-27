@@ -10,6 +10,7 @@ import { HolidayCalendar, OrderForm, UnPlannedOrdersReport } from "../../../Capa
 import ProductionReport from "../../../CapacityPlanner/pages/ProductionReport";
 import Home from "../../../CapacityPlanner/pages/Home";
 import HomeDashboard from "../Home";
+import OrderFormNew from "../../../CapacityPlanner/pages/OrderFormNew";
 
 const formatTabTitle = (name) => {
   if (!name) return "";
@@ -61,7 +62,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "CAPASITY PLANNER": <CapacityPlanner />,
     "USERS & ROLES": <UserAndRolesMaster />,
     "UNIT MASTER": <UnitMaster />,
-    "ORDER DETAILS FORM": <OrderForm />,
+    // "ORDER DETAILS FORM": <OrderForm />,
     "HOLIDAYS": <HolidayCalendar />,
     "PLANNED ORDERS": <ProductionReport />,
     "UNPLANNED ORDERS": <UnPlannedOrdersReport />,
@@ -71,6 +72,8 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "DEPARTMENT MASTER": <DepartmentMaster />,
     "EMPLOYEE CATEGORY MASTER": <EmployeeCategoryMaster />,
     "EMPLOYEE MASTER": <EmployeeMaster />,
+    "ORDER DETAILS FORM": <OrderFormNew />,
+
 
   };
 

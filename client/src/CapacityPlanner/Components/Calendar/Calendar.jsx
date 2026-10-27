@@ -17,6 +17,7 @@ const BASE_URL = process.env.REACT_APP_SERVER_URL;
 const Calendar = ({ orders, setOrders, month, selectedUnit, holidays, setDeliveryDateWarning }) => {
     const [currentMonthDays, setCurrentMonthDays] = useState([]);
     const [lines, setLines] = useState([]);
+    console.log(selectedUnit, "selectedUnit")
 
     const retrieveData = useCallback(() => {
         if (!selectedUnit) return
@@ -24,6 +25,7 @@ const Calendar = ({ orders, setOrders, month, selectedUnit, holidays, setDeliver
             method: 'get',
             url: BASE_URL + UNITS_API + `/${selectedUnit}`,
         }).then((result) => {
+            console.log(result, "result single line")
             setLines(result.data.data.line)
         }, (error) => {
             toast.error("Server Down", { autoClose: 5000 });
