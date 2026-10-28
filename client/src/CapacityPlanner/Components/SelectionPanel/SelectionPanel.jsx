@@ -5,8 +5,8 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { CapacityPlannerContext } from '../../CapacityPlanner';
 import ToggleButton from '../../../Components/ToggleButton';
-import { Building2, ChevronLeft, ChevronRight, Save } from 'lucide-react'
-import { getWeeksInMonth } from '../../helper';
+import { Building2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { getWeeksInMonth, getDateFromDateTimeFormat } from '../../helper';
 import SearchableTableCellSelect from '../../../Basic/ReusabelComponents/SearchableTableCellSelect';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -91,11 +91,19 @@ const SelectionPanel = () => {
     };
 
     const storeOrderData = useCallback(() => {
+        const payloadOrders = (orders || []).map(order => ({
+            ...order,
+            lines: (order.lines || []).map(line => ({
+                ...line,
+                startDate: getDateFromDateTimeFormat(line.startDate),
+                endDate: getDateFromDateTimeFormat(line.endDate)
+            }))
+        }));
 
         axios({
             method: 'patch',
             url: BASE_URL + ORDERS_API,
-            data: { orders }
+            data: { orders: payloadOrders }
         }).then((result) => {
             if (result.data.statusCode === 0) {
                 localStorage.setItem("res", "success");

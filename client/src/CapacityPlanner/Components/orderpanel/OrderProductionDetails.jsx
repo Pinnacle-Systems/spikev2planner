@@ -118,6 +118,7 @@ const OrderProductionDetails = () => {
     const lineObj = order?.lines?.find(
         lineItem => parseInt(lineItem.id) === parseInt(currentLine?.id)
     );
+    console.log(lineObj, "lineObj");
 
     if (!lineObj || !currentLine) {
         return (
@@ -142,30 +143,63 @@ const OrderProductionDetails = () => {
         holidays
     );
 
-    const currentCapacity = parseInt(
-        getCurrentCapacity(lineObj.efficiency, lineObj.capacity)
-    );
+    console.log(productionSchedule, "productionSchedule", workingDays);
 
-    const totalPcs = lineObj.pcs || 0;
+    // const currentCapacity = parseInt(
+    //     getCurrentCapacity(lineObj.efficiency, lineObj.capacity)
+    // );
+
+    // const totalPcs = lineObj.pcs || 0;
+    // let totalProductionSchedulePcs = 0;
+
+    // for (let i = 0; i < workingDays.length; i++) {
+    //     const currentEfficiency =
+    //         i < learningCurveItems.length
+    //             ? learningCurveItems[i]?.percentage || 0
+    //             : learningCurveItems[learningCurveItems.length - 1]?.percentage || 0;
+
+    //     const currentDatePcs = getCurrentCapacity(
+    //         parseInt(currentEfficiency),
+    //         currentCapacity
+    //     );
+
+    //     const balanceQty = totalPcs - totalProductionSchedulePcs;
+
+    //     const allocationQty =
+    //         currentDatePcs > balanceQty
+    //             ? Math.max(0, balanceQty)
+    //             : Math.max(0, currentDatePcs);
+
+    //     totalProductionSchedulePcs += allocationQty;
+
+    //     productionSchedule.push({
+    //         date: workingDays[i],
+    //         pcs: allocationQty
+    //     });
+    // }
+
+    // Use fallback to currentLine or lineObj.Line so capacity is never 0/undefined
+    const lineCapacity = lineObj?.capacity || currentLine?.capacity || lineObj?.Line?.capacity || 0;
+    const defaultEfficiency = lineObj?.efficiency || currentLine?.efficiency || 100;
+
+    const totalPcs = Number(lineObj?.pcs || 0);
     let totalProductionSchedulePcs = 0;
 
     for (let i = 0; i < workingDays.length; i++) {
-        const currentEfficiency =
-            i < learningCurveItems.length
-                ? learningCurveItems[i]?.percentage || 0
-                : learningCurveItems[learningCurveItems.length - 1]?.percentage || 0;
+        // Fallback to default line efficiency if learning curve is not defined
+        const currentEfficiency = learningCurveItems.length > 0
+            ? (i < learningCurveItems.length
+                ? parseFloat(learningCurveItems[i]?.percentage || 0)
+                : parseFloat(learningCurveItems[learningCurveItems.length - 1]?.percentage || 0))
+            : defaultEfficiency;
 
-        const currentDatePcs = getCurrentCapacity(
-            parseInt(currentEfficiency),
-            currentCapacity
-        );
+        // Calculate pcs matching LearningCurveInputGrid calculation
+        const currentDatePcs = Math.round((currentEfficiency * lineCapacity) / 100);
 
         const balanceQty = totalPcs - totalProductionSchedulePcs;
-
-        const allocationQty =
-            currentDatePcs > balanceQty
-                ? Math.max(0, balanceQty)
-                : Math.max(0, currentDatePcs);
+        const allocationQty = currentDatePcs > balanceQty
+            ? Math.max(0, balanceQty)
+            : Math.max(0, currentDatePcs);
 
         totalProductionSchedulePcs += allocationQty;
 
@@ -267,16 +301,16 @@ const OrderProductionDetails = () => {
                     </div>
 
                     <div className={`rounded-lg border p-4 ${totalBalanceQty > 0
-                            ? 'border-amber-100 bg-amber-50/70'
-                            : totalBalanceQty < 0
-                                ? 'border-orange-100 bg-orange-50/70'
-                                : 'border-emerald-100 bg-emerald-50/60'
+                        ? 'border-amber-100 bg-amber-50/70'
+                        : totalBalanceQty < 0
+                            ? 'border-orange-100 bg-orange-50/70'
+                            : 'border-emerald-100 bg-emerald-50/60'
                         }`}>
                         <p className={`text-xs font-medium ${totalBalanceQty > 0
-                                ? 'text-amber-700'
-                                : totalBalanceQty < 0
-                                    ? 'text-orange-700'
-                                    : 'text-emerald-700'
+                            ? 'text-amber-700'
+                            : totalBalanceQty < 0
+                                ? 'text-orange-700'
+                                : 'text-emerald-700'
                             }`}>
                             {totalBalanceQty > 0
                                 ? 'Pending Quantity'
@@ -285,10 +319,10 @@ const OrderProductionDetails = () => {
                                     : 'Schedule Completed'}
                         </p>
                         <p className={`mt-2 text-2xl font-bold tabular-nums ${totalBalanceQty > 0
-                                ? 'text-amber-800'
-                                : totalBalanceQty < 0
-                                    ? 'text-orange-800'
-                                    : 'text-emerald-800'
+                            ? 'text-amber-800'
+                            : totalBalanceQty < 0
+                                ? 'text-orange-800'
+                                : 'text-emerald-800'
                             }`}>
                             {formatQty(Math.abs(totalBalanceQty))}
                         </p>
@@ -363,10 +397,10 @@ const OrderProductionDetails = () => {
 
                                             <td className="px-4 py-3 text-right">
                                                 <span className={`inline-flex min-w-16 justify-end rounded-md px-2.5 py-1 font-semibold tabular-nums ${balQty > 0
-                                                        ? 'bg-amber-50 text-amber-700'
-                                                        : balQty < 0
-                                                            ? 'bg-orange-50 text-orange-700'
-                                                            : 'bg-emerald-50 text-emerald-700'
+                                                    ? 'bg-amber-50 text-amber-700'
+                                                    : balQty < 0
+                                                        ? 'bg-orange-50 text-orange-700'
+                                                        : 'bg-emerald-50 text-emerald-700'
                                                     }`}>
                                                     {formatQty(Math.abs(balQty))}
                                                 </span>

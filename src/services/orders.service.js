@@ -267,19 +267,34 @@ async function updateMany(req) {
                     Orders: { select: { id: true } }
                 }
             })
+            const parseDateToDbDate = (val) => {
+                if (!val) return null;
+                if (typeof val === 'string') {
+                    const dateStr = val.split('T')[0];
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                        return new Date(dateStr);
+                    }
+                }
+                return new Date(val);
+            };
+
             if (data.Orders) {
                 let orderLines = order.lines.filter(i => i.id);
                 for (let index = 0; index < orderLines.length; index++) {
                     const orderLine = orderLines[index];
                     const oldOrderLine = await tx.orderLines.findUnique({ where: { id: parseInt(orderLine.ordersLineId) } });
                     if (oldOrderLine.pcs !== parseInt(orderLine.pcs)) continue;
-                    if (getDateFromDateTimeFormat(oldOrderLine.startDate) !== getDateFromDateTimeFormat(new Date(orderLine.startDate))) continue;
+                    const oldStartStr = getDateFromDateTimeFormat(oldOrderLine.startDate);
+                    const newStartStr = typeof orderLine.startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(orderLine.startDate.split('T')[0])
+                        ? orderLine.startDate.split('T')[0]
+                        : getDateFromDateTimeFormat(new Date(orderLine.startDate));
+                    if (oldStartStr !== newStartStr) continue;
                     await tx.orderLines.update({
                         where: {
                             id: parseInt(orderLine.ordersLineId)
                         },
                         data: {
-                            endDate: new Date(orderLine.endDate)
+                            endDate: parseDateToDbDate(orderLine.endDate)
                         }
                     })
                 }
@@ -293,8 +308,8 @@ async function updateMany(req) {
                             deleteMany: {},
                             create: order.lines.map(line => {
                                 return {
-                                    lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: new Date(line.startDate),
-                                    endDate: new Date(line.endDate), days: parseInt(line.days),
+                                    lineId: parseInt(line.id), pcs: parseInt(line.pcs), startDate: parseDateToDbDate(line.startDate),
+                                    endDate: parseDateToDbDate(line.endDate), days: parseInt(line.days),
                                     efficiency: parseFloat(line.efficiency || 0),
                                     capacity: parseFloat(line.capacity || 0),
                                     learningCurveItems: {

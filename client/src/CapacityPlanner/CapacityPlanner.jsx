@@ -263,12 +263,12 @@ const CapacityPlanner = () => {
             <Modal widthClass={''} closeIcon isOpen={productionDetails} onClose={() => { setProductionDetails(false); }}>
                 <ProductionDetails />
             </Modal>
-            {/* <Modal isOpen={loading}>
+            <Modal isOpen={loading}>
                 <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
                     Loading...
                 </button>
-            </Modal> */}
+            </Modal>
 
             <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>
                 <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[30%] min-w-[340px] max-w-[480px]'

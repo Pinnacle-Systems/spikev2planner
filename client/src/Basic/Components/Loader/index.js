@@ -1,11 +1,11 @@
 import React from 'react'
-// import logo from '../../../assets/pin.png'
+import logo from '../../../assets/dotLogo.png'
 
 const Loader = () => {
   return (
     <div className='fixed z-99 top-1/2 left-1/2'>
       <img
-        // src={logo} 
+        src={logo}
         className='w-24 h-24 animate-ping' />
       {/* <Triangle
         height="80"

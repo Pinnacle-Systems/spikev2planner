@@ -17,10 +17,11 @@ const ViewPlanDetails = () => {
         const currentOrderIndex = orders.findIndex(o => parseInt(o.id) === parseInt(currentOrder?.id));
         const orderLines = structuredClone(orders[currentOrderIndex]?.['lines'] || []);
         const currentOrderLineIndex = orderLines.findIndex(i => i.id == currentLine.id);
+        const formattedCurrentDate = getDateFromDateTimeFormat(currentDate);
         if (currentOrderLineIndex == -1) {
-            orderLines.push({ id: currentLine.id, Line: currentLine, pcs: 0, startDate: currentDate })
+            orderLines.push({ id: currentLine.id, Line: currentLine, pcs: 0, startDate: formattedCurrentDate })
         } else {
-            orderLines[currentOrderLineIndex]['startDate'] = currentDate;
+            orderLines[currentOrderLineIndex]['startDate'] = formattedCurrentDate;
         }
         setLineItems(orderLines)
     }, [orders, currentOrder, currentLine, currentDate])
