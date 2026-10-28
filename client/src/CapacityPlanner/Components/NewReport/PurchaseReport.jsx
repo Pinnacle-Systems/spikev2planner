@@ -16,6 +16,7 @@ import {
   fmtDate,
   fmtPcs,
 } from "./productionReportUtils";
+import { Loader } from "../../../Basic/Components";
 
 const PAGE_SIZE_OPTIONS = [20, 40, 100, 200];
 
@@ -676,10 +677,11 @@ export default function PurchaseReport({
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-72 text-gray-500 gap-3">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+        {/* <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
         <span className="text-sm font-medium">
           Loading {isUnplanned ? "Unplanned" : "Planned"} Orders Report...
-        </span>
+        </span> */}
+        <Loader />
       </div>
     );
   }

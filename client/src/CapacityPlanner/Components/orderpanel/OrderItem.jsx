@@ -22,11 +22,10 @@ const OrderItem = ({
 
     const { manualSelect, setCurrentOrder, setCurrentLine, activeLineOrder, productionMode, setCurrentDate,
         setIsOrderLineDetailOptions, setFindOrder, findOrder, setMonth, setSelectedUnit, setScrollLine, setProductionDetails,
+        selectedUnit, setCalendarViewMode,
     } = useContext(CapacityPlannerContext)
 
-
-
-
+    const findOrderTimeoutRef = React.useRef(null);
 
     function drag(ev) {
         ev.dataTransfer.setData("order", JSON.stringify(order));
@@ -50,18 +49,41 @@ const OrderItem = ({
         bgColor = GREEN_ALERT_COLOR;
     }
 
-    function handleFindOrder() {
-        let lines = (order.lines || [])
-        if (lines.length === 0) return
-        setMonth(moment.utc(new Date(lines[0]?.startDate)));
-        if (lines[0]?.Line?.unitId) {
-            setSelectedUnit(lines[0]?.Line?.unitId);
+    function handleFindOrder(e) {
+        if (e) e.stopPropagation();
+        const lines = order?.lines || [];
+        if (lines.length === 0) return;
+
+        // Toggle off if already active
+        if (findOrder?.orderId && parseInt(findOrder.orderId) === parseInt(order.id)) {
+            setFindOrder({});
+            return;
         }
-        setFindOrder({ orderId: order.id })
-        // setScrollLine({ lineId: lines[0]?.id })
-    }
-    function handleFindOrderDisable() {
-        setFindOrder({})
+
+        const targetLine = lines[0];
+        const unitId = targetLine?.Line?.unitId || targetLine?.unitId || targetLine?.Line?.Unit?.id;
+
+        if (unitId && String(selectedUnit) !== String(unitId)) {
+            setSelectedUnit(String(unitId));
+            sessionStorage.setItem("selectedUnit", String(unitId));
+        }
+
+        if (targetLine?.startDate) {
+            setMonth(moment.utc(new Date(targetLine.startDate)));
+            if (setCalendarViewMode) {
+                setCalendarViewMode('month');
+            }
+        }
+
+        const lineId = targetLine?.lineId || targetLine?.id;
+        setFindOrder({ orderId: order.id, lineId, date: targetLine?.startDate });
+
+        if (findOrderTimeoutRef.current) {
+            clearTimeout(findOrderTimeoutRef.current);
+        }
+        findOrderTimeoutRef.current = setTimeout(() => {
+            setFindOrder({});
+        }, 5000);
     }
 
 
@@ -122,8 +144,14 @@ const OrderItem = ({
                             {BAN_ICON}
                         </td>
                         :
-                        <td onClick={handleFindOrder} className='py-1 border border-grya-200' onBlur={handleFindOrderDisable}>
-                            <button >{VIEW}</button>
+                        <td onClick={handleFindOrder} className='py-1 border border-slate-200 text-center cursor-pointer'>
+                            <button
+                                type="button"
+                                title={isCurrentOrderActive(order.id, findOrder) ? "Active in calendar (click to cancel)" : "Find order in calendar"}
+                                className={`p-1 rounded transition-colors ${isCurrentOrderActive(order.id, findOrder) ? "text-orange-600 bg-orange-100 font-bold scale-110" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+                            >
+                                {VIEW}
+                            </button>
                         </td>
                     }
 
@@ -160,7 +188,7 @@ const OrderItem = ({
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 animate-bounce" : "") : ""}
-                                        ${isCurrentOrderActive(order.id, findOrder) ? "transition delay-150 duration-300 ease-in-out animate-bounce scale-150 z-0" : ""} 
+                                        ${isCurrentOrderActive(order.id, findOrder) ? "transition delay-150 duration-300 ease-in-out animate-bounce scale-110 !z-30 ring-4 ring-orange-500 shadow-2xl" : ""} 
                                         `}
                         >
                             <div className={`flex flex-col gap-1 text-center p-1 onShow

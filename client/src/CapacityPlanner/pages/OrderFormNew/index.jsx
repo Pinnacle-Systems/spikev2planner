@@ -11,6 +11,7 @@ import { PlusIcon } from 'lucide-react';
 import { getDateFromDateTimeFormat } from '../../helper';
 import Swal from 'sweetalert2';
 import { useGetOrderQuery } from '../../../redux/uniformService/OrderService';
+import { Loader } from '../../../Basic/Components';
 
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
@@ -114,10 +115,11 @@ const OrderFormNew = () => {
   return (
     <>
       <Modal isOpen={loading}>
-        <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
+        {/* <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
           <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
           Loading...
-        </button>
+        </button> */}
+        <Loader />
       </Modal>
       <Modal isOpen={loadNewOrders} onClose={() => { setLoadNewOrders(false) }}>
 

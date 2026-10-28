@@ -210,10 +210,37 @@ const Calendar = () => {
         lines,
         manualSelect, setPreviousOrders, productionMode,
         calendarViewMode, calendarHalf, calendarWeek,
+        findOrder,
     } = useContext(CapacityPlannerContext)
 
     const [visibleDays, setVisibleDays] = useState([]);
     const [hoverCell, setHoverCell] = useState(null); // "lineId/date" currently under the dragged order
+
+    // Auto-scroll to found order in calendar
+    useEffect(() => {
+        if (!findOrder?.orderId) return;
+
+        const attemptScroll = () => {
+            const orderEl = document.querySelector(`[id^="${findOrder.orderId}/"]`);
+            if (orderEl) {
+                orderEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                return true;
+            }
+            if (findOrder.lineId) {
+                const lineEl = document.getElementById(`line${findOrder.lineId}`);
+                if (lineEl) {
+                    lineEl.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        if (!attemptScroll()) {
+            const timer = setTimeout(attemptScroll, 350);
+            return () => clearTimeout(timer);
+        }
+    }, [findOrder, visibleDays, lines]);
 
     useEffect(() => {
         const currentYear = new Date(month).getFullYear();
