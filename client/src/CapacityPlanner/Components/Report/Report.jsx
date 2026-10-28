@@ -81,24 +81,26 @@ const ProductionPlanningReport = () => {
         const learningCurveItems = lineObj.learningCurveItems || [];
         const productionSchedule = [];
         const workingDays = findWorkingDaysBetweenDates(lineObj.startDate, lineObj.endDate, holidays);
-        const currentCapacity = parseInt(getCurrentCapacity(lineObj.efficiency, lineObj.capacity));
-        let totalPcs = lineObj.pcs || 0;
+        const lineCapacity = lineObj.capacity || lineObj.Line?.capacity || 0;
+        const defaultEfficiency = lineObj.efficiency || 100;
+        let totalPcs = Number(lineObj.pcs || 0);
         let totalProductionSchedulePcs = 0;
         for (let i = 0; i < workingDays.length; i++) {
-            let currentEfficiency = (i < (learningCurveItems.length)) ? (learningCurveItems[i]?.percentage || 0) : (learningCurveItems[learningCurveItems.length - 1]?.percentage || 0);
-            let currentDatePcs = getCurrentCapacity(parseInt(currentEfficiency), currentCapacity);
-            let balanceQty = totalPcs - totalProductionSchedulePcs;
-            let allocationQty = 0;
-            if (currentDatePcs > balanceQty) {
-                allocationQty += balanceQty
-            } else {
-                allocationQty += currentDatePcs
-            }
+            const currentEfficiency = learningCurveItems.length > 0
+                ? (i < learningCurveItems.length
+                    ? parseFloat(learningCurveItems[i]?.percentage || 0)
+                    : parseFloat(learningCurveItems[learningCurveItems.length - 1]?.percentage || 0))
+                : defaultEfficiency;
+            const currentDatePcs = Math.round((currentEfficiency * lineCapacity) / 100);
+            const balanceQty = totalPcs - totalProductionSchedulePcs;
+            const allocationQty = currentDatePcs > balanceQty
+                ? Math.max(0, balanceQty)
+                : Math.max(0, currentDatePcs);
             totalProductionSchedulePcs += allocationQty;
-            productionSchedule.push({ date: workingDays[i], pcs: allocationQty })
+            productionSchedule.push({ date: workingDays[i], pcs: allocationQty });
         }
-        return { ...lineObj, productionSchedule }
-    })
+        return { ...lineObj, productionSchedule };
+    });
 
     function getDataForDateAndLine(date, line) {
         return reportDataWithLearningCurvePercentage.find(orderLine => (orderLine.lineId == line.id) && isDateBetweenDates(new Date(orderLine.startDate), new Date(orderLine.endDate), new Date(date)))

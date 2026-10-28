@@ -27,6 +27,7 @@ import Modal from '../Components/Modal';
 import ViewPlanDetails from './Components/LineDataCoformationForm/ViewPlanDetails';
 import ReduceEndDate from './Components/LineDataCoformationForm/ReduceEndDate';
 import useNavigationBlocker from '../CustomHooks/useNavigationBlocker';
+import { Loader } from '../Basic/Components';
 
 export const CapacityPlannerContext = createContext();
 
@@ -264,10 +265,11 @@ const CapacityPlanner = () => {
                 <ProductionDetails />
             </Modal>
             <Modal isOpen={loading}>
-                <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
+                {/* <button type="button" className="bg-indigo-500 text-white gap-2 p-2 rounded flex justify-center items-center" disabled>
                     <img src={loadingIcon} className='animate-spin h-[40px] w-[40px]' alt="loading" />
                     Loading...
-                </button>
+                </button> */}
+                <Loader />
             </Modal>
 
             <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>

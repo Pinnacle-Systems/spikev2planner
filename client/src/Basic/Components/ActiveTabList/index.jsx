@@ -74,7 +74,6 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "EMPLOYEE CATEGORY MASTER": <EmployeeCategoryMaster />,
     "EMPLOYEE MASTER": <EmployeeMaster />,
     "ORDER DETAILS FORM": <OrderFormNew />,
-    "PLANNED ORDERS NEW": <PurchaseReport />,
 
 
   };

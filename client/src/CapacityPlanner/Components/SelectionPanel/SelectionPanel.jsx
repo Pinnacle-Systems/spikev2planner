@@ -107,7 +107,7 @@ const SelectionPanel = () => {
         }).then((result) => {
             if (result.data.statusCode === 0) {
                 localStorage.setItem("res", "success");
-                localStorage.setItem("success", `Orders Planning Saved Successfully!!!`);
+                // localStorage.setItem("success", `Orders Planning Saved Successfully!!!`);
                 localStorage.setItem("lastSelectedMonth", moment.utc(month).format("YYYY-MM-DD"));
 
                 setIsModified(false);
@@ -331,7 +331,7 @@ const SelectionPanel = () => {
                             setLoading(true);
                             setTimeout(() => {
                                 storeOrderData();
-                            }, 3000);
+                            }, 2000);
                         }}
                     >
                         <Save size={14} aria-hidden="true" />
