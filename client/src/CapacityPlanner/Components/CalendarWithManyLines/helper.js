@@ -19,7 +19,16 @@ export function dateDiffInDays(startDate, endDate, holidays) {
   return Math.ceil((utc2 - utc1) / _MS_PER_DAY) + 1 - nationalHolidays;
 }
 
-export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getDateFromDateTimeFormat = (date) => {
+  if (!date) return "";
+  if (date instanceof Date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return moment.utc(date).format("YYYY-MM-DD");
+};
 
 export const getDateArray = function (start, end) {
   let arr = [];
@@ -33,7 +42,7 @@ export const getDateArray = function (start, end) {
 }
 
 export function isSameDay(d1, d2) {
-  return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
+  return getDateFromDateTimeFormat(d1) === getDateFromDateTimeFormat(d2);
 }
 
 export function endDateLoopFinder(startDate, endDate, holidays) {

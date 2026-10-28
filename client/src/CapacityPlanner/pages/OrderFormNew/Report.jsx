@@ -1,160 +1,161 @@
-import React from "react";
+import React, { useState } from "react";
 
 import moment from "moment";
 import { getDateFromDateTimeFormatToDisplay } from "../../helper";
 import { Tooltip } from "@mui/material";
+import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
+import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from "react-icons/fa";
 
 
 const Report = ({ orders, setId, onDelete, onView, }) => {
 
+    const [searchOrderNo, setSearchOrderNo] = useState("")
+    const [searchStyleNo, setSearchStyleNo] = useState("")
+    const [searchDeliveryDate, setSearchDeliveryDate] = useState("")
+    const [searchBuyerName, setSearchBuyerName] = useState("")
+    const [searchQty, setSearchQty] = useState("")
+    const [currentPage, setCurrentPage] = useState(1);
 
-    // const Pagination = () => {
-    //     return (
-    //         <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
-    //             <div className="text-sm text-gray-600 mb-2 sm:mb-0">
-    //                 Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
-    //             </div>
-    //             <div className="flex gap-1">
-    //                 <button
-    //                     onClick={() => handlePageChange(1)}
-    //                     disabled={currentPage === 1}
-    //                     className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
-    //                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-    //                         : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                         }`}
-    //                     title="First Page"
-    //                 >
-    //                     <FaStepBackward size={12} className="inline" />
-    //                 </button>
-    //                 <button
-    //                     onClick={() => handlePageChange(currentPage - 1)}
-    //                     disabled={currentPage === 1}
-    //                     className={`px-3 py-1 rounded-md ${currentPage === 1
-    //                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-    //                         : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                         }`}
-    //                 >
-    //                     <FaChevronLeft className="inline" />
-    //                 </button>
 
-    //                 {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
-    //                     let pageNum;
-    //                     if (totalPages <= 5) {
-    //                         pageNum = i + 1;
-    //                     } else if (currentPage <= 3) {
-    //                         pageNum = i + 1;
-    //                     } else if (currentPage >= totalPages - 2) {
-    //                         pageNum = totalPages - 4 + i;
-    //                     } else {
-    //                         pageNum = currentPage - 2 + i;
-    //                     }
+    const searchFields = {
+        searchOrderNo,
+        searchStyleNo,
+        searchDeliveryDate,
+        searchBuyerName,
+        searchQty
 
-    //                     return (
-    //                         <button
-    //                             key={pageNum}
-    //                             onClick={() => handlePageChange(pageNum)}
-    //                             className={`px-3 py-1 rounded-md ${currentPage === pageNum
-    //                                 ? 'bg-indigo-800 text-white'
-    //                                 : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                                 }`}
-    //                         >
-    //                             {pageNum}
-    //                         </button>
-    //                     );
-    //                 })}
+    };
 
-    //                 {totalPages > 5 && currentPage < totalPages - 2 && (
-    //                     <span className="px-3 py-1">...</span>
-    //                 )}
 
-    //                 {totalPages > 5 && currentPage < totalPages - 2 && (
-    //                     <button
-    //                         onClick={() => handlePageChange(totalPages)}
-    //                         className={`px-3 py-1 rounded-md ${currentPage === totalPages
-    //                             ? 'bg-indigo-800 text-white'
-    //                             : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                             }`}
-    //                     >
-    //                         {totalPages}
-    //                     </button>
-    //                 )}
 
-    //                 <button
-    //                     onClick={() => handlePageChange(currentPage + 1)}
-    //                     disabled={currentPage === totalPages}
-    //                     className={`px-3 py-1 rounded-md ${currentPage === totalPages
-    //                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-    //                         : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                         }`}
-    //                 >
-    //                     <FaChevronRight className="inline" />
-    //                 </button>
-    //                 <button
-    //                     onClick={() => handlePageChange(totalPages)}
-    //                     disabled={currentPage === totalPages}
-    //                     className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
-    //                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-    //                         : 'bg-white text-gray-600 hover:bg-gray-100'
-    //                         }`}
-    //                     title="Last Page"
-    //                 >
-    //                     <FaStepForward size={12} className="inline" />
-    //                 </button>
-    //             </div>
-    //         </div>
-    //     );
-    // };
+    const { data: allData, isFetching, isLoading } = useGetOrderQuery({
+        params: {
+            ...searchFields,
+            pagination: true,
+            dataPerPage: 14,
+            currentPageNumber: currentPage,
+        }
+    });
+
+
+    const totalPages = Math?.ceil(allData?.totalCount / 14);
+    const indexOfFirstItem = 0;
+    const indexOfLastItem = Math.min(currentPage * parseInt(14), allData?.totalCount || 0);
+    const currentItems = allData?.data?.slice(indexOfFirstItem, indexOfLastItem);
+
+    // console.log(allData, 'currentItems')
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+
+    const Pagination = () => {
+        return (
+            <div className="h-10 w-full flex flex-col sm:flex-row justify-between items-center p-2 bg-white border-t border-gray-200 ">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                    Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, allData?.data?.length)} of {allData?.length} entries
+                </div>
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="First Page"
+                    >
+                        <FaStepBackward size={12} className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className={`px-3 py-1 rounded-md ${currentPage === 1
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronLeft className="inline" />
+                    </button>
+
+                    {Array?.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                            pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                        } else {
+                            pageNum = currentPage - 2 + i;
+                        }
+
+                        return (
+                            <button
+                                key={pageNum}
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 py-1 rounded-md ${currentPage === pageNum
+                                    ? 'bg-indigo-800 text-white'
+                                    : 'bg-white text-gray-600 hover:bg-gray-100'
+                                    }`}
+                            >
+                                {pageNum}
+                            </button>
+                        );
+                    })}
+
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <span className="px-3 py-1">...</span>
+                    )}
+
+                    {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <button
+                            onClick={() => handlePageChange(totalPages)}
+                            className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                                ? 'bg-indigo-800 text-white'
+                                : 'bg-white text-gray-600 hover:bg-gray-100'
+                                }`}
+                        >
+                            {totalPages}
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                    >
+                        <FaChevronRight className="inline" />
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className={`min-w-8 rounded-md px-2.5 py-1 ${currentPage === totalPages
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-white text-gray-600 hover:bg-gray-100'
+                            }`}
+                        title="Last Page"
+                    >
+                        <FaStepForward size={12} className="inline" />
+                    </button>
+                </div>
+            </div>
+        );
+    };
 
 
     return (
-        // <div className='w-full overflow-auto'>
-        //     <table className='table-auto w-full text-center '>
-        //         <thead className="table-header">
-        //             <tr className="">
-        //                 <th>
-        //                     Order&nbsp;no
-        //                 </th>
-        //                 <th>
-        //                     Buyer
-        //                 </th>
-        //                 <th>
-        //                     Delivery&nbsp;Date
-        //                 </th>
-        //                 <th>
-        //                     Style
-        //                 </th>
-        //                 <th>
-        //                     Quantity
-        //                 </th>
-        //             </tr>
-        //         </thead>
-        //         <tbody>
-        //             {orders.map(order =>
-        //                 <tr key={order.id} className="table-row" onClick={() => setId(order.id)}>
-        //                     <td className="table-data">
-        //                         {order.orderNo}
-        //                     </td>
-        //                     <td className="table-data">
-        //                         {order.buyer}
-        //                     </td>
-        //                     <td className="table-data">
-        //                         {moment.utc(order.dDate).format("DD-MM-YYYY")}
-        //                     </td>
-        //                     <td className="table-data">
-        //                         {order.style}
-        //                     </td>
-        //                     <td className="table-data">
-        //                         {order.quantity}
-        //                     </td>
-        //                 </tr>
-        //             )}
-        //         </tbody>
-        //     </table>
-        // </div>
+
         <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
 
             <>
-                <div className="flex h-full min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
+                <div className="flex h-[72vh] min-h-0 flex-col rounded-lg bg-[#F1F1F0] shadow-sm">
                     <div className="min-h-0 flex-1 overflow-auto">
                         <table>
                             <thead className="bg-gray-200 text-gray-800 ">
@@ -190,7 +191,7 @@ const Report = ({ orders, setId, onDelete, onView, }) => {
 
                                     </th>
                                 </tr>
-                                {/* <tr className="">
+                                <tr className="">
                                     <th className=" px-1  font-bold text-[13px] justify-end  text-gray-900  text-center  w-12">
                                         <div className="h-3"></div>
                                     </th>
@@ -198,46 +199,68 @@ const Report = ({ orders, setId, onDelete, onView, }) => {
                                     <th className=" px-1 font-bold text-[13px] border  text-gray-900  text-center w-32">
                                         <input
                                             type="text"
-                                            className="text-black h-5   w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            className="text-black h-5 bg-white  w-full  px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={serachDocNo}
+                                            value={searchOrderNo}
                                             onChange={(e) => {
-                                                setSerachDocNo(e.target.value);
+                                                setSearchOrderNo(e.target.value);
+                                            }}
+                                        />
+                                    </th>
+                                    <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5 bg-white  w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={searchBuyerName}
+                                            onChange={(e) => {
+                                                setSearchBuyerName(e.target.value);
                                             }}
                                         />
                                     </th>
                                     <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <input
                                             type="text"
-                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            className="text-black h-5 bg-white  w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={searchDate}
+                                            value={searchDeliveryDate}
                                             onChange={(e) => {
-                                                setSearchDate(e.target.value);
+                                                setSearchDeliveryDate(e.target.value);
                                             }}
                                         />
                                     </th>
 
-                
-                                    <th className="w-96  px-1 font-bold text-[13px]  text-gray-900  text-center ">
+
+
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
                                         <input
                                             type="text"
-                                            className="text-black h-5   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            className="text-black h-5 bg-white  w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
                                             placeholder="Search"
-                                            value={supplier}
+                                            value={searchStyleNo}
                                             onChange={(e) => {
-                                                setSupplier(e.target.value);
+                                                setSearchStyleNo(e.target.value);
                                             }}
                                         />
                                     </th>
-                                    <th className="w-36  px-1  font-bold text-[13px]  text-gray-900  text-center ">
+
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
+                                        <input
+                                            type="text"
+                                            className="text-black h-5 bg-white   w-full   px-1 focus:outline-none border  border-gray-400 rounded-md"
+                                            placeholder="Search"
+                                            value={searchQty}
+                                            onChange={(e) => {
+                                                setSearchQty(e.target.value);
+                                            }}
+                                        />
+                                    </th>
+
+                                    <th className="  px-1 font-bold text-[13px]  text-gray-900  text-center w-32">
 
                                     </th>
-                                    <th className="w-40  px-1  font-bold text-[13px]  text-gray-900  text-center ">
 
-                                    </th>
-
-                                </tr> */}
+                                </tr>
                             </thead>
                             {false ? (
                                 <tbody>
@@ -249,7 +272,7 @@ const Report = ({ orders, setId, onDelete, onView, }) => {
                                 </tbody>
                             ) : (
                                 <tbody className="border-2">
-                                    {(orders ? orders : []).map((dataObj, index) => {
+                                    {(currentItems ? currentItems : []).map((dataObj, index) => {
 
                                         return (
                                             <tr
@@ -354,6 +377,9 @@ const Report = ({ orders, setId, onDelete, onView, }) => {
                         <Pagination />
                     </div> */}
 
+                </div>
+                <div className="shrink-0">
+                    <Pagination />
                 </div>
             </>
 

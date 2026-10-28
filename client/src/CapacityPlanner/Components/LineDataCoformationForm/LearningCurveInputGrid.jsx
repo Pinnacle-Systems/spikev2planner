@@ -54,7 +54,7 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
             <thead className='bg-blue-200 top-0 border-b border-gray-500'>
                 <tr className=''>
                     <th className="table-data  py-2 w-5">S.No</th>
-                    <th className="table-data  py-2 w-16">Learning Curve</th>
+                    <th className="table-data  py-2 w-16">Learning Curve (%)</th>
                     <th className="table-data  py-2 w-5">Pcs</th>
                     {!readOnly &&
                         <th className="table-data  w-10 p-0.5">

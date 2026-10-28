@@ -97,7 +97,16 @@ function filterItem(itemArray, itemId) {
     return itemArray.filter(item => parseInt(item.id) !== parseInt(itemId))
 }
 
-export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getDateFromDateTimeFormat = (date) => {
+    if (!date) return "";
+    if (date instanceof Date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    return moment.utc(date).format("YYYY-MM-DD");
+};
 export const getYearMonthFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM");
 export const getYearFromDateTimeFormat = (date) => moment.utc(date).format("YYYY");
 export const getDateFromDateTimeFormatToDisplay = (date) => moment.utc(date).format("DD-MM-YYYY");
@@ -190,7 +199,7 @@ export function findSundaysBetweenDates(start, end) {
 }
 
 export function isSameDay(d1, d2) {
-    return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
+    return getDateFromDateTimeFormat(d1) === getDateFromDateTimeFormat(d2);
 }
 export function isDateBetweenDates(d1, d2, findDate) {
     let startDate = new Date(d1);

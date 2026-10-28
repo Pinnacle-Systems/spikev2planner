@@ -160,7 +160,7 @@ function Form({ id, setId, getOrders, onClose }) {
                 </div>
             </Modal>
             <TransactionEntryShell
-                title="Purchase Inward"
+                title="Order Details Form"
                 // readOnly={readOnly}
                 id={id}
                 onClose={onClose}

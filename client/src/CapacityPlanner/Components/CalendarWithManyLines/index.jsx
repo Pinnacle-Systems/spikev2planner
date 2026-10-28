@@ -278,15 +278,16 @@ const Calendar = () => {
     }
 
     const findOrderHasCurrentDate = (order, date, lineObj) => {
-        if (!(date || lineObj)) return
-        const line = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id))
-        if (line) {
-            let lineOrderDates = getDateArray(line.startDate, line.endDate)
-            if (lineOrderDates.some(d => isSameDay(new Date(d), new Date(date)))) {
-                return true
-            }
+        if (!(date || lineObj)) return false;
+        const line = order.lines.find(lineItem => parseInt(lineItem.id) === parseInt(lineObj.id));
+        if (line && line.startDate && line.endDate) {
+            const targetDateStr = getDateFromDateTimeFormat(date);
+            const lineStartStr = getDateFromDateTimeFormat(line.startDate);
+            const lineEndStr = getDateFromDateTimeFormat(line.endDate);
+            return targetDateStr >= lineStartStr && targetDateStr <= lineEndStr;
         }
-    }
+        return false;
+    };
 
     const getOrderIfOrderPlacedInCurrentDate = (date, line) => {
         let orderOnDate = orders.find(order => {
@@ -391,7 +392,7 @@ const Calendar = () => {
                 </thead>
                 <tbody>
                     {lines.map((line, index) =>
-                        <tr key={index} className='h-12'>
+                        <tr key={index} className=' h-10 '>
                             <LineItem index={index} line={line} isLast={index >= (lines.length / 2)} />
                             {visibleDays.map((date, dIndex) => {
                                 const isPastWeek = isDateInPreviousWeek(date);

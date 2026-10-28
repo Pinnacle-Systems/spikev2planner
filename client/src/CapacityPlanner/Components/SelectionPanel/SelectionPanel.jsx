@@ -147,9 +147,10 @@ const SelectionPanel = () => {
                 <SearchableTableCellSelect
                     value={selectedUnit}
                     options={unitOptions}
-                    onChange={(e) => {
-                        setSelectedUnit(e.target.value);
-                        sessionStorage.setItem("selectedUnit", e.target.value);
+                    onChange={(value) => {
+                        console.log(value, "value  ")
+                        setSelectedUnit(value);
+                        sessionStorage.setItem("selectedUnit", value);
                     }}
                 />
 
@@ -184,13 +185,13 @@ const SelectionPanel = () => {
                     <ChevronRight size={16} />
                 </button>
             </div>
-            {/* <button
+            <button
                 type="button"
                 className="shrink-0 h-8 px-2.5 rounded-md border border-slate-300 bg-white font-medium text-slate-700 hover:bg-slate-100 shadow-xs"
                 onClick={handleToday}
             >
                 Today
-            </button> */}
+            </button>
 
             <span className="shrink-0 h-5 w-px bg-slate-200" aria-hidden="true" />
 

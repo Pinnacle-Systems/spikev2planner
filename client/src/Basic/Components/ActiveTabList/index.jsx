@@ -11,6 +11,7 @@ import ProductionReport from "../../../CapacityPlanner/pages/ProductionReport";
 import Home from "../../../CapacityPlanner/pages/Home";
 import HomeDashboard from "../Home";
 import OrderFormNew from "../../../CapacityPlanner/pages/OrderFormNew";
+import PurchaseReport from "../../../CapacityPlanner/Components/NewReport/PurchaseReport";
 
 const formatTabTitle = (name) => {
   if (!name) return "";
@@ -73,6 +74,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "EMPLOYEE CATEGORY MASTER": <EmployeeCategoryMaster />,
     "EMPLOYEE MASTER": <EmployeeMaster />,
     "ORDER DETAILS FORM": <OrderFormNew />,
+    "PLANNED ORDERS NEW": <PurchaseReport />,
 
 
   };

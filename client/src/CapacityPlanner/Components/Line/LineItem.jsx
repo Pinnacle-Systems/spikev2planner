@@ -11,17 +11,17 @@ const LineItem = ({ line, isLast = false, onMouseOver, index }) => {
 
     return (
         <td id={"line" + line?.id}
-            className={`onHover h-full`}
+            className={`onHover h-full border border-gray-200`}
             style={{
                 fontSize: "10px"
             }}
             onMouseOver={onMouseOver}
         >
             <div className='h-full grid justify-center items-center '>
-                <span className='text-[12px] font-normal mt-4'> {line.name}
-                    <span className='text-[10px] capitalize'>
+                <span className='text-[12px] font-normal mt-5 ' > {line.name}
+                    {/* <span className='text-[10px] capitalize'>
                         ({(line?.styleType || '')?.[0]})
-                    </span>
+                    </span> */}
                 </span>
             </div>
             <div className={`flex flex-col gap-1 text-center p-1 onShow  ${isLast ? "-mt-20" : ""}`}>

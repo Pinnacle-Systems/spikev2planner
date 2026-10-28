@@ -230,7 +230,7 @@ import { toast } from 'react-toastify';
 
 // ---- UI-only style tokens (no logic depends on these) ----
 const cell = 'border border-slate-200 px-2 py-1.5 text-sm';
-const headCell = 'border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600 text-left';
+const headCell = 'text-center border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600 text-left';
 const inputBase =
   'w-full rounded px-1.5 py-1 text-right text-sm tabular-nums bg-transparent focus:outline-none focus:ring-2 focus:ring-emerald-400 disabled:text-slate-500 disabled:cursor-not-allowed';
 const readonlyField =
@@ -409,14 +409,13 @@ const LineDataConformationForm = () => {
               </colgroup>
               <thead className='sticky top-0 bg-slate-100'>
                 <tr>
-                  <th className={`${headCell} text-center`}>S.no</th>
+                  <th className={`${headCell} text-center`}>S No</th>
                   <th className={headCell}>Line</th>
-                  <th className={headCell}>Start date</th>
-                  <th className={headCell}>Est. end date</th>
+                  <th className={headCell}>Start Date</th>
+                  <th className={headCell}>Estimate End date</th>
                   <th className={headCell}>
-                    <div className='flex items-center justify-between'>
-                      <span>Pcs</span>
-                      <button
+                    <span>Pcs</span>
+                    {/* <button
                         type='button'
                         className='rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400'
                         onClick={(e) => {
@@ -425,8 +424,7 @@ const LineDataConformationForm = () => {
                         }}
                       >
                         All
-                      </button>
-                    </div>
+                      </button> */}
                   </th>
                 </tr>
                 <tr className='bg-slate-50'>
@@ -459,15 +457,27 @@ const LineDataConformationForm = () => {
                         }}
                       />
                     </td>
+
                     <td className={`${cell} p-0.5`} >
                       <input type="date" className={inputBase}
                         value={currentLine.id == line.id ? estimatedEndDate : getDateFromDateTimeFormat(line.endDate)}
-                        disabled /> </td>
+                        disabled />
+                    </td>
                     <td className={`${cell} p-0.5`} >
-                      <input type="number" min={0} className={inputBase} value={line?.pcs}
-                        disabled={currentLine.id != line.id} onChange={(e) =>
-                          handleChange(index, 'pcs', !allPcs ? e.target.value : currentOrder.quantity)
-                        } /> </td>
+                      <input type="number"
+                        min={0}
+                        className={inputBase}
+                        value={line?.pcs}
+                        disabled={currentLine.id != line.id}
+                        // onChange={(e) =>
+                        //   handleChange(index, 'pcs', !allPcs ? e.target.value : currentOrder.quantity)
+                        // }
+                        onChange={(e) =>
+                          handleChange(index, 'pcs', e.target.value)
+                        }
+
+                      />
+                    </td>
                   </tr>
                 )}
               </tbody>

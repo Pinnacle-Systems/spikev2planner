@@ -9,6 +9,7 @@ import secureLocalStorage from "react-secure-storage";
 import axios from "axios";
 import Modal from "../../../Components/Modal";
 import BranchAndFinYearForm from "../../../Basic/Components/BranchAndFinyear";
+import dotLogo from "../../../assets/dotLogo.png";
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -199,9 +200,17 @@ const Login = () => {
                         <div>
                             {/* Top Brand Logo */}
                             <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-[#e46230] rounded-[3px] rotate-45 transform" />
+                                {/* <div className="w-5 h-5 bg-[#e46230] rounded-[3px] rotate-45 transform" /> */}
+                                {/* <img src="" alt="logo" /> */}
+                                <div className="flex justify-end items-center mb-4 sm:mb-6">
+                                    <img
+                                        src={dotLogo}
+                                        alt="PINNACLE Systems"
+                                        className="h-12 sm:h-16 object-contain"
+                                    />
+                                </div>
                                 <span className="text-xl font-bold tracking-tight text-slate-900">
-                                    Dot <span className="text-[#e46230]">Capacity Planner</span>
+                                    dot. <span className="text-[#e46230]">Capacity Planner</span>
                                 </span>
                             </div>
 
@@ -209,7 +218,7 @@ const Login = () => {
                             <div className="mt-8 sm:mt-11">
                                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
                                     Sign in to <br />
-                                    Dot <span className="text-[#e46230]">Capacity Planner</span>
+                                    dot.  <span className="text-[#e46230]">Capacity Planner</span>
                                 </h2>
                             </div>
 

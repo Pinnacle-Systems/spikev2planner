@@ -5,11 +5,28 @@ import { getOrdersFromErp, importOrders, importProduction, replanOrder } from '.
 import { fetchProductionDataFromErp, fetchRawMaterialDataFromErp } from '../queries/production.js';
 import { getDateFromDateTimeFormat } from '../utils/dateHelper.js';
 import { groupByPropertyToArr, groupByPropertyToObj } from '../utils/helper.js';
+import moment from "moment";
 
 const prisma = new PrismaClient()
 
+
+const getDateFromDateTime = (dateTime) => moment.utc(dateTime).format("DD-MM-YYYY")
+
+function manualFilterSearchData(dDate, data) {
+    return (data || [])?.filter(item =>
+        (dDate ? String(getDateFromDateTime(item.dDate)).includes(dDate) : true)
+    )
+}
+
 async function get(req) {
-    const { lines, isGetOrdersFromERP, startDate, endDate, isGetProductionDataFromErp } = req.query;
+    const { lines, isGetOrdersFromERP, startDate, endDate, isGetProductionDataFromErp, pagination, currentPageNumber, dataPerPage,
+
+        searchOrderNo,
+        searchStyleNo,
+        searchDeliveryDate,
+        searchBuyerName,
+        searchQty
+    } = req.query;
     if (isGetOrdersFromERP) {
         if (!startDate || !endDate) return { statusCode: 1, message: "Start Date and End Date Mandatory...!!!" }
         await getOrdersFromErp(startDate, endDate)
@@ -63,7 +80,9 @@ async function get(req) {
     select * from timeAndAction;
     `
     const timeAndActionMap = groupByPropertyToObj(timeAndActionDetails, 'orderNo');
-    const out = [];
+    let out = [];
+    let totalCount;
+
     for (let index = 0; index < data.length; index++) {
         const i = data[index];
         const productionDetailsDateWise = await prisma.$queryRaw`
@@ -83,7 +102,28 @@ async function get(req) {
         newItem["timeAndAction"] = timeAndActionMap.get(i.orderNo);
         out.push(newItem);
     }
-    return { statusCode: 0, data: out };
+
+    if (pagination) {
+
+        out = manualFilterSearchData(searchDeliveryDate, out)
+        out = out.filter((item) =>
+            (!searchOrderNo ||
+                item.orderNo?.toLowerCase().includes(searchOrderNo.toLowerCase())) &&
+            (!searchStyleNo ||
+                item.style?.toLowerCase().includes(searchStyleNo.toLowerCase())) &&
+            (!searchBuyerName ||
+                item.buyer?.toLowerCase().includes(searchBuyerName.toLowerCase())) &&
+            (!searchQty ||
+                item.quantity?.toString().toLowerCase().includes(searchQty.toString().toLowerCase()))
+        );
+        if (pagination) {
+            totalCount = out.length;
+            out = out.slice((parseInt(currentPageNumber) - 1) * parseInt(dataPerPage), parseInt(currentPageNumber) * parseInt(dataPerPage));
+        }
+    }
+
+
+    return { statusCode: 0, data: out, totalCount };
 }
 
 

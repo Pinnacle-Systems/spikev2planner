@@ -45,13 +45,22 @@ export function getRandomColor() {
   return adjust(color, -50);
 }
 
-export const getDateFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM-DD");
+export const getDateFromDateTimeFormat = (date) => {
+  if (!date) return "";
+  if (date instanceof Date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  return moment.utc(date).format("YYYY-MM-DD");
+};
 
 export const getMonthYearFromDateTimeFormat = (date) => moment.utc(date).format("YYYY-MM");
 
 
 export function isSameDay(d1, d2) {
-  return moment.utc(d1).format("YYYY-MM-DD") === moment.utc(d2).format("YYYY-MM-DD")
+  return getDateFromDateTimeFormat(d1) === getDateFromDateTimeFormat(d2);
 }
 
 export function matchingDatesbetweenOrders(currentOrder, looporder) {

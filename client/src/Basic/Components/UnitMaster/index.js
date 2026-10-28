@@ -222,7 +222,6 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       "styleType",
       "capacity",
       "efficiency",
-      "qty",
 
     ];
 
@@ -240,7 +239,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     if (
       !isGridDatasValid(
-        data?.directInwardReturnItems?.filter((i) => i.itemId),
+        data?.lines?.filter((i) => i.lineId),
         false,
         mandatoryFields,
       )
@@ -497,7 +496,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     <th className={`${compactHeaderCellClassName} w-32`}>Incharge </th>
                     <th className={`${compactHeaderCellClassName} w-16`}>Max Capacity / per day(piece) <span className="text-red-500">*</span></th>
                     <th className={`${compactHeaderCellClassName} w-16`}>Efficiency (%) <span className="text-red-500">*</span></th>
-                    <th className={`${compactHeaderCellClassName} w-32`}>Current Capacity / per day(piece) <span className="text-red-500">*</span></th>
+                    {/* <th className={`${compactHeaderCellClassName} w-32`}>Current Capacity / per day(piece) <span className="text-red-500">*</span></th> */}
 
 
                     <th className={`${compactHeaderCellClassName} w-7`}></th>
@@ -573,7 +572,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "efficiency")}
                         />
                       </td>
-                      <td className={`${compactFocusCellClassName} w-40 text-right`}>
+                      {/* <td className={`${compactFocusCellClassName} w-40 text-right`}>
                         <input
                           onKeyDown={e => {
                             if (e.code === "Minus" || e.code === "NumpadSubtract") e.preventDefault();
@@ -587,7 +586,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                           onChange={e => handleInputChange(e.target.value, index, "qty")}
                           onBlur={e => handleInputChange(parseFloat(e.target.value).toFixed(3), index, "qty")}
                         />
-                      </td>
+                      </td> */}
                       <td className={`${compactFocusCellClassName} w-16 px-1 py-1 text-center`}>
                         <button
                           onClick={() => addNewRow()}
