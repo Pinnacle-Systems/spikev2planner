@@ -218,9 +218,8 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     const mandatoryFields = [
 
       "capacity",
-      "lineId",
+      "name",
       "styleType",
-      "capacity",
       "efficiency",
 
     ];
@@ -239,7 +238,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     if (
       !isGridDatasValid(
-        data?.lines?.filter((i) => i.lineId),
+        data?.lines?.filter((i) => i.name),
         false,
         mandatoryFields,
       )
@@ -440,6 +439,24 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
     };
     setLines([...lines, newRow]);
   };
+  const [contextMenu, setContextMenu] = useState(false);
+
+  const handleRightClick = (event, rowIndex, type) => {
+    event.preventDefault();
+    setContextMenu({
+      mouseX: event.clientX,
+      mouseY: event.clientY,
+      rowId: rowIndex,
+      type,
+    });
+  };
+  const handleCloseContextMenu = () => setContextMenu(null);
+
+  const handleDeleteRow = (id) => {
+    setLines((lines) =>
+      lines.filter((row, index) => index !== parseInt(id))
+    );
+  };
 
   const formBody = (
     <div className="flex-1 p-3 h-[70%]">
@@ -507,8 +524,10 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                     <tr
                       key={index}
                       onContextMenu={(e) => {
-
-                      }}
+                        if (!readOnly) {
+                          handleRightClick(e, index, "shiftTimeHrs");
+                        }
+                      }} f
                     >
                       <td className="border border-gray-200 w-10 px-1 py-1 text-center text-xs ">{index + 1}</td>
                       <td className="border border-gray-200 w-16 px-1 py-1 text-left text-xs">
@@ -609,6 +628,36 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
               </table>
 
             </div>
+            {contextMenu && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: `${contextMenu.mouseY - 200}px`,
+                  left: `${contextMenu.mouseX - 110}px`,
+
+                  // background: "gray",
+                  boxShadow: "0px 0px 5px rgba(0,0,0,0.3)",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  zIndex: 1000,
+                }}
+                className="bg-gray-100"
+                onMouseLeave={handleCloseContextMenu} // Close when the mouse leaves
+              >
+                <div className="flex flex-col gap-1">
+                  <button
+                    className=" text-black text-[12px] text-left rounded px-1"
+                    onClick={() => {
+                      handleDeleteRow(contextMenu.rowId);
+                      handleCloseContextMenu();
+                    }}
+                  >
+                    Delete{" "}
+                  </button>
+
+                </div>
+              </div>
+            )}
           </TransactionLineItemsSection>
         </fieldset>
       </div>

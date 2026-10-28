@@ -194,8 +194,8 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 import { isHoliday, isSunday, isNationalHoliday } from './helper';
 import { sortWeekDaysIfLastWeek, getWeeksInMonth, isDateInPreviousWeek, getDaysUntilDelivery } from '../../helper';
 
-// Height of everything ABOVE the calendar (header + toolbar). Tune this number if the bottom is cut off or has a gap.
-const CALENDAR_HEIGHT = 'calc(100vh - 117px)';
+// Height of everything ABOVE the calendar (header + toolbar + legend grid). Tune this number if the bottom is cut off or has a gap.
+const CALENDAR_HEIGHT = 'calc(100vh - 145px)';
 const DAY_COL_MIN = 38;   // min width of one day column in Month view (px)
 const LINE_COL = 96;      // width of the Lines column (px)
 

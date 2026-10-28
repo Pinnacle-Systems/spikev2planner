@@ -466,16 +466,11 @@ const LineDataConformationForm = () => {
                     <td className={`${cell} p-0.5`} >
                       <input type="number"
                         min={0}
-                        className={inputBase}
-                        value={line?.pcs}
-                        disabled={currentLine.id != line.id}
-                        // onChange={(e) =>
-                        //   handleChange(index, 'pcs', !allPcs ? e.target.value : currentOrder.quantity)
-                        // }
-                        onChange={(e) =>
-                          handleChange(index, 'pcs', e.target.value)
-                        }
-
+                        className={`${inputBase} bg-slate-50 cursor-not-allowed`}
+                        value={line?.pcs || 0}
+                        disabled={true}
+                        readOnly
+                        title="Auto-calculated from Learning Curve (%)"
                       />
                     </td>
                   </tr>
@@ -500,7 +495,7 @@ const LineDataConformationForm = () => {
             </table>
           </div>
 
-          <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} lineItems={lineItems} />
+          <LearningCurveInputGrid learningCurveItems={learningCurveItems} setLearningCurveItems={setLearningCurveItems} lineItems={lineItems} setLineItems={setLineItems} />
 
           <div className='flex justify-end gap-3 border-t border-slate-200 pt-4'>
             {/* <button autoFocus id='manualSelect' className='bg-blue-200 w-20 text-blue-700 p-1 rounded hover:bg-blue-300 text-xs'

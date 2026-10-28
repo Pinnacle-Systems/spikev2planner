@@ -198,7 +198,7 @@ const OrderLineDetailOptions = () => {
         options = [
             ...options,
             { name: "Edit Planning", onClick: () => { setLineEntryConformation(true); setIsOrderLineDetailOptions(false); }, group: "main", variant: "primary", icon: "edit", desc: "Change pieces and dates for this line" },
-            { name: "Replan Order", onClick: replanOrder, group: "main", variant: "warn", icon: "replan", desc: "Create a new plan for this order" },
+            // { name: "Replan Order", onClick: replanOrder, group: "main", variant: "warn", icon: "replan", desc: "Create a new plan for this order" },
             { name: "Delete Strip", onClick: () => { removeOrderFromLine(); }, group: "danger", variant: "danger", icon: "trash", desc: "Remove this line's strip" },
             { name: "Delete All Strips ", onClick: () => { removeOrder(); }, group: "danger", variant: "danger", icon: "trash", desc: "Remove every strip of this order" },
         ]
