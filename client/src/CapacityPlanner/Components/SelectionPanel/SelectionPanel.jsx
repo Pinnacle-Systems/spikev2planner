@@ -8,6 +8,7 @@ import ToggleButton from '../../../Components/ToggleButton';
 import { Building2, ChevronLeft, ChevronRight, Save } from 'lucide-react';
 import { getWeeksInMonth, getDateFromDateTimeFormat } from '../../helper';
 import SearchableTableCellSelect from '../../../Basic/ReusabelComponents/SearchableTableCellSelect';
+import Swal from 'sweetalert2';
 
 const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
@@ -21,7 +22,8 @@ const SelectionPanel = () => {
         units, setIsModified,
         calendarViewMode, setCalendarViewMode,
         calendarHalf, setCalendarHalf,
-        calendarWeek, setCalendarWeek
+        calendarWeek, setCalendarWeek,
+        retrieveData
     } = useContext(CapacityPlannerContext);
 
 
@@ -106,23 +108,30 @@ const SelectionPanel = () => {
             data: { orders: payloadOrders }
         }).then((result) => {
             if (result.data.statusCode === 0) {
-                localStorage.setItem("res", "success");
-                // localStorage.setItem("success", `Orders Planning Saved Successfully!!!`);
                 localStorage.setItem("lastSelectedMonth", moment.utc(month).format("YYYY-MM-DD"));
 
                 setIsModified(false);
 
-                toast.success("Orders Saved Successfully");
+                // toast.success("Orders Saved Successfully");
+                Swal.fire({
+                    title: "Orders Saved Successfully",
+                    icon: "success",
+                });
 
-
-                window.location.reload();
+                if (retrieveData) {
+                    retrieveData();
+                } else {
+                    setLoading(false);
+                }
             } else if (result.data.statusCode === 1) {
                 toast.warning(result.data.message, { autoClose: 5000 });
+                setLoading(false);
             }
         }).catch(() => {
             toast.error("Server Down", { autoClose: 5000 });
+            setLoading(false);
         });
-    }, [orders, month]);
+    }, [orders, month, retrieveData, setIsModified, setLoading]);
 
     useEffect(() => {
         setSelectedUnit(sessionStorage.getItem("selectedUnit") || "");

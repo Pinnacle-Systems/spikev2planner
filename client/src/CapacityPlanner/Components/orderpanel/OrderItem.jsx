@@ -103,6 +103,7 @@ const OrderItem = ({
                     onDragStart={(e) => { drag(e) }}
                     onDragOver={(e) => { e.preventDefault(); }}
                     className={`orderItem noDrop select-none text-center border grabbable`}
+                    onClick={handleFindOrder}
                 >
                     <td
                     >
@@ -139,7 +140,7 @@ const OrderItem = ({
                     <td className='py-1 border border-grya-200'>
                         {order.status}
                     </td>
-                    {order.status == "Pending" ?
+                    {/* {order.status == "Pending" ?
                         <td className='py-1 border border-grya-200'>
                             {BAN_ICON}
                         </td>
@@ -153,7 +154,7 @@ const OrderItem = ({
                                 {VIEW}
                             </button>
                         </td>
-                    }
+                    } */}
 
                     <td className='py-1 border border-grya-200' onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
                         <button >{VIEW}</button>

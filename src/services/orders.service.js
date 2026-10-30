@@ -254,7 +254,7 @@ async function updateMany(req) {
 
     const { orders } = await req.body
 
-    console.log(orders, "orders")
+    // console.log(orders, "orders")
 
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orders.length; index++) {

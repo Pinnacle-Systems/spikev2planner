@@ -7,35 +7,49 @@ import { useGetOrderQuery } from "../../../redux/uniformService/OrderService";
 import { FaChevronLeft, FaChevronRight, FaStepBackward, FaStepForward } from "react-icons/fa";
 
 
-const Report = ({ orders, setId, onDelete, onView, }) => {
+const Report = ({ orders, setId, onDelete, onView, allData,
+    searchOrderNo,
+    setSearchOrderNo,
+    searchStyleNo,
+    setSearchStyleNo,
+    searchDeliveryDate,
+    setSearchDeliveryDate,
+    searchBuyerName,
+    setSearchBuyerName,
+    searchQty,
+    setSearchQty,
+    currentPage,
+    setCurrentPage,
 
-    const [searchOrderNo, setSearchOrderNo] = useState("")
-    const [searchStyleNo, setSearchStyleNo] = useState("")
-    const [searchDeliveryDate, setSearchDeliveryDate] = useState("")
-    const [searchBuyerName, setSearchBuyerName] = useState("")
-    const [searchQty, setSearchQty] = useState("")
-    const [currentPage, setCurrentPage] = useState(1);
+}) => {
+
+    // const [searchOrderNo, setSearchOrderNo] = useState("")
+    // const [searchStyleNo, setSearchStyleNo] = useState("")
+    // const [searchDeliveryDate, setSearchDeliveryDate] = useState("")
+    // const [searchBuyerName, setSearchBuyerName] = useState("")
+    // const [searchQty, setSearchQty] = useState("")
+    // const [currentPage, setCurrentPage] = useState(1);
 
 
-    const searchFields = {
-        searchOrderNo,
-        searchStyleNo,
-        searchDeliveryDate,
-        searchBuyerName,
-        searchQty
+    // const searchFields = {
+    //     searchOrderNo,
+    //     searchStyleNo,
+    //     searchDeliveryDate,
+    //     searchBuyerName,
+    //     searchQty
 
-    };
+    // };
 
 
 
-    const { data: allData, isFetching, isLoading } = useGetOrderQuery({
-        params: {
-            ...searchFields,
-            pagination: true,
-            dataPerPage: 14,
-            currentPageNumber: currentPage,
-        }
-    });
+    // const { data: allData, isFetching, isLoading } = useGetOrderQuery({
+    //     params: {
+    //         ...searchFields,
+    //         pagination: true,
+    //         dataPerPage: 14,
+    //         currentPageNumber: currentPage,
+    //     }
+    // });
 
 
     const totalPages = Math?.ceil(allData?.totalCount / 14);

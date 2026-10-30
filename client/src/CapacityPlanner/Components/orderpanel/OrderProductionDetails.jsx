@@ -243,37 +243,37 @@ const OrderProductionDetails = () => {
         });
 
     return (
-        <div className="mt-5 px-4 pb-5 sm:px-5">
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex h-full flex-col px-4 pb-4 sm:px-5">
+            <div className="flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
 
                 {/* Header */}
-                <div className="border-b border-gray-200 bg-gray-50 px-5 py-4">
+                <div className="shrink-0 border-b border-gray-200 bg-gray-50 px-5 py-4">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h2 className="text-lg font-bold tracking-tight text-gray-800">
                                 Production Schedule Details
                             </h2>
-                            <p className="mt-1 text-xs text-gray-500">
+                            {/* <p className="mt-1 text-xs text-gray-500">
                                 Planned vs actual production and daily balance
-                            </p>
+                            </p> */}
                         </div>
 
                         <div className="flex flex-wrap gap-2">
                             <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-2">
-                                <p className="text-[11px] font-medium uppercase tracking-wide text-blue-600">
+                                {/* <p className="text-[11px] font-medium uppercase tracking-wide text-blue-600">
                                     Order No.
-                                </p>
+                                </p> */}
                                 <p className="mt-0.5 text-sm font-bold text-[#1D3A76]">
-                                    {order?.orderNo || '-'}
+                                    Order No :  {order?.orderNo || '-'}
                                 </p>
                             </div>
 
                             <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
-                                <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                {/* <p className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
                                     Production Line
-                                </p>
+                                </p> */}
                                 <p className="mt-0.5 text-sm font-bold text-gray-800">
-                                    {currentLine?.name || '-'}
+                                    Line :   {currentLine?.name || '-'}
                                 </p>
                             </div>
                         </div>
@@ -281,7 +281,7 @@ const OrderProductionDetails = () => {
                 </div>
 
                 {/* Summary Cards */}
-                <div className="grid grid-cols-1 gap-3 border-b border-gray-100 p-4 sm:grid-cols-3">
+                {/* <div className="grid shrink-0 grid-cols-1 gap-3 border-b border-gray-100 p-4 sm:grid-cols-3">
                     <div className="rounded-lg border border-blue-100 bg-blue-50/70 p-4">
                         <p className="text-xs font-medium text-blue-700">
                             Scheduled Quantity
@@ -327,26 +327,26 @@ const OrderProductionDetails = () => {
                             {formatQty(Math.abs(totalBalanceQty))}
                         </p>
                     </div>
-                </div>
+                </div> */}
 
-                {/* Schedule Table */}
-                <div className="max-h-[500px] overflow-auto">
-                    <table className="w-full min-w-[650px] table-fixed border-collapse text-sm">
-                        <thead className="sticky top-0 z-10">
+                {/* Schedule Table Container - Only tbody scrolls */}
+                <div className="flex-1 min-h-0 overflow-y-auto p-2">
+                    <table className="w-full min-w-[650px] table-fixed border-separate border-spacing-0 text-sm">
+                        <thead className="sticky top-0 z-10 shadow-[0_1px_0_0_rgba(29,58,118,1)]">
                             <tr className="bg-[#1D3A76] text-white">
-                                <th className="w-16 px-3 py-3 text-center font-semibold">
+                                <th className="w-16 px-3 py-3 text-center font-semibold bg-[#1D3A76] border-b border-[#1D3A76]">
                                     S.No
                                 </th>
-                                <th className="w-[24%] px-4 py-3 text-left font-semibold">
+                                <th className="w-[24%] px-4 py-3 text-left font-semibold bg-[#1D3A76] border-b border-[#1D3A76]">
                                     Date
                                 </th>
-                                <th className="px-4 py-3 text-right font-semibold">
+                                <th className="px-4 py-3 text-right font-semibold bg-[#1D3A76] border-b border-[#1D3A76]">
                                     Planned Pcs
                                 </th>
-                                <th className="px-4 py-3 text-right font-semibold">
+                                <th className="px-4 py-3 text-right font-semibold bg-[#1D3A76] border-b border-[#1D3A76]">
                                     Produced Pcs
                                 </th>
-                                <th className="px-4 py-3 text-right font-semibold">
+                                <th className="px-4 py-3 text-right font-semibold bg-[#1D3A76] border-b border-[#1D3A76]">
                                     Balance Pcs
                                 </th>
                             </tr>
@@ -377,25 +377,25 @@ const OrderProductionDetails = () => {
                                             key={`${prod.date}-${index}`}
                                             className="transition-colors hover:bg-blue-50/50"
                                         >
-                                            <td className="px-3 py-3 text-center text-gray-400">
+                                            <td className="px-3 py-3 text-center text-gray-400 border-b border-gray-100">
                                                 {index + 1}
                                             </td>
 
-                                            <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-700">
+                                            <td className="whitespace-nowrap px-4 py-3 font-medium text-gray-700 border-b border-gray-100">
                                                 {getDateFromDateTimeFormatToDisplay(
                                                     prod.date
                                                 )}
                                             </td>
 
-                                            <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                                            <td className="px-4 py-3 text-right tabular-nums text-gray-700 border-b border-gray-100">
                                                 {formatQty(prod.pcs)}
                                             </td>
 
-                                            <td className="px-4 py-3 text-right font-semibold tabular-nums text-gray-800">
+                                            <td className="px-4 py-3 text-right font-semibold tabular-nums text-gray-800 border-b border-gray-100">
                                                 {formatQty(prodQty)}
                                             </td>
 
-                                            <td className="px-4 py-3 text-right">
+                                            <td className="px-4 py-3 text-right border-b border-gray-100">
                                                 <span className={`inline-flex min-w-16 justify-end rounded-md px-2.5 py-1 font-semibold tabular-nums ${balQty > 0
                                                     ? 'bg-amber-50 text-amber-700'
                                                     : balQty < 0
@@ -412,24 +412,24 @@ const OrderProductionDetails = () => {
                         </tbody>
 
                         {/* Total Row */}
-                        <tfoot className="sticky bottom-0 z-[1]">
-                            <tr className="border-t-2 border-gray-200 bg-gray-50">
+                        <tfoot className="sticky bottom-0 z-10 shadow-[0_-2px_0_0_rgba(229,231,235,1)]">
+                            <tr className="bg-gray-50">
                                 <td
                                     colSpan={2}
-                                    className="px-4 py-4 text-right font-bold uppercase tracking-wide text-gray-600"
+                                    className="px-4 py-4 text-right font-bold uppercase tracking-wide text-gray-600 bg-gray-50 border-t-2 border-gray-200"
                                 >
                                     Total
                                 </td>
 
-                                <td className="px-4 py-4 text-right font-bold tabular-nums text-[#1D3A76]">
+                                <td className="px-4 py-4 text-right font-bold tabular-nums text-[#1D3A76] bg-gray-50 border-t-2 border-gray-200">
                                     {formatQty(totalProductionSchedulePcs)}
                                 </td>
 
-                                <td className="px-4 py-4 text-right font-bold tabular-nums text-gray-800">
+                                <td className="px-4 py-4 text-right font-bold tabular-nums text-gray-800 bg-gray-50 border-t-2 border-gray-200">
                                     {formatQty(lineAndDateWiseProductionQty)}
                                 </td>
 
-                                <td className="px-4 py-4 text-right font-bold tabular-nums text-gray-800">
+                                <td className="px-4 py-4 text-right font-bold tabular-nums text-gray-800 bg-gray-50 border-t-2 border-gray-200">
                                     {formatQty(Math.abs(totalBalanceQty))}
                                 </td>
                             </tr>
@@ -438,7 +438,7 @@ const OrderProductionDetails = () => {
                 </div>
 
                 {/* Footer */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 px-5 py-3">
+                <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-gray-100 px-5 py-3">
                     <p className="text-xs text-gray-500">
                         Working Days:{' '}
                         <span className="font-semibold text-gray-700">

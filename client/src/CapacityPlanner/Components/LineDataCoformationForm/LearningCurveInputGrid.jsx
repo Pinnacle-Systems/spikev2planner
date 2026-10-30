@@ -110,15 +110,15 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
     const totalCurvePcs = (learningCurveItems || []).reduce((acc, item) => acc + getRowPcs(item?.percentage), 0);
 
     return (
-        <div className="w-full">
-            <table className="border border-gray-400 text-xs table-auto w-full bg-white rounded shadow-xs overflow-hidden">
-                <thead className='bg-slate-100 top-0 border-b border-gray-300'>
+        <div className="w-full max-h-52 overflow-y-auto rounded-lg border border-slate-300 shadow-xs bg-white">
+            <table className="w-full text-xs border-separate border-spacing-0 table-auto bg-white">
+                <thead className='sticky top-0 z-10 bg-slate-100 shadow-[0_1px_0_0_rgba(203,213,225,1)]'>
                     <tr>
-                        <th className="table-data py-2 w-10 text-center font-semibold text-slate-700">Day</th>
-                        <th className="table-data py-2 w-32 text-center font-semibold text-slate-700">Learning Curve (%)</th>
-                        <th className="table-data py-2 w-24 text-right font-semibold text-slate-700 pr-2">Pcs</th>
+                        <th className="table-data py-2 w-10 text-center font-semibold text-slate-700 bg-slate-100 border-b border-slate-300">Day</th>
+                        <th className="table-data py-2 w-32 text-center font-semibold text-slate-700 bg-slate-100 border-b border-slate-300">Learning Curve (%)</th>
+                        <th className="table-data py-2 w-24 text-right font-semibold text-slate-700 pr-2 bg-slate-100 border-b border-slate-300">Pcs</th>
                         {!readOnly &&
-                            <th className="table-data w-10 p-0.5 text-center">
+                            <th className="table-data w-10 p-0.5 text-center bg-slate-100 border-b border-slate-300">
                                 <button
                                     type='button'
                                     className="p-1 rounded hover:bg-slate-200 text-slate-700 transition-colors"
@@ -131,13 +131,13 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                         }
                     </tr>
                 </thead>
-                <tbody className='overflow-y-auto h-full w-full'>
+                <tbody className='divide-y divide-slate-100'>
                     {(learningCurveItems ? learningCurveItems : []).map((item, index) =>
-                        <tr key={index} className="w-full border-b border-slate-100 hover:bg-slate-50">
-                            <td className='table-data text-center text-slate-600 font-medium'>
+                        <tr key={index} className="w-full hover:bg-slate-50">
+                            <td className='table-data text-center text-slate-600 font-medium py-1 border-b border-slate-100'>
                                 {index + 1}
                             </td>
-                            <td className='table-data p-1'
+                            <td className='table-data p-1 border-b border-slate-100'
                                 onKeyDown={(e) => { if ((index == learningCurveItems.length - 1) && e.key == "Tab") { addNewGrid() } }}>
                                 <input
                                     type="text"
@@ -150,12 +150,12 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                                     disabled={readOnly}
                                 />
                             </td>
-                            <td className="table-data text-right pr-2 tabular-nums font-semibold text-slate-800">
+                            <td className="table-data text-right pr-2 tabular-nums font-semibold text-slate-800 border-b border-slate-100">
                                 {getRowPcs(item?.percentage)}
                             </td>
 
                             {!readOnly &&
-                                <td className="text-center p-1">
+                                <td className="table-data text-center p-1 border-b border-slate-100">
                                     <button
                                         tabIndex={-1}
                                         type='button'
@@ -171,15 +171,15 @@ export const LearningCurveInputGrid = ({ setLearningCurveItems, learningCurveIte
                         </tr>
                     )}
                 </tbody>
-                <tfoot className="bg-slate-50 font-semibold border-t border-slate-300 text-slate-700">
+                <tfoot className="sticky bottom-0 z-10 bg-slate-50 font-semibold text-slate-700 shadow-[0_-1px_0_0_rgba(203,213,225,1)]">
                     <tr>
-                        <td className="table-data text-center py-2" colSpan={2}>
+                        <td className="table-data text-center py-2 bg-slate-50 border-t border-slate-300" colSpan={2}>
                             Total Planned Pcs
                         </td>
-                        <td className={`table-data text-right pr-2 py-2 tabular-nums font-bold ${totalCurvePcs > orderQuantity ? 'text-red-600' : 'text-emerald-700'}`}>
+                        <td className={`table-data text-right pr-2 py-2 tabular-nums font-bold bg-slate-50 border-t border-slate-300 ${totalCurvePcs > orderQuantity ? 'text-red-600' : 'text-emerald-700'}`}>
                             {totalCurvePcs}
                         </td>
-                        {!readOnly && <td className="table-data"></td>}
+                        {!readOnly && <td className="table-data bg-slate-50 border-t border-slate-300"></td>}
                     </tr>
                 </tfoot>
             </table>

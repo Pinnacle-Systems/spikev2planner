@@ -116,13 +116,13 @@ import { CapacityPlannerContext } from '../../CapacityPlanner';
 
 const TABS = [
     { label: 'All', value: '' },
-    { label: 'Pending', value: 'Pending' },
-    { label: 'Partial', value: 'Partial' },
+    { label: 'To Be Planned', value: 'Pending' },
+    { label: 'Partially Planned', value: 'Partial' },
     { label: 'Allocated', value: 'Allocated' },
 ];
 
 const HEADERS = ['S.no', 'Order no', 'Delivery date', 'Style', 'Buyer', 'Style type',
-    'Qty', 'Status', 'Find', 'Production details'];
+    'Qty', 'Status', 'Production details'];
 
 const EMPTY_ARRAY = [];
 
@@ -333,9 +333,14 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
             </div>
 
             {/* Status tabs (fixed) */}
-            <div className="shrink-0 flex gap-1 px-3 pb-2 border-b border-slate-200" role="tablist" aria-label="Order status">
+            <div
+                className="shrink-0 flex gap-1 overflow-x-auto px-3 pb-2 border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                role="tablist"
+                aria-label="Order status"
+            >
                 {TABS.map(t => {
                     const active = statusFilter === t.value;
+                    const isAll = t.value === '';
                     return (
                         <button
                             key={t.label}
@@ -343,11 +348,13 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                             role="tab"
                             aria-selected={active}
                             onClick={() => setStatusFilter(t.value)}
-                            className={`flex-1 h-8 rounded-md text-xs font-medium transition
-                                ${active ? 'bg-[#16345F] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                            className={`shrink-0 whitespace-nowrap h-8 rounded-md text-xs font-medium transition
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16345F]/40
+                    ${isAll ? 'w-20 flex-none px-1' : 'flex-auto px-3'}
+                    ${active ? 'bg-[#16345F] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                         >
                             {t.label}
-                            <span className={`ml-1 ${active ? 'text-white/80' : 'text-slate-500'}`}> {counts[t.value] ? `(${counts[t.value]})` : ''}</span>
+                            <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : 'text-slate-500'}`}> {counts[t.value] ? `(${counts[t.value]})` : ''}</span>
                         </button>
                     );
                 })}
@@ -358,6 +365,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                 id="ordersList"
                 className="flex-1 min-h-0 w-full overflow-auto"
             >
+
                 <table className="w-full min-w-max border-separate border-spacing-0 text-[11px]">
                     <thead>
                         <tr>

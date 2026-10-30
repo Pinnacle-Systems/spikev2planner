@@ -27,6 +27,31 @@ const OrderFormNew = () => {
   const [endDate, setEndDate] = useState(new Date());
 
 
+  const [searchOrderNo, setSearchOrderNo] = useState("")
+  const [searchStyleNo, setSearchStyleNo] = useState("")
+  const [searchDeliveryDate, setSearchDeliveryDate] = useState("")
+  const [searchBuyerName, setSearchBuyerName] = useState("")
+  const [searchQty, setSearchQty] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
+
+
+  const searchFields = {
+    searchOrderNo,
+    searchStyleNo,
+    searchDeliveryDate,
+    searchBuyerName,
+    searchQty
+
+  };
+
+  const { data: allData, isFetching, isLoading, refetch } = useGetOrderQuery({
+    params: {
+      ...searchFields,
+      pagination: true,
+      dataPerPage: 14,
+      currentPageNumber: currentPage,
+    }
+  });
 
 
 
@@ -63,7 +88,7 @@ const OrderFormNew = () => {
       }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });
-    }).finally(() => { setLoading(false) });
+    }).finally(() => { setLoading(false); refetch() });
   }, []);
   useEffect(retrieveAllData, [retrieveAllData]);
 
@@ -247,6 +272,22 @@ const OrderFormNew = () => {
               orders={orders}
               setOrders={setOrders}
               setId={setId}
+              allData={allData}
+
+
+              searchOrderNo={searchOrderNo}
+              setSearchOrderNo={setSearchOrderNo}
+              searchStyleNo={searchStyleNo}
+              setSearchStyleNo={setSearchStyleNo}
+              searchDeliveryDate={searchDeliveryDate}
+              setSearchDeliveryDate={setSearchDeliveryDate}
+              searchBuyerName={searchBuyerName}
+              setSearchBuyerName={setSearchBuyerName}
+              searchQty={searchQty}
+              setSearchQty={setSearchQty}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+
             />
           </div>
         </div>

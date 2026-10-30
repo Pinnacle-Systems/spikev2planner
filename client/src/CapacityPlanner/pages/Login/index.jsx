@@ -199,26 +199,19 @@ const Login = () => {
                     <div className="w-full md:w-[46%] bg-[#fbf5ed] rounded-[22px] p-6 sm:p-8 lg:p-9 flex flex-col justify-between">
                         <div>
                             {/* Top Brand Logo */}
-                            <div className="flex items-center gap-2">
-                                {/* <div className="w-5 h-5 bg-[#e46230] rounded-[3px] rotate-45 transform" /> */}
-                                {/* <img src="" alt="logo" /> */}
-                                <div className="flex justify-end items-center mb-4 sm:mb-6">
-                                    <img
-                                        src={dotLogo}
-                                        alt="PINNACLE Systems"
-                                        className="h-12 sm:h-16 object-contain"
-                                    />
-                                </div>
-                                <span className="text-xl font-bold tracking-tight text-slate-900">
-                                    dot. <span className="text-[#e46230]">Capacity Planner</span>
-                                </span>
+                            <div className="flex items-center justify-center gap-2">
+                                <img
+                                    src={dotLogo}
+                                    alt="dot."
+                                    className="h-12 sm:h-16 object-contain"
+                                />
                             </div>
 
                             {/* Headline */}
                             <div className="mt-8 sm:mt-11">
                                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
                                     Sign in to <br />
-                                    dot.  <span className="text-[#e46230]">Capacity Planner</span>
+                                    <span className="text-[#e46230]">Capacity Planner</span>
                                 </h2>
                             </div>
 
@@ -301,7 +294,7 @@ const Login = () => {
                             {/* Heading */}
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
                                 Welcome in <br />
-                                Dot <span className="text-[#e46230]">Capacity Planner</span> Platform
+                                <span className="text-[#e46230]">Capacity Planner</span> Platform
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-400 mt-2 mb-6 font-normal">
                                 Enter your credentials to access your dashboard

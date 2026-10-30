@@ -229,7 +229,8 @@ const CapacityPlanner = () => {
                 calendarHalf, setCalendarHalf,
                 calendarWeek, setCalendarWeek,
                 isOrderListCollapsed, setIsOrderListCollapsed,
-                toggleOrderList
+                toggleOrderList,
+                retrieveData
             }}>
             <Modal isOpen={openModalDeliveryWarning} closeIcon onClose={() => setOpenModalDeliveryWarning(false)}>
                 <DeliveryDateWarning />
@@ -237,7 +238,7 @@ const CapacityPlanner = () => {
             <Modal isOpen={openIncludeHolidayModal} closeIcon onClose={() => setOpenIncludeHolidayModal(false)}>
                 <IncludeNationalHolidays />
             </Modal>
-            <Modal isOpen={lineEntryConformation} closeIcon onClose={() => { setLineEntryConformation(false); setSplit(false); }}>
+            <Modal isOpen={lineEntryConformation} closeIcon onClose={() => { setLineEntryConformation(false); setSplit(false); }} widthClass={"max-h-[92vh] overflow-y-auto"} >
                 <LineDataConformationForm />
             </Modal>
             <Modal isOpen={viewPlanDetails} closeIcon onClose={() => { setViewPlanDetails(false); setSplit(false); }}>
@@ -252,7 +253,7 @@ const CapacityPlanner = () => {
             <Modal isOpen={openOrderDetail} closeIcon onClose={() => { setOpenOrderDetail(false); }}>
                 <OrderLineDetails />
             </Modal>
-            <Modal isOpen={isOrderProductionDetails} closeIcon onClose={() => { setIsOrderProductionDetails(false); }}>
+            <Modal isOpen={isOrderProductionDetails} closeIcon onClose={() => { setIsOrderProductionDetails(false); }} widthClass={"h-[90%] w-[90%]"} >
                 <OrderProductionDetails />
             </Modal>
             <Modal isOpen={isOrderLineDetailOptions} closeIcon onClose={() => { setIsOrderLineDetailOptions(false); }}>
@@ -273,7 +274,7 @@ const CapacityPlanner = () => {
             </Modal>
 
             <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>
-                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[30%] min-w-[340px] max-w-[480px]'
+                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[35%] min-w-[340px] max-w-[480px]'
                     }`}>
                     <OrderList
                         orders={orders}

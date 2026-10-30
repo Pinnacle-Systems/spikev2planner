@@ -7,6 +7,9 @@ import { fetchProductionDataFromErp } from "./production.js";
 import { getDateFromDateTimeFormat } from "../utils/dateHelper.js";
 
 export async function importOrders(importedData) {
+    let connection;
+    connection = await getConnection();
+
     const headerNames = ["orderno",
         "styleno",
         "buyer",
@@ -15,20 +18,35 @@ export async function importOrders(importedData) {
         "color",
         "qty",
         'sam',
-        "styletype"
+        "styletype",
+        "styleitem"
     ]
     const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
+    console.log(multipleOrderDetails, "multipleOrderDetails")
+    // const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
+    //     return `${item['orderno']}--${item['deliverydate']}`;
+    // });
     const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
-        return `${item['orderno']}--${item['deliverydate']}`;
+        return `${item['orderno']}--${item['styleitem']}--${item['deliverydate']}`;
     });
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
-        let orderNo = key.split("--")[0];
-        const deliveryDate = new Date((key.split("--")[1]).split("/").reverse().join("-"));
+        const [orderNo, styleItem, rawDeliveryDate] = key.split("--");
+
+        // Correctly parse delivery date from parts[2]
+        const deliveryDate = rawDeliveryDate
+            ? new Date(rawDeliveryDate.split("/").reverse().join("-"))
+            : new Date();
+
+        // let orderNo = key.split("--")[0];
+        // const deliveryDate = new Date((key.split("--")[1]).split("/").reverse().join("-"));
+
+
         orderDetailsArr.push({
             orderNo,
             styleType: val[0]?.styletype,
             style: val[0]?.styleno,
+            styleItem: styleItem,
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,
             dDate: deliveryDate,
@@ -45,13 +63,52 @@ export async function importOrders(importedData) {
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orderDetailsArr.length; index++) {
             const order = orderDetailsArr[index];
+            // console.log(order, "order")
             const data = await tx.orders.findMany({ where: { orderNo: order.orderNo, dDate: order.dDate } });
             if (data.length > 0) continue;
             await tx.orders.create({
                 data: order
             })
+
+
         }
     })
+    try {
+        const sqlQuery = `
+        INSERT INTO GTNORDERENTRYLP
+            (ORDERNO, COLOR, STYLENAME, SIZES, QTY)
+        VALUES
+            (:b1, :b2, :b3, :b4, :b5)
+    `;
+
+        for (const order of importedData) {
+            await connection.execute(sqlQuery, {
+                b1: order.orderno,
+                b2: order.color,
+                b3: order.styleitem,
+                b4: order.size,
+                b5: order.qty
+            });
+        }
+
+        await connection.commit();
+        console.log("All orders saved successfully");
+
+        await connection.commit();
+
+        console.log("All orders saved successfully");
+
+    } catch (error) {
+        console.error("Error saving orders:", error.message);
+
+        await connection.rollback();
+
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+
 }
 
 export async function importProduction(importedData) {
@@ -84,10 +141,52 @@ export async function getOrdersFromErp(startDate, endDate) {
 
         let sql;
 
+        //         sql = `
+        // SELECT * FROM (
+        // SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO, A.STYLEITEM,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
+        // A.COLOR AS COLOR,
+        // A.PRODQTY,
+        // NVL((
+        // SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
+        // FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
+        // JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
+        // JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+        // JOIN GTSIZEMAST  DD ON DD.SIZENAME =GG.SIZES
+        // JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
+        // JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
+        // JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
+        // WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+        // ),0) SEWINGDONE,
+        // A.PRODQTY
+        // -
+        // NVL((
+        // SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
+        // FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
+        // JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
+        // JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+        // JOIN GTSIZEMAST  DD ON DD.SIZENAME=GG.SIZES
+        // JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
+        // JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
+        // JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
+        // WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+        // ),0)
+        // AS QTY,  
+        // '' SAM ,'' STYLETYPE
+        // FROM ORDERALLOWDET A
+        //              WHERE  
+        //              ${existingOrderNumbers.length > 0 ? `(A.ORDERNO, A.BUYERDELDATE) NOT IN (${existingOrderNumbers}) AND` : ""} 
+        //              A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+        //             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY') AND
+        //          A.COMPCODE = 'SPK'
+        //            ) AAA
+        //             WHERE AAA.QTY > 0
+        // `
+
+
         sql = `
 SELECT * FROM (
-SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
-A.COLOR AS COLOR,
+SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO, A.STYLEITEM,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
+A.COLOR AS COLOR,A.STATUS,
 A.PRODQTY,
 NVL((
 SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
@@ -115,9 +214,9 @@ WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND
 ),0)
 AS QTY,  
 '' SAM ,'' STYLETYPE
-FROM ORDERALLOWDET A
+FROM ORDERALLOWDETLP A
              WHERE  
-             ${existingOrderNumbers.length > 0 ? `(A.ORDERNO, A.BUYERDELDATE) NOT IN (${existingOrderNumbers}) AND` : ""} 
+            A.STATUS IS NULL AND
              A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY') AND
          A.COMPCODE = 'SPK'

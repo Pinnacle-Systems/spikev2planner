@@ -380,7 +380,7 @@ const LineDataConformationForm = () => {
           <GridForm />
         </div>
         :
-        <form className={`w-[560px] max-w-full flex flex-col gap-4 p-4`} onSubmit={handleNoSplit} >
+        <form className={`w-[560px] max-w-full flex flex-col gap-4 p-1`} onSubmit={handleNoSplit} >
           <div className='flex items-baseline justify-between'>
             <h2 className='text-base font-semibold text-slate-800'>Line schedule details - {currentLine?.name}</h2>
             {formattedDeliveryDate && (
@@ -399,7 +399,7 @@ const LineDataConformationForm = () => {
             </div>
           )}
 
-          <div className='overflow-hidden rounded-lg border border-slate-200 shadow-sm'>
+          <div className='max-h-48 overflow-y-auto rounded-lg border border-slate-200 shadow-sm bg-white'>
             <table className='w-full table-fixed border-collapse bg-white'>
               <colgroup>
                 <col className='w-10' />
@@ -408,32 +408,22 @@ const LineDataConformationForm = () => {
                 <col className='w-36' />
                 <col className='w-28' />
               </colgroup>
-              <thead className='sticky top-0 bg-slate-100'>
+              <thead className='sticky top-0 z-10 bg-slate-100 shadow-[0_1px_0_0_rgba(226,232,240,1)]'>
                 <tr>
-                  <th className={`${headCell} text-center`}>S No</th>
-                  <th className={headCell}>Line</th>
-                  <th className={headCell}>Start Date</th>
-                  <th className={headCell}>Estimate End date</th>
-                  <th className={headCell}>
+                  <th className={`${headCell} text-center w-10 bg-slate-100`}>S No</th>
+                  <th className={`${headCell} bg-slate-100`}>Line</th>
+                  <th className={`${headCell} bg-slate-100`}>Start Date</th>
+                  <th className={`${headCell} bg-slate-100`}>Estimate End date</th>
+                  <th className={`${headCell} bg-slate-100`}>
                     <span>Pcs</span>
-                    {/* <button
-                        type='button'
-                        className='rounded bg-emerald-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-400'
-                        onClick={(e) => {
-                          e.preventDefault();
-                          isAllPcsChecked(true);
-                        }}
-                      >
-                        All
-                      </button> */}
                   </th>
                 </tr>
                 <tr className='bg-slate-50'>
-                  <th className={headCell}></th>
-                  <th className={`${headCell} font-medium`}>Order total pcs</th>
-                  <th className={headCell}></th>
-                  <th className={headCell}></th>
-                  <th className={`${headCell} text-right tabular-nums text-slate-800`}>{currentOrder.quantity || 0}</th>
+                  <th className={`${headCell} bg-slate-50`}></th>
+                  <th className={`${headCell} font-medium bg-slate-50`}>Order total pcs</th>
+                  <th className={`${headCell} bg-slate-50`}></th>
+                  <th className={`${headCell} bg-slate-50`}></th>
+                  <th className={`${headCell} text-right tabular-nums text-slate-800 bg-slate-50`}>{currentOrder.quantity || 0}</th>
                 </tr>
               </thead>
               <tbody>
@@ -477,20 +467,20 @@ const LineDataConformationForm = () => {
                   </tr>
                 )}
               </tbody>
-              <tfoot className='bg-slate-50 font-medium text-slate-700'>
+              <tfoot className='sticky bottom-0 z-10 bg-slate-50 font-medium text-slate-700 shadow-[0_-1px_0_0_rgba(226,232,240,1)]'>
                 <tr>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={cell} colSpan={1}>Total allocated</td>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={`${cell} text-right tabular-nums`}> {totalAllocatedQty}</td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}>Total allocated</td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50 text-right tabular-nums`}> {totalAllocatedQty}</td>
                 </tr>
                 <tr>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={cell} colSpan={1}>Balance</td>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={cell} colSpan={1}></td>
-                  <td className={`${cell} text-right tabular-nums ${balanceQty === 0 ? 'text-emerald-700' : 'text-amber-700'}`}> {balanceQty}</td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}>Balance</td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50`} colSpan={1}></td>
+                  <td className={`${cell} bg-slate-50 text-right tabular-nums ${balanceQty === 0 ? 'text-emerald-700' : 'text-amber-700'}`}> {balanceQty}</td>
                 </tr>
               </tfoot>
             </table>
