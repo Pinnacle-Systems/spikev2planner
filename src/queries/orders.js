@@ -64,7 +64,7 @@ export async function importOrders(importedData) {
         for (let index = 0; index < orderDetailsArr.length; index++) {
             const order = orderDetailsArr[index];
             // console.log(order, "order")
-            const data = await tx.orders.findMany({ where: { orderNo: order.orderNo, dDate: order.dDate } });
+            const data = await tx.orders.findMany({ where: { orderNo: order.orderNo, dDate: order.dDate, styleItem: order.styleItem } });
             if (data.length > 0) continue;
             await tx.orders.create({
                 data: order
