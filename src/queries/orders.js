@@ -23,34 +23,27 @@ export async function importOrders(importedData) {
     ]
     const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
     console.log(multipleOrderDetails, "multipleOrderDetails")
-    // const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
-    //     return `${item['orderno']}--${item['deliverydate']}`;
-    // });
     const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
-        return `${item['orderno']}--${item['styleitem']}--${item['deliverydate']}`;
+        return `${item['orderno']}--${item['styleitem'] || ''}--${item['deliverydate']}`;
     });
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
         const [orderNo, styleItem, rawDeliveryDate] = key.split("--");
-
-        // Correctly parse delivery date from parts[2]
         const deliveryDate = rawDeliveryDate
             ? new Date(rawDeliveryDate.split("/").reverse().join("-"))
             : new Date();
-
-        // let orderNo = key.split("--")[0];
-        // const deliveryDate = new Date((key.split("--")[1]).split("/").reverse().join("-"));
-
 
         orderDetailsArr.push({
             orderNo,
             styleType: val[0]?.styletype,
             style: val[0]?.styleno,
-            styleItem: styleItem,
+            styleItem: styleItem || val[0]?.styleitem,
             buyer: val[0]?.buyer,
             sam: val[0]?.sam,
             dDate: deliveryDate,
             quantity: val.reduce((a, c) => a + parseInt(c.qty || 0), 0),
+            erpQty: (val.reduce((a, c) => a + parseInt(c.qty || 0), 0)).toString(),
+            prevQuantity: val.reduce((a, c) => a + parseInt(c.qty || 0), 0),
             OrderSizeColorWiseDetails: {
                 create: val.map(i => ({
                     size: i.size,
@@ -58,56 +51,156 @@ export async function importOrders(importedData) {
                     qty: parseInt(i.qty || 0)
                 }))
             }
-        })
+        });
     }
+
+    let existingOrders = [];
+
     await prisma.$transaction(async (tx) => {
         for (let index = 0; index < orderDetailsArr.length; index++) {
             const order = orderDetailsArr[index];
-            // console.log(order, "order")
-            const data = await tx.orders.findMany({ where: { orderNo: order.orderNo, dDate: order.dDate, styleItem: order.styleItem } });
-            if (data.length > 0) continue;
-            await tx.orders.create({
-                data: order
-            })
+            existingOrders = await tx.orders.findMany({
+                where: {
+                    orderNo: order.orderNo,
+                    styleItem: order.styleItem || null
+                },
+                include: {
+                    lines: true
+                }
+            });
 
+            if (existingOrders.length === 0) {
+                // Brand new order -> create
+                await tx.orders.create({
+                    data: order
+                });
+            } else {
+                // Existing order found -> safely update details while preserving schedule
+                for (const existing of existingOrders) {
+                    const isAllocated = (existing.lines || []).length > 0;
 
+                    if (!isAllocated) {
+                        // Unallocated: update all details & size/color breakdown safely
+                        await tx.orders.update({
+                            where: { id: existing.id },
+                            data: {
+                                dDate: order.dDate,
+                                // style: order.style,
+                                // styleType: order.styleType,
+                                // buyer: order.buyer,
+                                // sam: order.sam,
+                                quantity: order.quantity,
+                                prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
+                                erpQty: String(order.quantity),
+                                version: (existing.version || 1) + 1,
+                                OrderSizeColorWiseDetails: {
+                                    deleteMany: {},
+                                    create: order.OrderSizeColorWiseDetails.create
+                                },
+                                status: "AMANDMENT"
+
+                            }
+                        });
+                    } else {
+                        // Already allocated: update master quantity & details without breaking lines schedule
+                        await tx.orders.update({
+                            where: { id: existing.id },
+                            data: {
+                                // quantity: order.quantity,
+                                // dDate: order.dDate,
+                                // buyer: order.buyer,
+                                // sam: order.sam,
+                                quantity: order.quantity,
+                                prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
+                                erpQty: String(order.quantity),
+                                version: (existing.version || 1) + 1,
+                                erpQty: String(order.quantity),
+                                OrderSizeColorWiseDetails: {
+                                    deleteMany: {},
+                                    create: order.OrderSizeColorWiseDetails.create
+                                },
+                                status: "AMANDMENT"
+                            }
+                        });
+                    }
+                }
+            }
         }
     })
-    try {
-        const sqlQuery = `
+
+    console.log(existingOrders, "existingOrders")
+
+    if (existingOrders.length === 0) {
+        try {
+            const sqlQuery = `
         INSERT INTO GTNORDERENTRYLP
             (ORDERNO, COLOR, STYLENAME, SIZES, QTY)
         VALUES
             (:b1, :b2, :b3, :b4, :b5)
     `;
 
-        for (const order of importedData) {
-            await connection.execute(sqlQuery, {
-                b1: order.orderno,
-                b2: order.color,
-                b3: order.styleitem,
-                b4: order.size,
-                b5: order.qty
-            });
-        }
+            for (const order of importedData) {
+                await connection.execute(sqlQuery, {
+                    b1: order.orderno,
+                    b2: order.color,
+                    b3: order.styleitem,
+                    b4: order.size,
+                    b5: order.qty
+                });
+            }
 
-        await connection.commit();
-        console.log("All orders saved successfully");
+            await connection.commit();
+            console.log("All orders saved successfully");
 
-        await connection.commit();
+        } catch (error) {
+            console.error("Error saving orders:", error.message);
+            await connection.rollback();
 
-        console.log("All orders saved successfully");
-
-    } catch (error) {
-        console.error("Error saving orders:", error.message);
-
-        await connection.rollback();
-
-    } finally {
-        if (connection) {
-            await connection.close();
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
         }
     }
+
+    if (existingOrders.length && existingOrders.length !== 0) {
+        try {
+            const sqlQuery = `
+        UPDATE GTNORDERENTRYLP
+        SET QTY = :b1
+        WHERE ORDERNO = :b2
+          AND COLOR = :b3
+          AND STYLENAME = :b4
+          AND SIZES = :b5
+    `;
+
+            for (const order of importedData) {
+                await connection.execute(sqlQuery, {
+                    b1: order.qty,
+                    b2: order.orderno,
+                    b3: order.color,
+                    b4: order.styleitem,
+                    b5: order.size
+                });
+            }
+
+            await connection.commit();
+
+            console.log("All orders updated successfully");
+
+        } catch (error) {
+            console.error("Error updating orders:", error.message);
+
+            await connection.rollback();
+
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+
 
 }
 

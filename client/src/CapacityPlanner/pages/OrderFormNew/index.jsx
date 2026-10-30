@@ -116,7 +116,8 @@ const OrderFormNew = () => {
               timer: 1500,
               showConfirmButton: false,
             }).then(() => {
-              window.location.reload();
+              // window.location.reload();
+              refetch()
             });
           } else if (result.data.statusCode === 1) {
             Swal.fire({

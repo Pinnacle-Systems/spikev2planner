@@ -6,6 +6,7 @@ import { fetchProductionDataFromErp, fetchRawMaterialDataFromErp } from '../quer
 import { getDateFromDateTimeFormat } from '../utils/dateHelper.js';
 import { groupByPropertyToArr, groupByPropertyToObj } from '../utils/helper.js';
 import moment from "moment";
+import { getConnection } from '../utils/db.connection.js';
 
 const prisma = new PrismaClient()
 
@@ -68,6 +69,11 @@ async function get(req) {
                             }
                         }
                     },
+                }
+            },
+            _count: {
+                select: {
+                    lines: true
                 }
             }
         }
@@ -327,12 +333,72 @@ async function updateMany(req) {
 };
 
 async function remove(id) {
-    const data = await prisma.orders.delete({
-        where: {
-            id: parseInt(id)
-        },
-    })
-    return { statusCode: 0, data };
+    let connection;
+    let orderData;
+    let oracleDeleted = false;
+
+    try {
+        connection = await getConnection();
+
+        // 1. Get order details before deleting
+        orderData = await prisma.orders.findUnique({
+            where: {
+                id: parseInt(id)
+            },
+            include: {
+                OrderSizeColorWiseDetails: true
+            }
+        });
+
+        if (!orderData) {
+            throw new Error("Order not found");
+        }
+        console.log(orderData, "orderData")
+
+        // 2. Delete from Oracle
+        const sqlQuery = `
+            DELETE FROM GTNORDERENTRYLP
+            WHERE ORDERNO = :b1
+              AND COLOR = :b2
+              AND STYLENAME = :b3
+              AND SIZES = :b4
+        `;
+
+        for (const order of orderData.OrderSizeColorWiseDetails) {
+            await connection.execute(sqlQuery, {
+                b1: orderData.orderNo,
+                b2: order.color,
+                b3: orderData.styleItem,
+                b4: order.size
+            });
+        }
+
+        // 3. Commit Oracle deletion
+        await connection.commit();
+        oracleDeleted = true;
+
+        // 4. Delete from Prisma
+        const data = await prisma.orders.delete({
+            where: {
+                id: parseInt(id)
+            }
+        });
+
+        return { statusCode: 0, data };
+
+    } catch (error) {
+
+        console.error("Error deleting order:", error);
+
+
+
+        throw error;
+
+    } finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
 }
 
 export {

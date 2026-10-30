@@ -93,6 +93,11 @@ const OrderItem = ({
     orderNoSplit = orderNoSplit.slice(1).join("/");
 
     console.log(fromOrderList, "fromOrderListfromOrderList")
+    const isAmended = order.status === "AMANDMENT" || (order.erpQty && parseFloat(order.erpQty) !== parseFloat(order.quantity || 0));
+    const prevQuantity = order.prevQuantity ? parseFloat(order.prevQuantity) : null;
+    const currentQtyNum = parseFloat(order.quantity || 0);
+    const qtyDiff = currentQtyNum !== null && !isNaN(currentQtyNum) ? (currentQtyNum - prevQuantity) : 0;
+
     return (
         <>
             {fromOrderList
@@ -102,14 +107,15 @@ const OrderItem = ({
                     draggable={["Pending", "Partial"].includes(order.status) && !order.isReplanned}
                     onDragStart={(e) => { drag(e) }}
                     onDragOver={(e) => { e.preventDefault(); }}
-                    className={`orderItem noDrop select-none text-center border grabbable`}
+                    className={`orderItem noDrop select-none text-center border grabbable transition-colors
+                        ${isAmended ? 'bg-amber-50/80 hover:bg-amber-100/80 border-l-4 border-l-amber-500' : ''}`}
                     onClick={handleFindOrder}
                 >
                     <td
                     >
                         {index}
                     </td>
-                    <td className='py-1 border border-grya-200'>
+                    <td className='py-1 border border-grya-200 font-medium'>
                         {order.orderNo}
                     </td>
                     <td className='py-1 border border-grya-200'>
@@ -124,8 +130,15 @@ const OrderItem = ({
                     <td className='capitalize py-1 border border-grya-200'>
                         {order.styleType}
                     </td>
-                    <td className='py-1 border border-grya-200'>
-                        {order.quantity}
+                    <td className='py-1 border border-grya-200 tabular-nums'>
+                        <div className="flex flex-col items-center justify-center">
+                            <span className="font-semibold text-slate-800">{order.quantity}</span>
+                            {isAmended && qtyDiff !== 0 && (
+                                <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full whitespace-nowrap mt-0.5 ${qtyDiff > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                    {qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff} ERP
+                                </span>
+                            )}
+                        </div>
                     </td>
                     {/* <td>
                         <strong>
@@ -138,7 +151,13 @@ const OrderItem = ({
                         </strong>
                     </td> */}
                     <td className='py-1 border border-grya-200'>
-                        {order.status}
+                        {isAmended ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300 shadow-2xs">
+                                ⚠️ Amended
+                            </span>
+                        ) : (
+                            order.status
+                        )}
                     </td>
                     {/* {order.status == "Pending" ?
                         <td className='py-1 border border-grya-200'>
@@ -186,6 +205,7 @@ const OrderItem = ({
                             ${manualSelect ? "pointer-events-none" : ""}
                             ${(order.isReplanned) ? "cursor-pointer" : "grabbable"}
                             select-none 
+                            ${isAmended ? "ring-2 ring-amber-500 shadow-md ring-offset-1" : ""}
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 animate-bounce" : "") : ""}
@@ -211,6 +231,12 @@ const OrderItem = ({
                                     <b> Total Order Qty</b>
                                     <div> {order.quantity} </div>
                                 </div>
+                                {isAmended && qtyDiff !== 0 && (
+                                    <div className='grid grid-cols-2 text-amber-700 bg-amber-50 rounded p-0.5 border border-amber-300 font-semibold'>
+                                        <b> ERP Amended Qty</b>
+                                        <div> {order.erpQty} ({qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff}) </div>
+                                    </div>
+                                )}
 
                                 <div className='grid grid-cols-2'>
                                     <b> Line Qty</b>

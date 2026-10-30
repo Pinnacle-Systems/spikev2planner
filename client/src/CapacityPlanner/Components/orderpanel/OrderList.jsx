@@ -119,6 +119,7 @@ const TABS = [
     { label: 'To Be Planned', value: 'Pending' },
     { label: 'Partially Planned', value: 'Partial' },
     { label: 'Allocated', value: 'Allocated' },
+    { label: 'Amended', value: 'AMANDMENT' },
 ];
 
 const HEADERS = ['S.no', 'Order no', 'Delivery date', 'Style', 'Buyer', 'Style type',
@@ -167,7 +168,9 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
     const ordersForLines = useMemo(() => orders.map(ord => {
         let status = "Pending";
         const isFullyCompleted = (ord.lines || []).reduce((a, c) => a + parseFloat(c.pcs || 0), 0) === parseFloat(ord.quantity || 0);
-        if (isFullyCompleted) {
+        if (ord.status === "AMANDMENT") {
+            status = "AMANDMENT";
+        } else if (isFullyCompleted) {
             status = "Allocated";
         } else if ((ord.lines || []).length > 0) {
             status = "Partial";
@@ -176,7 +179,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
     }), [orders]);
 
     const baseOrders = useMemo(
-        () => ordersForLines.filter(i => !i.isReplanned && i.balanceQty > 0),
+        () => ordersForLines.filter(i => !i.isReplanned && (i.status === "AMANDMENT" || i.balanceQty > 0 || (i.lines || []).length > 0)),
         [ordersForLines]
     );
 
@@ -185,6 +188,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
         Pending: baseOrders.filter(i => i.status === 'Pending').length,
         Partial: baseOrders.filter(i => i.status === 'Partial').length,
         Allocated: baseOrders.filter(i => i.status === 'Allocated').length,
+        AMANDMENT: baseOrders.filter(i => i.status === 'AMANDMENT').length,
     }), [baseOrders]);
 
     const visibleOrders = useMemo(() => {
@@ -288,7 +292,31 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
             {/* Header (fixed) */}
             <div className="shrink-0 flex items-center justify-between px-3 pt-3 pb-2 border-b border-slate-100">
                 <div className="flex items-center gap-2 min-w-0">
-                    <h1 className="text-[15px] font-semibold text-slate-900 truncate mb-0">Order backlog</h1>
+                    {/* <h1 className="text-[15px] font-semibold text-slate-900 truncate mb-0">Order backlog</h1> */}
+                    <div className="shrink-0 px-3 pb-2">
+                        <div className="relative">
+                            <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+                            <input
+                                type="text"
+                                placeholder="Search order no. or style"
+                                aria-label="Search orders"
+                                value={searchText}
+                                onChange={(e) => setSearchText(e.target.value)}
+                                className="w-full h-9 pl-8 pr-8 text-sm rounded-lg border border-slate-300 bg-slate-50 outline-none
+                                   focus:bg-white focus:border-orange-600 focus:ring-2 focus:ring-orange-100"
+                            />
+                            {searchText && (
+                                <button
+                                    type="button"
+                                    aria-label="Clear search"
+                                    onClick={() => setSearchText('')}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-slate-200 text-slate-600"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
                     <span className="px-1.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600 shrink-0">
                         {/* {visibleOrders.length} of {baseOrders.length} */}
                     </span>
@@ -307,7 +335,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
             </div>
 
             {/* Search (fixed) */}
-            <div className="shrink-0 px-3 pb-2">
+            {/* <div className="shrink-0 px-3 pb-2">
                 <div className="relative">
                     <Search size={15} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" aria-hidden="true" />
                     <input
@@ -330,7 +358,26 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                         </button>
                     )}
                 </div>
-            </div>
+            </div> */}
+
+            {/* Notification Banner when Amended Orders exist */}
+            {counts['AMANDMENT'] > 0 && (
+                <div className="mx-3 my-1.5 flex items-center justify-between rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 shadow-xs">
+                    <div className="flex items-center gap-1.5 font-medium">
+                        <span className="text-sm">⚠️</span>
+                        <span>
+                            <strong>{counts['AMANDMENT']} {counts['AMANDMENT'] === 1 ? 'order' : 'orders'}</strong> amended from ERP
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setStatusFilter(statusFilter === 'AMANDMENT' ? '' : 'AMANDMENT')}
+                        className="text-[11px] font-semibold underline text-amber-800 hover:text-amber-950 cursor-pointer"
+                    >
+                        {statusFilter === 'AMANDMENT' ? 'Show All' : 'View Orders'}
+                    </button>
+                </div>
+            )}
 
             {/* Status tabs (fixed) */}
             <div
@@ -341,6 +388,7 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                 {TABS.map(t => {
                     const active = statusFilter === t.value;
                     const isAll = t.value === '';
+                    const isAmendedTab = t.value === 'AMANDMENT';
                     return (
                         <button
                             key={t.label}
@@ -350,11 +398,15 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                             onClick={() => setStatusFilter(t.value)}
                             className={`shrink-0 whitespace-nowrap h-8 rounded-md text-xs font-medium transition
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16345F]/40
-                    ${isAll ? 'w-20 flex-none px-1' : 'flex-auto px-3'}
-                    ${active ? 'bg-[#16345F] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                    ${isAll ? 'w-16 flex-none px-1' : 'flex-auto px-2.5'}
+                    ${active 
+                        ? (isAmendedTab ? 'bg-amber-600 text-white' : 'bg-[#16345F] text-white') 
+                        : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'bg-amber-100 text-amber-900 font-semibold hover:bg-amber-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
                         >
-                            {t.label}
-                            <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : 'text-slate-500'}`}> {counts[t.value] ? `(${counts[t.value]})` : ''}</span>
+                            {isAmendedTab && counts['AMANDMENT'] > 0 ? '⚠️ ' : ''}{t.label}
+                            <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'text-amber-800 font-bold' : 'text-slate-500')}`}>
+                                {counts[t.value] !== undefined ? `(${counts[t.value]})` : ''}
+                            </span>
                         </button>
                     );
                 })}
