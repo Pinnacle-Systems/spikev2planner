@@ -66,6 +66,7 @@ const OrderFormNew = () => {
         toast.warning(result.data.message)
       } else {
         setOrders(result?.data?.data || []);
+        window.dispatchEvent(new Event('REFRESH_ORDERS'));
       }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });
@@ -85,6 +86,7 @@ const OrderFormNew = () => {
         toast.warning(result.data.message)
       } else {
         setOrders(result?.data?.data || []);
+        window.dispatchEvent(new Event('REFRESH_ORDERS'));
       }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });

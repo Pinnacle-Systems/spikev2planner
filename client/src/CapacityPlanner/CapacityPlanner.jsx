@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, createContext, useRef } from 'react'
+import { useSelector } from 'react-redux';
 import { getRandomColor } from '../utils/helper';
 import Calendar from './Components/CalendarWithManyLines';
 import OrderList from './Components/orderpanel/OrderList';
@@ -189,6 +190,27 @@ const CapacityPlanner = () => {
 
     useEffect(retrieveData, [retrieveData]);
     useEffect(toasterTrigger, []);
+
+    // Re-fetch orders whenever user switches to the Capacity Planner tab
+    const openTabs = useSelector((state) => state.openTabs);
+    const isPlannerTabActive = openTabs?.tabs?.find(
+        (t) => t.name?.toUpperCase() === 'CAPASITY PLANNER'
+    )?.active;
+
+    useEffect(() => {
+        if (isPlannerTabActive) {
+            retrieveData();
+        }
+    }, [isPlannerTabActive, retrieveData]);
+
+    // Re-fetch immediately when an order is created, edited, or synced in OrderForm
+    useEffect(() => {
+        const handleOrderSync = () => {
+            retrieveData();
+        };
+        window.addEventListener('REFRESH_ORDERS', handleOrderSync);
+        return () => window.removeEventListener('REFRESH_ORDERS', handleOrderSync);
+    }, [retrieveData]);
 
     useEffect(() => {
         if (!scrollLine) return

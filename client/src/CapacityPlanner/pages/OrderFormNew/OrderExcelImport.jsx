@@ -21,6 +21,7 @@ const OrderExcelImport = () => {
             console.log("result", result.data.response);
             if (result.status === 200 || result.status === 304) {
                 if (result.data.statusCode === 0) {
+                    window.dispatchEvent(new Event('REFRESH_ORDERS'));
                     window.location.reload();
                     localStorage.setItem("res", "success");
                     localStorage.setItem("success", `Order Imported Successfully!!!`);
