@@ -118,12 +118,13 @@ const TABS = [
     { label: 'All', value: '' },
     { label: 'To Be Planned', value: 'Pending' },
     { label: 'Partially Planned', value: 'Partial' },
-    { label: 'Allocated', value: 'Allocated' },
+    // { label: 'Allocated', value: 'Allocated' },
     { label: 'Amended', value: 'AMANDMENT' },
 ];
 
-const HEADERS = ['S.no', 'Order no', 'Delivery date', 'Style', 'Buyer', 'Style type',
-    'Qty', 'Status', 'Production details'];
+// const HEADERS = ['S.no', 'Order no', 'Delivery date', 'Style', 'Buyer', 'Style type',
+//     'Qty', 'Status', 'Production details'];
+const HEADERS = ['S.no', 'Order no', ''];
 
 const EMPTY_ARRAY = [];
 
@@ -399,9 +400,9 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
                             className={`shrink-0 whitespace-nowrap h-8 rounded-md text-xs font-medium transition
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16345F]/40
                     ${isAll ? 'w-16 flex-none px-1' : 'flex-auto px-2.5'}
-                    ${active 
-                        ? (isAmendedTab ? 'bg-amber-600 text-white' : 'bg-[#16345F] text-white') 
-                        : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'bg-amber-100 text-amber-900 font-semibold hover:bg-amber-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
+                    ${active
+                                    ? (isAmendedTab ? 'bg-amber-600 text-white' : 'bg-[#16345F] text-white')
+                                    : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'bg-amber-100 text-amber-900 font-semibold hover:bg-amber-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
                         >
                             {isAmendedTab && counts['AMANDMENT'] > 0 ? '⚠️ ' : ''}{t.label}
                             <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'text-amber-800 font-bold' : 'text-slate-500')}`}>

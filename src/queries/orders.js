@@ -21,11 +21,14 @@ export async function importOrders(importedData) {
         "styletype",
         "styleitem"
     ]
+    console.log(importedData, "importedData")
     const multipleOrderDetails = convertToImportFormat(importedData, headerNames);
-    console.log(multipleOrderDetails, "multipleOrderDetails")
+    // console.log(multipleOrderDetails, "multipleOrderDetails")
     const orderDetails = _.groupBy(multipleOrderDetails, (item) => {
         return `${item['orderno']}--${item['styleitem'] || ''}--${item['deliverydate']}`;
     });
+
+    // console.log(orderDetails, "orderDetails")
     const orderDetailsArr = [];
     for (let [key, val] of Object.entries(orderDetails)) {
         const [orderNo, styleItem, rawDeliveryDate] = key.split("--");
@@ -52,153 +55,266 @@ export async function importOrders(importedData) {
                 }))
             }
         });
+        // console.log(deliveryDate, "rawDeliveryDate")
     }
+
+    // console.log(orderDetailsArr, "orderDetailsArr")
+
 
     let existingOrders = [];
 
+    // await prisma.$transaction(async (tx) => {
+    //     for (let index = 0; index < orderDetailsArr.length; index++) {
+    //         const order = orderDetailsArr[index];
+    //         // console.log(order, "order")
+
+    //         existingOrders = await tx.orders.findMany({
+    //             where: {
+    //                 orderNo: order.orderNo,
+    //                 styleItem: order.styleItem || null
+    //             },
+    //             include: {
+    //                 lines: true
+    //             }
+    //         });
+
+    //         // console.log(existingOrders, "existingOrders")
+
+    //         if (existingOrders.length === 0) {
+    //             // Brand new order -> create
+    //             await tx.orders.create({
+    //                 data: order
+    //             });
+    //         } else {
+    //             // Existing order found -> safely update details while preserving schedule
+    //             for (const existing of existingOrders) {
+    //                 const isAllocated = (existing.lines || []).length > 0;
+
+    //                 if (!isAllocated) {
+    //                     // Unallocated: update all details & size/color breakdown safely
+    //                     await tx.orders.update({
+    //                         where: { id: existing.id },
+    //                         data: {
+    //                             dDate: order.dDate,
+    //                             // style: order.style,
+    //                             // styleType: order.styleType,
+    //                             // buyer: order.buyer,
+    //                             // sam: order.sam,
+    //                             quantity: order.quantity,
+    //                             prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
+    //                             erpQty: String(order.quantity),
+    //                             version: (existing.version || 1) + 1,
+    //                             OrderSizeColorWiseDetails: {
+    //                                 deleteMany: {},
+    //                                 create: order.OrderSizeColorWiseDetails.create
+    //                             },
+    //                             status: "AMANDMENT"
+
+    //                         }
+    //                     });
+    //                 } else {
+    //                     // Already allocated: update master quantity & details without breaking lines schedule
+    //                     await tx.orders.update({
+    //                         where: { id: existing.id },
+    //                         data: {
+    //                             // quantity: order.quantity,
+    //                             // dDate: order.dDate,
+    //                             // buyer: order.buyer,
+    //                             // sam: order.sam,
+    //                             quantity: order.quantity,
+    //                             prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
+    //                             erpQty: String(order.quantity),
+    //                             version: (existing.version || 1) + 1,
+    //                             erpQty: String(order.quantity),
+    //                             OrderSizeColorWiseDetails: {
+    //                                 deleteMany: {},
+    //                                 create: order.OrderSizeColorWiseDetails.create
+    //                             },
+    //                             status: "AMANDMENT"
+    //                         }
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //     }
+    // })
+
     await prisma.$transaction(async (tx) => {
-        for (let index = 0; index < orderDetailsArr.length; index++) {
-            const order = orderDetailsArr[index];
-            existingOrders = await tx.orders.findMany({
-                where: {
+
+        // Fetch all existing orders at once
+        const existingOrders = await tx.orders.findMany({
+            where: {
+                OR: orderDetailsArr.map(order => ({
                     orderNo: order.orderNo,
                     styleItem: order.styleItem || null
-                },
-                include: {
-                    lines: true
-                }
-            });
+                }))
+            },
+            include: {
+                lines: true
+            }
+        });
 
-            if (existingOrders.length === 0) {
-                // Brand new order -> create
+        for (const order of orderDetailsArr) {
+
+            const existing = existingOrders.find(
+                item =>
+                    item.orderNo === order.orderNo &&
+                    item.styleItem === (order.styleItem || null)
+            );
+
+            if (!existing) {
+                // Create new order
                 await tx.orders.create({
                     data: order
                 });
             } else {
-                // Existing order found -> safely update details while preserving schedule
-                for (const existing of existingOrders) {
-                    const isAllocated = (existing.lines || []).length > 0;
-
-                    if (!isAllocated) {
-                        // Unallocated: update all details & size/color breakdown safely
-                        await tx.orders.update({
-                            where: { id: existing.id },
-                            data: {
-                                dDate: order.dDate,
-                                // style: order.style,
-                                // styleType: order.styleType,
-                                // buyer: order.buyer,
-                                // sam: order.sam,
-                                quantity: order.quantity,
-                                prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
-                                erpQty: String(order.quantity),
-                                version: (existing.version || 1) + 1,
-                                OrderSizeColorWiseDetails: {
-                                    deleteMany: {},
-                                    create: order.OrderSizeColorWiseDetails.create
-                                },
-                                status: "AMANDMENT"
-
-                            }
-                        });
-                    } else {
-                        // Already allocated: update master quantity & details without breaking lines schedule
-                        await tx.orders.update({
-                            where: { id: existing.id },
-                            data: {
-                                // quantity: order.quantity,
-                                // dDate: order.dDate,
-                                // buyer: order.buyer,
-                                // sam: order.sam,
-                                quantity: order.quantity,
-                                prevQuantity: existing.version === 1 ? existing.quantity : order.quantity,
-                                erpQty: String(order.quantity),
-                                version: (existing.version || 1) + 1,
-                                erpQty: String(order.quantity),
-                                OrderSizeColorWiseDetails: {
-                                    deleteMany: {},
-                                    create: order.OrderSizeColorWiseDetails.create
-                                },
-                                status: "AMANDMENT"
-                            }
-                        });
+                // Update existing order
+                await tx.orders.update({
+                    where: { id: existing.id },
+                    data: {
+                        quantity: order.quantity,
+                        prevQuantity: existing.version === 1
+                            ? existing.quantity
+                            : order.quantity,
+                        erpQty: String(order.quantity),
+                        version: (existing.version || 1) + 1,
+                        OrderSizeColorWiseDetails: {
+                            deleteMany: {},
+                            create: order.OrderSizeColorWiseDetails.create
+                        },
+                        status: "AMANDMENT"
                     }
-                }
-            }
-        }
-    })
-
-    console.log(existingOrders, "existingOrders")
-
-    if (existingOrders.length === 0) {
-        try {
-            const sqlQuery = `
-        INSERT INTO GTNORDERENTRYLP
-            (ORDERNO, COLOR, STYLENAME, SIZES, QTY)
-        VALUES
-            (:b1, :b2, :b3, :b4, :b5)
-    `;
-
-            for (const order of importedData) {
-                await connection.execute(sqlQuery, {
-                    b1: order.orderno,
-                    b2: order.color,
-                    b3: order.styleitem,
-                    b4: order.size,
-                    b5: order.qty
                 });
             }
+        }
+    });
 
-            await connection.commit();
-            console.log("All orders saved successfully");
+    try {
+        const sqlQuery = `
+        MERGE INTO GTNORDERENTRYLP target
+        USING (
+            SELECT
+                :b1 AS ORDERNO,
+                :b2 AS COLOR,
+                :b3 AS STYLENAME,
+                :b4 AS SIZES,
+                :b5 AS QTY
+            FROM DUAL
+        ) source
+        ON (
+            target.ORDERNO = source.ORDERNO
+            AND target.COLOR = source.COLOR
+            AND target.STYLENAME = source.STYLENAME
+            AND target.SIZES = source.SIZES
+        )
+        WHEN MATCHED THEN
+            UPDATE SET target.QTY = source.QTY
+        WHEN NOT MATCHED THEN
+            INSERT (ORDERNO, COLOR, STYLENAME, SIZES, QTY)
+            VALUES (
+                source.ORDERNO,
+                source.COLOR,
+                source.STYLENAME,
+                source.SIZES,
+                source.QTY
+            )
+    `;
 
-        } catch (error) {
-            console.error("Error saving orders:", error.message);
-            await connection.rollback();
+        for (const order of importedData) {
+            await connection.execute(sqlQuery, {
+                b1: order.orderno,
+                b2: order.color,
+                b3: order.styleitem,
+                b4: order.size,
+                b5: order.qty
+            });
+        }
 
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
+        await connection.commit();
+
+        console.log("All orders saved/updated successfully");
+
+    } catch (error) {
+        console.error("Error saving/updating orders:", error.message);
+        await connection.rollback();
+
+    } finally {
+        if (connection) {
+            await connection.close();
         }
     }
 
-    if (existingOrders.length && existingOrders.length !== 0) {
-        try {
-            const sqlQuery = `
-        UPDATE GTNORDERENTRYLP
-        SET QTY = :b1
-        WHERE ORDERNO = :b2
-          AND COLOR = :b3
-          AND STYLENAME = :b4
-          AND SIZES = :b5
-    `;
+    // console.log(existingOrders, "existingOrders")
 
-            for (const order of importedData) {
-                await connection.execute(sqlQuery, {
-                    b1: order.qty,
-                    b2: order.orderno,
-                    b3: order.color,
-                    b4: order.styleitem,
-                    b5: order.size
-                });
-            }
+    // if (existingOrders.length === 0) {
+    //     try {
+    //         const sqlQuery = `
+    //     INSERT INTO GTNORDERENTRYLP
+    //         (ORDERNO, COLOR, STYLENAME, SIZES, QTY)
+    //     VALUES
+    //         (:b1, :b2, :b3, :b4, :b5)
+    // `;
 
-            await connection.commit();
+    //         for (const order of importedData) {
+    //             await connection.execute(sqlQuery, {
+    //                 b1: order.orderno,
+    //                 b2: order.color,
+    //                 b3: order.styleitem,
+    //                 b4: order.size,
+    //                 b5: order.qty
+    //             });
+    //         }
 
-            console.log("All orders updated successfully");
+    //         await connection.commit();
+    //         console.log("All orders saved successfully");
 
-        } catch (error) {
-            console.error("Error updating orders:", error.message);
+    //     } catch (error) {
+    //         console.error("Error saving orders:", error.message);
+    //         await connection.rollback();
 
-            await connection.rollback();
+    //     } finally {
+    //         if (connection) {
+    //             await connection.close();
+    //         }
+    //     }
+    // }
 
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
+    // if (existingOrders.length && existingOrders.length !== 0) {
+    //     try {
+    //         const sqlQuery = `
+    //     UPDATE GTNORDERENTRYLP
+    //     SET QTY = :b1
+    //     WHERE ORDERNO = :b2
+    //       AND COLOR = :b3
+    //       AND STYLENAME = :b4
+    //       AND SIZES = :b5
+    // `;
+
+    //         for (const order of importedData) {
+    //             await connection.execute(sqlQuery, {
+    //                 b1: order.qty,
+    //                 b2: order.orderno,
+    //                 b3: order.color,
+    //                 b4: order.styleitem,
+    //                 b5: order.size
+    //             });
+    //         }
+
+    //         await connection.commit();
+
+    //         console.log("All orders updated successfully");
+
+    //     } catch (error) {
+    //         console.error("Error updating orders:", error.message);
+
+    //         await connection.rollback();
+
+    //     } finally {
+    //         if (connection) {
+    //             await connection.close();
+    //         }
+    //     }
+    // }
 
 
 
@@ -277,44 +393,43 @@ export async function getOrdersFromErp(startDate, endDate) {
 
 
         sql = `
-SELECT * FROM (
-SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO, A.STYLEITEM,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
-A.COLOR AS COLOR,A.STATUS,
-A.PRODQTY,
-NVL((
-SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
-FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
-JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
-JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
-JOIN GTSIZEMAST  DD ON DD.SIZENAME =GG.SIZES
-JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
-JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
-JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
-WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
-),0) SEWINGDONE,
-A.PRODQTY
--
-NVL((
-SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
-FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
-JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
-JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
-JOIN GTSIZEMAST  DD ON DD.SIZENAME=GG.SIZES
-JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
-JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
-JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
-WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
-),0)
-AS QTY,  
-'' SAM ,'' STYLETYPE
-FROM ORDERALLOWDETLP A
-             WHERE  
-            A.STATUS IS NULL AND
-             A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
-            AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY') AND
-         A.COMPCODE = 'SPK'
-           ) AAA
-            WHERE AAA.QTY > 0
+    SELECT * FROM (
+    SELECT A.ORDERNO AS ORDERNO,A.STYLEREFNO AS STYLENO, A.STYLEITEM,A.BUYER AS BUYER,TO_CHAR(A.BUYERDELDATE,'yyyy-mm-dd') AS DELIVERYDATE,A.SIZES AS "size",
+    A.COLOR AS COLOR,A.STATUS,A.ORDERTYPE,
+    A.PRODQTY,
+    NVL((
+    SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
+    FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
+    JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
+    JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+    JOIN GTSIZEMAST  DD ON DD.SIZENAME =GG.SIZES
+    JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
+    JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
+    JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
+    WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+    ),0) SEWINGDONE,
+    A.PRODQTY
+    -
+    NVL((
+    SELECT SUM(BB.PRODQTY) PRODUCTIONQTY
+    FROM GTGINPROD AA JOIN GTGINPRODDET BB ON  AA.GTGINPRODID=BB.GTGINPRODID
+    JOIN GTGINPRODSUBDET GG ON GG.GTGINPRODID=AA.GTGINPRODID AND BB.GTGINPRODDETID=GG.GTGINPRODDETID
+    JOIN GTCOMPMAST CC ON CC.GTCOMPMASTID=AA.COMPCODE
+    JOIN GTSIZEMAST  DD ON DD.SIZENAME=GG.SIZES
+    JOIN GTCOLORMAST EE ON EE.GTCOLORMASTID=GG.COLOR1
+    JOIN GTLINEMAST FF ON FF.GTLINEMASTID=GG.LINENO
+    JOIN GTPROCESSMAST HH ON HH.GTPROCESSMASTID=AA.PREVPROCESS
+    WHERE BB.PRODQTY >0 AND BB.ORDERNO = A.ORDERNO AND HH.PROCESSNAME = 'SEWING' AND DD.SIZENAME = A.SIZES AND EE.COLORNAME = A.COLOR
+    ),0)
+    AS QTY,  
+    '' SAM ,'' STYLETYPE
+    FROM ORDERALLOWDETLP A
+                WHERE  
+                A.STATUS IS NULL AND A.ORDERTYPE = 'ORDER' AND A.BUYERDELDATE IS NOT NULL AND
+           
+            A.COMPCODE = 'PSS' 
+            ) AAA
+                WHERE AAA.QTY > 0
 `
         console.log(sql, "sql for get order")
         let result = await connection.execute(sql);
@@ -334,7 +449,8 @@ FROM ORDERALLOWDETLP A
         }
     }
 }
-
+//  A.BUYERDELDATE BETWEEN TO_DATE('${moment(startDate).format('DD-MM-YYYY')}','DD-MM-YYYY') 
+//             AND TO_DATE('${moment(endDate).format("DD-MM-YYYY")}','DD-MM-YYYY') AND
 
 export async function replanOrder(orderId) {
     let createdOrder;
