@@ -296,7 +296,7 @@ const CapacityPlanner = () => {
             </Modal>
 
             <div className='relative flex w-full h-screen overflow-hidden bg-slate-50'>
-                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[35%] min-w-[340px] max-w-[480px]'
+                <div className={`h-full shrink-0 transition-all duration-300 ease-in-out ${isOrderListCollapsed ? 'w-12' : 'w-[27%] min-w-[340px] max-w-[480px]'
                     }`}>
                     <OrderList
                         orders={orders}

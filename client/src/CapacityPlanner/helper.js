@@ -279,18 +279,25 @@ export const getWeeksInMonth = (month) => {
 
     const weekKeys = sortWeekDaysIfLastWeek(allDays);
     return weekKeys.map((weekKey, index) => {
-        const daysInWeek = allDays.filter(d => moment.utc(d).format('W') === weekKey);
-        const startDay = new Date(daysInWeek[0]).getDate();
-        const endDay = new Date(daysInWeek[daysInWeek.length - 1]).getDate();
-        const monthShort = moment.utc(daysInWeek[0]).format('MMM');
+        // Find a representative date in this week from the month
+        const sampleDay = allDays.find(d => moment.utc(d).format('W') === weekKey);
+
+        // Generate the full 7-day ISO week (Monday to Sunday)
+        const weekStart = moment.utc(sampleDay).startOf('isoWeek');
+        const weekEnd = moment.utc(sampleDay).endOf('isoWeek');
+        const fullWeekDays = getDateArray(weekStart.toDate(), weekEnd.toDate());
+
+        const startDayText = weekStart.format('D MMM');
+        const endDayText = weekEnd.format('D MMM');
+
         return {
             weekKey,
             index,
-            label: `Week ${index + 1}: ${monthShort} ${startDay}–${endDay} (W${weekKey})`,
-            shortLabel: `W${weekKey} (${startDay}–${endDay})`,
-            days: daysInWeek,
-            startDate: daysInWeek[0],
-            endDate: daysInWeek[daysInWeek.length - 1]
+            label: `Week ${weekKey}: ${startDayText} – ${endDayText}`,
+            shortLabel: `W${weekKey} (${weekStart.format('D')}–${weekEnd.format('D')})`,
+            days: fullWeekDays,
+            startDate: fullWeekDays[0],
+            endDate: fullWeekDays[fullWeekDays.length - 1]
         };
     });
 };

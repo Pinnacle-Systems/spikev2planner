@@ -381,36 +381,69 @@ const OrderList = ({ isCollapsed: propIsCollapsed, onToggleCollapse: propOnToggl
             )}
 
             {/* Status tabs (fixed) */}
-            <div
-                className="shrink-0 flex gap-1 overflow-x-auto px-3 pb-2 border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                role="tablist"
-                aria-label="Order status"
-            >
-                {TABS.map(t => {
-                    const active = statusFilter === t.value;
-                    const isAll = t.value === '';
-                    const isAmendedTab = t.value === 'AMANDMENT';
+            {/* <div
+                    className="shrink-0 flex gap-1 overflow-x-auto px-3 pb-2 border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                    role="tablist"
+                    aria-label="Order status"
+                >
+                    {TABS.map(t => {
+                        const active = statusFilter === t.value;
+                        const isAll = t.value === '';
+                        const isAmendedTab = t.value === 'AMANDMENT';
+                        return (
+                            <button
+                                key={t.label}
+                                type="button"
+                                role="tab"
+                                aria-selected={active}
+                                onClick={() => setStatusFilter(t.value)}
+                                className={`shrink-0 whitespace-nowrap h-8 rounded-md text-xs font-medium transition
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16345F]/40
+                        ${isAll ? 'w-16 flex-none px-1' : 'flex-auto px-2.5'}
+                        ${active
+                                        ? (isAmendedTab ? 'bg-amber-600 text-white' : 'bg-[#16345F] text-white')
+                                        : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'bg-amber-100 text-amber-900 font-semibold hover:bg-amber-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
+                            >
+                                {isAmendedTab && counts['AMANDMENT'] > 0 ? '⚠️ ' : ''}{t.label}
+                                <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'text-amber-800 font-bold' : 'text-slate-500')}`}>
+                                    {counts[t.value] !== undefined ? `(${counts[t.value]})` : ''}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div> */}
+            <div className="shrink-0 px-3 pb-2 border-b border-slate-200">
+                {(() => {
+                    const amendedCount = counts['AMANDMENT'] > 0;
+                    const isAmendedSelected = statusFilter === 'AMANDMENT';
+
                     return (
-                        <button
-                            key={t.label}
-                            type="button"
-                            role="tab"
-                            aria-selected={active}
-                            onClick={() => setStatusFilter(t.value)}
-                            className={`shrink-0 whitespace-nowrap h-8 rounded-md text-xs font-medium transition
+                        <select
+                            id="order-status-filter"
+                            aria-label="Order status"
+                            value={statusFilter}
+                            onChange={e => setStatusFilter(e.target.value)}
+                            className={`w-full h-9 rounded-md border px-2.5 text-sm font-medium transition
                     focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16345F]/40
-                    ${isAll ? 'w-16 flex-none px-1' : 'flex-auto px-2.5'}
-                    ${active
-                                    ? (isAmendedTab ? 'bg-amber-600 text-white' : 'bg-[#16345F] text-white')
-                                    : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'bg-amber-100 text-amber-900 font-semibold hover:bg-amber-200' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
+                    ${isAmendedSelected
+                                    ? 'bg-amber-600 text-white border-amber-600'
+                                    : amendedCount
+                                        ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                        : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'}`}
                         >
-                            {isAmendedTab && counts['AMANDMENT'] > 0 ? '⚠️ ' : ''}{t.label}
-                            <span className={`ml-1 tabular-nums ${active ? 'text-white/80' : (isAmendedTab && counts['AMANDMENT'] > 0 ? 'text-amber-800 font-bold' : 'text-slate-500')}`}>
-                                {counts[t.value] !== undefined ? `(${counts[t.value]})` : ''}
-                            </span>
-                        </button>
+                            {TABS.map(t => {
+                                const isAmendedTab = t.value === 'AMANDMENT';
+                                const count = counts[t.value] !== undefined ? ` (${counts[t.value]})` : '';
+                                const warn = isAmendedTab && counts['AMANDMENT'] > 0 ? '⚠️ ' : '';
+                                return (
+                                    <option key={t.label} value={t.value}>
+                                        {warn}{t.label}{count}
+                                    </option>
+                                );
+                            })}
+                        </select>
                     );
-                })}
+                })()}
             </div>
 
             {/* SCROLL AREA: scrolls both directions (x and y) */}

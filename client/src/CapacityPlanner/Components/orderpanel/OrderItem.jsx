@@ -202,19 +202,25 @@ const OrderItem = ({
                             <span className="text-slate-600">
                                 {getDateFromDateTimeFormatToDisplay(order.dDate)}
                             </span>
-                            <span className="text-slate-700">{order.style}</span>
+                            {/* <span className="text-slate-700">{order.style}</span> */}
                         </div>
 
                         {/* Second row: other details */}
                         <div className="flex items-center gap-3 flex-wrap mt-0.5 text-[10px] text-slate-500">
                             <span>
-                                <span className="text-slate-400">Buyer: </span>
-                                {order.buyer}
+                                <span className="text-slate-400 font-semibold">Style: </span>
+                                <span className="text-slate-800 font-semibold">
+                                    {order.style}
+                                </span>
+
                             </span>
                             <span className="capitalize">
                                 <span className="text-slate-400 normal-case">Type: </span>
                                 {order.styleType}
                             </span>
+
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap mt-0.5 text-[10px] text-slate-500">
                             <span className="tabular-nums">
                                 <span className="text-slate-400">Qty: </span>
                                 <span className="font-semibold text-slate-800">{order.quantity}</span>
