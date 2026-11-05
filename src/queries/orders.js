@@ -427,7 +427,7 @@ export async function getOrdersFromErp(startDate, endDate) {
                 WHERE  
                 A.STATUS IS NULL AND A.ORDERTYPE = 'ORDER' AND A.BUYERDELDATE IS NOT NULL AND
            
-            A.COMPCODE = 'PSS' 
+            A.COMPCODE = 'SPK' 
             ) AAA
                 WHERE AAA.QTY > 0
 `
