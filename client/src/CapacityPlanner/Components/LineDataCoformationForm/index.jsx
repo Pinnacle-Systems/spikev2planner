@@ -380,7 +380,7 @@ const LineDataConformationForm = () => {
           <GridForm />
         </div>
         :
-        <form className={`w-[560px] max-w-full flex flex-col gap-4 p-1`} onSubmit={handleNoSplit} >
+        <form className={`w-[800px] max-w-full flex flex-col gap-4 p-1`} onSubmit={handleNoSplit} >
           <div className='flex items-baseline justify-between'>
             <h2 className='text-base font-semibold text-slate-800'>Line schedule details - {currentLine?.name}</h2>
             {formattedDeliveryDate && (

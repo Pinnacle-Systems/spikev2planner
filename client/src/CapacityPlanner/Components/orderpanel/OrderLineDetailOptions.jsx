@@ -147,6 +147,14 @@ const OrderLineDetailOptions = () => {
     const { setIsOrderProductionDetails, setLineEntryConformation, setOpenOrderDetail, setIsOrderLineDetailOptions, setOrders, currentOrder, currentLine, setViewPlanDetails,
         setReduceEndDate, prevOrders, loading, setLoading
     } = useContext(CapacityPlannerContext)
+    console.log(currentOrder, "currentOrdercurrentOrder")
+
+    const isAmended = currentOrder.status === "AMANDMENT" || (currentOrder.erpQty && parseFloat(currentOrder.erpQty) !== parseFloat(currentOrder.quantity || 0));
+    const prevQuantity = currentOrder.prevQuantity ? parseFloat(currentOrder.prevQuantity) : null;
+    const currentQtyNum = parseFloat(currentOrder.quantity || 0);
+    const qtyDiff = currentQtyNum !== null && !isNaN(currentQtyNum) ? (currentQtyNum - prevQuantity) : 0;
+
+
     function removeOrderFromLine() {
         if (!window.confirm("Do you want to delete this strip?")) return
         setOrders(prev => {
@@ -235,37 +243,55 @@ const OrderLineDetailOptions = () => {
     };
 
     return (
-        <div className='mt-10 w-full max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm'>
-            <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4'>
-                <div className='min-w-0'>
-                    <div className='text-xs text-slate-500'>Selected order</div>
-                    <div className='truncate text-lg font-semibold text-slate-900'>{currentOrder.orderNo}</div>
-                </div>
-                <div className='flex flex-wrap items-center gap-2'>
-                    <span className='rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600'>
-                        Delivery <strong className='ml-1 font-semibold text-slate-800'>{getDateFromDateTimeFormatToDisplay(currentOrder.dDate)}</strong>
-                    </span>
-                    <span className='rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs text-violet-700'>
-                        Line <strong className='ml-1 font-semibold'>{currentLine?.name}</strong>
-                    </span>
-                </div>
-            </div>
-
-            <div className='p-5'>
-                <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
-                    {mainOptions.map(renderTile)}
-                </div>
-
-                {dangerOptions.length > 0 &&
-                    <div className='mt-5 rounded-lg border border-red-100 bg-red-50/40 p-3'>
-                        <div className='mb-2 text-xs font-medium text-red-700'>These actions change or remove the plan</div>
-                        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
-                            {dangerOptions.map(renderTile)}
-                        </div>
+        <>
+            <div className='mt-10 w-full max-w-3xl overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm'>
+                <div className='flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4'>
+                    <div className='min-w-0'>
+                        <div className='text-xs text-slate-500'>Selected order</div>
+                        <div className='truncate text-lg font-semibold text-slate-900'>{currentOrder.orderNo}</div>
                     </div>
-                }
+                    <div className='flex flex-wrap items-center gap-2'>
+                        <span className='rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600'>
+                            Delivery <strong className='ml-1 font-semibold text-slate-800'>{getDateFromDateTimeFormatToDisplay(currentOrder.dDate)}</strong>
+                        </span>
+                        <span className='rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-xs text-violet-700'>
+                            Line <strong className='ml-1 font-semibold'>{currentLine?.name}</strong>
+                        </span>
+                    </div>
+                    {isAmended && (
+                        <div className='flex items-center justify-between border-b border-amber-200 bg-amber-50/80 px-5 py-2.5 text-xs text-amber-900'>
+                            <div className='flex items-center gap-2'>
+                                <span className='text-base'>⚠️</span>
+                                <span>
+                                    This order was amended in ERP. New Quantity: <strong>{currentOrder.quantity}</strong>
+                                    {prevQuantity && <span className='text-slate-600 font-normal'> (Previously: {prevQuantity})</span>}
+                                </span>
+                            </div>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${qtyDiff > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                {qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff} pcs
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                <div className='p-5'>
+                    <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                        {mainOptions.map(renderTile)}
+                    </div>
+
+                    {dangerOptions.length > 0 &&
+                        <div className='mt-5 rounded-lg border border-red-100 bg-red-50/40 p-3'>
+                            <div className='mb-2 text-xs font-medium text-red-700'>These actions change or remove the plan</div>
+                            <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
+                                {dangerOptions.map(renderTile)}
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
-        </div>
+
+        </>
+
     )
 }
 

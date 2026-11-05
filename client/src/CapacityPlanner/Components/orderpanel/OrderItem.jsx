@@ -93,71 +93,155 @@ const OrderItem = ({
     orderNoSplit = orderNoSplit.slice(1).join("/");
 
     console.log(fromOrderList, "fromOrderListfromOrderList")
+    const isAmended = order.status === "AMANDMENT" || (order.erpQty && parseFloat(order.erpQty) !== parseFloat(order.quantity || 0));
+    const prevQuantity = order.prevQuantity ? parseFloat(order.prevQuantity) : null;
+    const currentQtyNum = parseFloat(order.quantity || 0);
+    const qtyDiff = currentQtyNum !== null && !isNaN(currentQtyNum) ? (currentQtyNum - prevQuantity) : 0;
+
     return (
         <>
             {fromOrderList
                 ?
+                // <tr
+                //     style={{ fontSize: "11px" }} id={order.id}
+                //     draggable={["Pending", "Partial", "AMANDMENT"].includes(order.status) && !order.isReplanned}
+                //     onDragStart={(e) => { drag(e) }}
+                //     onDragOver={(e) => { e.preventDefault(); }}
+                //     className={`orderItem noDrop select-none text-center border grabbable transition-colors
+                //         ${isAmended ? 'bg-amber-50/80 hover:bg-amber-100/80 border-l-4 border-l-amber-500' : ''}`}
+                //     onClick={handleFindOrder}
+                // >
+                //     <td
+                //     >
+                //         {index}
+                //     </td>
+                //     <td className='py-1 w-48 border text-left px-2 border-grya-200 font-medium'>
+                //         {order.orderNo}
+                //     </td>
+                //     <td className='py-1 border border-grya-200'>
+                //         {getDateFromDateTimeFormatToDisplay(order.dDate)}
+                //     </td>
+                //     <td className='py-1 border border-grya-200'>
+                //         {order.style}
+                //     </td>
+                //     <td className='py-1 border border-grya-200'>
+                //         {order.buyer}
+                //     </td>
+                //     <td className='capitalize py-1 border border-grya-200'>
+                //         {order.styleType}
+                //     </td>
+                //     <td className='py-1 border border-grya-200 tabular-nums'>
+                //         <div className="flex flex-col items-center justify-center">
+                //             <span className="font-semibold text-slate-800">{order.quantity}</span>
+                //             {isAmended && qtyDiff !== 0 && (
+                //                 <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded-full whitespace-nowrap mt-0.5 ${qtyDiff > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                //                     {qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff} ERP
+                //                 </span>
+                //             )}
+                //         </div>
+                //     </td>
+                //     {/* <td>
+                //         <strong>
+                //             {parseInt(order?.timeAndAction?.fPer || 0)}%
+                //         </strong>
+                //     </td>
+                //     <td>
+                //         <strong>
+                //             {parseInt(order?.timeAndAction?.tPer || 0)}%
+                //         </strong>
+                //     </td> */}
+                //     <td className='py-1 border border-grya-200'>
+                //         {isAmended ? (
+                //             <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300 shadow-2xs">
+                //                 ⚠️ Amended
+                //             </span>
+                //         ) : (
+                //             order.status
+                //         )}
+                //     </td>
+                //     {/* {order.status == "Pending" ?
+                //         <td className='py-1 border border-grya-200'>
+                //             {BAN_ICON}
+                //         </td>
+                //         :
+                //         <td onClick={handleFindOrder} className='py-1 border border-slate-200 text-center cursor-pointer'>
+                //             <button
+                //                 type="button"
+                //                 title={isCurrentOrderActive(order.id, findOrder) ? "Active in calendar (click to cancel)" : "Find order in calendar"}
+                //                 className={`p-1 rounded transition-colors ${isCurrentOrderActive(order.id, findOrder) ? "text-orange-600 bg-orange-100 font-bold scale-110" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
+                //             >
+                //                 {VIEW}
+                //             </button>
+                //         </td>
+                //     } */}
+
+                //     <td className='py-1 border border-grya-200' onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
+                //         <button >{VIEW}</button>
+                //     </td>
+                // </tr>
                 <tr
-                    style={{ fontSize: "11px" }} id={order.id}
-                    draggable={["Pending", "Partial"].includes(order.status) && !order.isReplanned}
+                    style={{ fontSize: "11px" }}
+                    id={order.id}
+                    draggable={["Pending", "Partial", "AMANDMENT"].includes(order.status) && !order.isReplanned}
                     onDragStart={(e) => { drag(e) }}
                     onDragOver={(e) => { e.preventDefault(); }}
-                    className={`orderItem noDrop select-none text-center border grabbable`}
+                    className={`orderItem noDrop select-none border grabbable transition-colors
+        ${isAmended ? 'bg-amber-50/80 hover:bg-amber-100/80 border-l-4 border-l-amber-500' : ''}`}
                     onClick={handleFindOrder}
                 >
-                    <td
-                    >
+                    {/* Index */}
+                    <td className="py-1 px-1 border border-slate-200 text-center align-top w-8">
                         {index}
                     </td>
-                    <td className='py-1 border border-grya-200'>
-                        {order.orderNo}
-                    </td>
-                    <td className='py-1 border border-grya-200'>
-                        {getDateFromDateTimeFormatToDisplay(order.dDate)}
-                    </td>
-                    <td className='py-1 border border-grya-200'>
-                        {order.style}
-                    </td>
-                    <td className='py-1 border border-grya-200'>
-                        {order.buyer}
-                    </td>
-                    <td className='capitalize py-1 border border-grya-200'>
-                        {order.styleType}
-                    </td>
-                    <td className='py-1 border border-grya-200'>
-                        {order.quantity}
-                    </td>
-                    {/* <td>
-                        <strong>
-                            {parseInt(order?.timeAndAction?.fPer || 0)}%
-                        </strong>
-                    </td>
-                    <td>
-                        <strong>
-                            {parseInt(order?.timeAndAction?.tPer || 0)}%
-                        </strong>
-                    </td> */}
-                    <td className='py-1 border border-grya-200'>
-                        {order.status}
-                    </td>
-                    {/* {order.status == "Pending" ?
-                        <td className='py-1 border border-grya-200'>
-                            {BAN_ICON}
-                        </td>
-                        :
-                        <td onClick={handleFindOrder} className='py-1 border border-slate-200 text-center cursor-pointer'>
-                            <button
-                                type="button"
-                                title={isCurrentOrderActive(order.id, findOrder) ? "Active in calendar (click to cancel)" : "Find order in calendar"}
-                                className={`p-1 rounded transition-colors ${isCurrentOrderActive(order.id, findOrder) ? "text-orange-600 bg-orange-100 font-bold scale-110" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"}`}
-                            >
-                                {VIEW}
-                            </button>
-                        </td>
-                    } */}
 
-                    <td className='py-1 border border-grya-200' onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}>
-                        <button >{VIEW}</button>
+                    {/* Main cell: row 1 = orderNo | dDate | style, row 2 = other details */}
+                    <td className="py-1 px-2 border border-slate-200 text-left align-top">
+                        {/* First row */}
+                        <div className="flex items-center gap-3 flex-wrap">
+                            <span className="font-semibold text-slate-800">{order.orderNo}</span>
+                            <span className="text-slate-600">
+                                {getDateFromDateTimeFormatToDisplay(order.dDate)}
+                            </span>
+                            <span className="text-slate-700">{order.style}</span>
+                        </div>
+
+                        {/* Second row: other details */}
+                        <div className="flex items-center gap-3 flex-wrap mt-0.5 text-[10px] text-slate-500">
+                            <span>
+                                <span className="text-slate-400">Buyer: </span>
+                                {order.buyer}
+                            </span>
+                            <span className="capitalize">
+                                <span className="text-slate-400 normal-case">Type: </span>
+                                {order.styleType}
+                            </span>
+                            <span className="tabular-nums">
+                                <span className="text-slate-400">Qty: </span>
+                                <span className="font-semibold text-slate-800">{order.quantity}</span>
+                                {isAmended && qtyDiff !== 0 && (
+                                    <span className={`ml-1 text-[10px] font-bold px-1.5 rounded-full whitespace-nowrap ${qtyDiff > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                                        {qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff} ERP
+                                    </span>
+                                )}
+                            </span>
+                            <span>
+                                {isAmended ? (
+                                    <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900 border border-amber-300">
+                                        ⚠️ Amended
+                                    </span>
+                                ) : (
+                                    order.status
+                                )}
+                            </span>
+                        </div>
+                    </td>
+
+                    {/* View button */}
+                    <td
+                        className="py-1 px-1 border border-slate-200 text-center align-middle w-10"
+                        onClick={() => { setProductionDetails(true); setCurrentOrder(order); }}
+                    >
+                        <button>{VIEW}</button>
                     </td>
                 </tr>
                 :
@@ -186,6 +270,7 @@ const OrderItem = ({
                             ${manualSelect ? "pointer-events-none" : ""}
                             ${(order.isReplanned) ? "cursor-pointer" : "grabbable"}
                             select-none 
+                            ${isAmended ? "ring-2 ring-amber-500 shadow-md ring-offset-1" : ""}
                             ${manualSelect ?
                                     (isCurrentOrderLineActive(order.id, line.id, activeLineOrder) ?
                                         "z-0 transition delay-150 duration-300 ease-in-out scale-150 animate-bounce" : "") : ""}
@@ -211,6 +296,12 @@ const OrderItem = ({
                                     <b> Total Order Qty</b>
                                     <div> {order.quantity} </div>
                                 </div>
+                                {isAmended && qtyDiff !== 0 && (
+                                    <div className='grid grid-cols-2 text-amber-700 bg-amber-50 rounded p-0.5 border border-amber-300 font-semibold'>
+                                        <b> ERP Amended Qty</b>
+                                        <div> {order.erpQty} ({qtyDiff > 0 ? `+${qtyDiff}` : qtyDiff}) </div>
+                                    </div>
+                                )}
 
                                 <div className='grid grid-cols-2'>
                                     <b> Line Qty</b>

@@ -66,6 +66,7 @@ const OrderFormNew = () => {
         toast.warning(result.data.message)
       } else {
         setOrders(result?.data?.data || []);
+        window.dispatchEvent(new Event('REFRESH_ORDERS'));
       }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });
@@ -85,6 +86,7 @@ const OrderFormNew = () => {
         toast.warning(result.data.message)
       } else {
         setOrders(result?.data?.data || []);
+        window.dispatchEvent(new Event('REFRESH_ORDERS'));
       }
     }, (error) => {
       toast.error("Server Down", { autoClose: 5000 });
@@ -116,7 +118,8 @@ const OrderFormNew = () => {
               timer: 1500,
               showConfirmButton: false,
             }).then(() => {
-              window.location.reload();
+              // window.location.reload();
+              refetch()
             });
           } else if (result.data.statusCode === 1) {
             Swal.fire({

@@ -64,7 +64,7 @@ const Header = ({ profile, setIsGlobalOpen }) => {
         data: singleData,
         isFetching: isSingleFetching,
         isLoading: isSingleLoading,
-    } = useGetUserByIdQuery(id);
+    } = useGetUserByIdQuery(id, { skip: !id });
 
     const { data: pageGroup, isLoading, isFetching } = useGetPageGroupQuery({ searchParams: "" })
 
