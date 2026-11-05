@@ -159,14 +159,12 @@ const OrderFormNew = () => {
               <h2 className="text-lg font-bold text-gray-800">
                 Sync Orders from ERP
               </h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Select a date range to retrieve orders from the ERP system.
-              </p>
+
             </div>
 
             {/* Filters */}
             <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-end">
-              <div className="flex-1">
+              {/* <div className="flex-1">
                 <label
                   htmlFor="startDate"
                   className="mb-1.5 block text-sm font-medium text-gray-700"
@@ -196,10 +194,10 @@ const OrderFormNew = () => {
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-700 outline-none transition focus:border-[#1D3A76] focus:ring-2 focus:ring-blue-100"
                 />
-              </div>
+              </div> */}
 
               <button
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1D3A76] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152c5c] focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[170px]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1D3A76] px-10 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#152c5c] focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[170px]"
                 type="button"
                 onClick={handleGetOrders}
               >
