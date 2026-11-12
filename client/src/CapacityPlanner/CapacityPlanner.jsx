@@ -194,7 +194,7 @@ const CapacityPlanner = () => {
     // Re-fetch orders whenever user switches to the Capacity Planner tab
     const openTabs = useSelector((state) => state.openTabs);
     const isPlannerTabActive = openTabs?.tabs?.find(
-        (t) => t.name?.toUpperCase() === 'CAPASITY PLANNER'
+        (t) => t.name?.toUpperCase() === 'CAPACITY PLANNER'
     )?.active;
 
     useEffect(() => {

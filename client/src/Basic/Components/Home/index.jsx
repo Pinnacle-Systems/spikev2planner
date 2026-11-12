@@ -32,7 +32,7 @@ const DASHBOARD_CARDS = [
     id: "capacity-planner",
     title: "Capacity Planner",
     subtitle: "Balance lines & factory allocation",
-    tabName: "CAPASITY PLANNER",
+    tabName: "CAPACITY PLANNER",
     category: "forms",
     icon: Calendar,
     gradient: "from-[#6366f1] to-[#4338ca]",

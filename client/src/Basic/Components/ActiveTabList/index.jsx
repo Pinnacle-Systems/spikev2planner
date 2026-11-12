@@ -60,7 +60,7 @@ const ActiveTabList = ({ isSuperAdmin }) => {
     "PAGE GROUP MASTER": <PageGroupMaster />,
     "PAGE MASTER": <PageMaster />,
     "COMPANY MASTER": <CompanyMaster />,
-    "CAPASITY PLANNER": <CapacityPlanner />,
+    "CAPACITY PLANNER": <CapacityPlanner />,
     "USERS & ROLES": <UserAndRolesMaster />,
     "UNIT MASTER": <UnitMaster />,
     // "ORDER DETAILS FORM": <OrderForm />,
