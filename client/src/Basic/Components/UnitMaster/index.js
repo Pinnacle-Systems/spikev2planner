@@ -260,7 +260,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
 
     if (foundItem) {
       Swal.fire({
-        text: "The Country Name already exists.",
+        text: "The Unit Name already exists.",
         icon: "warning",
         didClose: () => {
           countryNameRef?.current?.focus();
@@ -676,17 +676,17 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
           toast.error(res?.data?.message || "Cannot delete: child records exist");
           return;
         }
-        toast.success("Country deleted successfully");
+        toast.success("Unit deleted successfully");
         onSuccess?.();
       } catch (err) {
-        toast.error(err?.data?.message || "Failed to delete country");
+        toast.error(err?.data?.message || "Failed to delete Unit");
       }
     };
 
     return (
       <div className="flex flex-col bg-gray-200 min-h-[250px]">
         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
-          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete Country</h2>
+          <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">Delete Unit</h2>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 bg-white mx-3 mt-3 mb-3 rounded">
           {isLoadingRecord ? (
@@ -701,7 +701,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
                 <p className="text-xs text-gray-600 text-center">
                   <span className="font-semibold">"{deleteLabel}"</span> has{" "}
                   <span className="font-semibold text-red-600">{childCount} linked state{childCount > 1 ? "s" : ""}</span>.
-                  Remove them first before deleting this country.
+                  Remove them first before deleting this Unit.
                 </p>
               </div>
               <button type="button" onClick={onClose}
@@ -737,7 +737,7 @@ export default function Form({ onSuccess, onClose, editId, deleteId, deleteLabel
       <div onKeyDown={handleKeyDown} className="h-full flex flex-col bg-gray-200">
         <div className="border-b py-2 px-4 mx-3 flex mt-4 justify-between items-center sticky top-0 z-10 bg-white">
           <h2 className="text-lg px-2 py-0.5 font-semibold text-gray-800">
-            {editId ? "Edit Country" : "Add New Country"}
+            {editId ? "Edit Unit" : "Add New Unit"}
           </h2>
           <button
             type="button"
